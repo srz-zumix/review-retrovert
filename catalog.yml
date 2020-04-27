@@ -1,0 +1,49 @@
+PREDEF:
+  - c000-preface.re
+
+CHAPS:
+  - 無料で使える CI サービス紹介:
+    - c001-free-ci.re
+    - c010-appveyor.re
+    - c010-azure-pipelines.re
+    - c010-bitrise.re
+    - c010-buddy-works.re
+    - c010-circleci.re
+    - c010-cirrus-ci.re
+    - c010-codefresh.re
+    - c010-codeship.re
+    - c010-drone.re
+    - c010-github-actions.re
+    - c010-semaphore.re
+    - c010-shippable.re
+    - c010-travis-ci.re
+    # - c010-wercker.re
+    - c090-free-others.re
+  - 無料で使える CI サービス比較:
+    - c101-vs-env.re
+    - c102-vs-specs.re
+    - c103-vs-yaml.re
+    - c104-vs-comment-command.re
+    - c105-vs-share.re
+    - c106-vs-security.re
+    - c130-vs-badge.re
+
+APPENDIX:
+  - c200-appendix.re
+
+POSTDEF:
+
+##
+## ■Tips
+## 第I部、第II部、…のように「部」を使うには、「CHAPS:」を次のようにする。
+##
+##   CHAPS:
+##     - 部タイトル:
+##         - chap01.re
+##         - chap02.re
+##     - 部タイトル:
+##         - chap03.re
+##         - chap04.re
+##
+## 「部タイトル」の最後に半角の「:」をつけることに注意。
+##

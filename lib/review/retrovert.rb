@@ -1,7 +1,7 @@
 require "review/retrovert/version"
 require "review/retrovert/cli"
 
-module Review
+module ReVIEW
   module Retrovert
     class Error < StandardError; end
       def hello

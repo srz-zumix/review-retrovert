@@ -2,4 +2,4 @@
 
 require "review/retrovert"
 
-Review::Retrovert::CLI.start
+ReVIEW::Retrovert::CLI.start

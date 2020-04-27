@@ -2,7 +2,7 @@ require_relative 'lib/review/retrovert/version'
 
 Gem::Specification.new do |spec|
   spec.name          = "review-retrovert"
-  spec.version       = Review::Retrovert::VERSION
+  spec.version       = ReVIEW::Retrovert::VERSION
   spec.authors       = ["srz-zumix"]
   spec.email         = ["zumix.cpp@gmail.com"]
 
@@ -28,6 +28,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency "thor"
-  spec.add_dependency "review"
+  spec.add_runtime_dependency "review", ['>= 3.2.0', '< 4.0']
 
 end
