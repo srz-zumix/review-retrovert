@@ -23,12 +23,16 @@ module ReVIEW
         @logger.warn msg
       end
 
+      def info(msg)
+        @logger.info msg
+      end
+
       def copy_config(outdir)
         @configs.copy(outdir)
       end
 
       def copy_catalog(outdir)
-        yamlfile =@config['catalogfile']
+        yamlfile = @config['catalogfile']
         FileUtils.copy(File.join(@basedir, yamlfile), File.join(outdir, File.basename(yamlfile)))
       end
 
@@ -53,6 +57,43 @@ module ReVIEW
 
       def update_config(outdir)
         # @configs.rewrite_yml('imagedir', 'images')
+      end
+
+      def replace_inline_command(content, command, sub)
+
+      end
+
+      def delete_inline_command(content, command)
+        # FIXME: 入れ子のフェンス記法({}|$)
+        content.gsub(/@<#{command}>(?:(\$)|(?:({)|(\|)))((?:.*@<\w*>[\|${].*?[\|$}].*?|.*?)*)(?(1)(\$)|(?(2)(})|(\|)))/){"#{$4}"}
+      end
+
+      def update_content(contentfile)
+        info contentfile
+        content = File.read(contentfile)
+        content.gsub!(/\/\/sideimage/, '//image')
+        content = delete_inline_command(content , 'xsmall')
+        File.write(contentfile, content)
+      end
+
+      def update_content_files(contentdir, contentfiles)
+        files = contentfiles.is_a?(String) ? contentfiles.split(/\R/) : contentfiles
+        files.each do |content|
+          update_content(File.join(contentdir, content))
+        end
+      end
+
+      def update_contents(outdir)
+        yamlfile = @config['catalogfile']
+        abspath = File.absolute_path(outdir)
+        catalog = ReVIEW::Catalog.new(File.open(File.join(abspath, yamlfile)))
+        contentdir = File.join(abspath, @config['contentdir'])
+        info 'replace //sideimage to //image'
+        info 'replace xsmall'
+        update_content_files(contentdir, catalog.predef())
+        update_content_files(contentdir, catalog.chaps())
+        update_content_files(contentdir, catalog.appendix())
+        update_content_files(contentdir, catalog.postdef())
       end
 
       def clean_initial_project(outdir)
@@ -107,6 +148,7 @@ module ReVIEW
         copy_contents(outdir)
         copy_images(outdir)
         update_config(outdir)
+        update_contents(outdir)
 
         pwd = Dir.pwd
         Dir.chdir(outdir)
