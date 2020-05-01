@@ -41,7 +41,8 @@ module ReVIEW
         path = File.join(@basedir, contentdir)
         outpath = File.join(outdir, contentdir)
         FileUtils.mkdir_p(outpath)
-        FileUtils.cp_r(Dir.glob(File.join(path, '*.re')), outpath)
+        # FileUtils.cp_r(Dir.glob(File.join(path, '*.re')), outpath)
+        FileUtils.cp_r(Dir.glob(File.join(path, '*.re')), outdir)
       end
 
       def copy_images(outdir)
@@ -58,6 +59,7 @@ module ReVIEW
       end
 
       def update_config(outdir)
+        @configs.rewrite_yml('contentdir', '.')
         @configs.rewrite_yml('hook_beforetexcompile', 'null')
         @configs.rewrite_yml('texstyle', '["reviewmacro"]')
       end
@@ -68,7 +70,7 @@ module ReVIEW
 
       def delete_inline_command(content, command)
         # FIXME: 入れ子のフェンス記法({}|$)
-        content.gsub(/@<#{command}>(?:(\$)|(?:({)|(\|)))((?:.*@<\w*>[\|${].*?[\|$}].*?|.*?)*)(?(1)(\$)|(?(2)(})|(\|)))/){"#{$4}"}
+        content.gsub!(/@<#{command}>(?:(\$)|(?:({)|(\|)))((?:.*@<\w*>[\|${].*?[\|$}].*?|.*?)*)(?(1)(\$)|(?(2)(})|(\|)))/){"#{$4}"}
       end
 
       def copy_embedded_contents(outdir, content)
@@ -78,6 +80,7 @@ module ReVIEW
             outpath = File.join(outdir, filepath)
             FileUtils.mkdir_p(File.absolute_path(File.dirname(outpath)))
             FileUtils.cp(srcpath, outpath)
+            update_content(outpath, outpath)
           end
         end
       end
@@ -89,7 +92,8 @@ module ReVIEW
         content.gsub!(/\/\/sideimage/, '//image')
         while !content.gsub!(/(\/\/table.*)@<br>(.*?\/\/})/m, '\1\2').nil? do
         end
-        content = delete_inline_command(content , 'xsmall')
+        delete_inline_command(content , 'xsmall')
+        delete_inline_command(content , 'weak')
         File.write(contentfile, content)
         copy_embedded_contents(outdir, content)
       end
@@ -105,7 +109,8 @@ module ReVIEW
         yamlfile = @config['catalogfile']
         abspath = File.absolute_path(outdir)
         catalog = ReVIEW::Catalog.new(File.open(File.join(abspath, yamlfile)))
-        contentdir = File.join(abspath, @config['contentdir'])
+        # contentdir = File.join(abspath, @config['contentdir'])
+        contentdir = abspath
         info 'replace //sideimage to //image'
         info 'replace xsmall'
         update_content_files(outdir, contentdir, catalog.predef())
