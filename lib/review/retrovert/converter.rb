@@ -46,17 +46,20 @@ module ReVIEW
 
       def copy_images(outdir)
         imagedir = @config['imagedir']
-        path = File.join(@basedir, imagedir)
-        outpath = File.join(outdir, imagedir)
+        srcpath = File.join(@basedir, imagedir)
+        outimagedir = File.basename(imagedir) # Re:VIEW not support sub-directory
+        outpath = File.join(outdir, outimagedir)
         FileUtils.mkdir_p(outpath)
         image_ext = @config['image_ext']
         image_ext.each { |ext|
-          FileUtils.cp_r(Dir.glob(File.join(path, "*.#{ext}")), outpath)
+          FileUtils.cp_r(Dir.glob(File.join(srcpath, "**/*.#{ext}")), outpath)
         }
+        @configs.rewrite_yml('imagedir', outimagedir)
       end
 
       def update_config(outdir)
-        # @configs.rewrite_yml('imagedir', 'images')
+        @configs.rewrite_yml('hook_beforetexcompile', 'null')
+        @configs.rewrite_yml('texstyle', '["reviewmacro"]')
       end
 
       def replace_inline_command(content, command, sub)
@@ -68,18 +71,33 @@ module ReVIEW
         content.gsub(/@<#{command}>(?:(\$)|(?:({)|(\|)))((?:.*@<\w*>[\|${].*?[\|$}].*?|.*?)*)(?(1)(\$)|(?(2)(})|(\|)))/){"#{$4}"}
       end
 
-      def update_content(contentfile)
-        info contentfile
-        content = File.read(contentfile)
-        content.gsub!(/\/\/sideimage/, '//image')
-        content = delete_inline_command(content , 'xsmall')
-        File.write(contentfile, content)
+      def copy_embedded_contents(outdir, content)
+        content.scan(/\#@mapfile\((.*?)\)/).each do |filepath|
+          srcpath = File.join(@basedir, filepath)
+          if File.exist?(srcpath)
+            outpath = File.join(outdir, filepath)
+            FileUtils.mkdir_p(File.absolute_path(File.dirname(outpath)))
+            FileUtils.cp(srcpath, outpath)
+          end
+        end
       end
 
-      def update_content_files(contentdir, contentfiles)
+      def update_content(outdir, contentfile)
+        info contentfile
+        content = File.read(contentfile)
+        content.gsub!(/(\/\/sideimage\[.*?\]\[.*?\])\[.*?\]/, '\1')
+        content.gsub!(/\/\/sideimage/, '//image')
+        while !content.gsub!(/(\/\/table.*)@<br>(.*?\/\/})/m, '\1\2').nil? do
+        end
+        content = delete_inline_command(content , 'xsmall')
+        File.write(contentfile, content)
+        copy_embedded_contents(outdir, content)
+      end
+
+      def update_content_files(outdir, contentdir, contentfiles)
         files = contentfiles.is_a?(String) ? contentfiles.split(/\R/) : contentfiles
         files.each do |content|
-          update_content(File.join(contentdir, content))
+          update_content(outdir, File.join(contentdir, content))
         end
       end
 
@@ -90,10 +108,10 @@ module ReVIEW
         contentdir = File.join(abspath, @config['contentdir'])
         info 'replace //sideimage to //image'
         info 'replace xsmall'
-        update_content_files(contentdir, catalog.predef())
-        update_content_files(contentdir, catalog.chaps())
-        update_content_files(contentdir, catalog.appendix())
-        update_content_files(contentdir, catalog.postdef())
+        update_content_files(outdir, contentdir, catalog.predef())
+        update_content_files(outdir, contentdir, catalog.chaps())
+        update_content_files(outdir, contentdir, catalog.appendix())
+        update_content_files(outdir, contentdir, catalog.postdef())
       end
 
       def clean_initial_project(outdir)
