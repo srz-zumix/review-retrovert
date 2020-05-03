@@ -77,8 +77,8 @@ module ReVIEW
         content.scan(/\#@mapfile\((.*?)\)/).each do |filepath|
           srcpath = File.join(@basedir, filepath)
           if File.exist?(srcpath)
-            outpath = File.join(outdir, filepath)
-            FileUtils.mkdir_p(File.absolute_path(File.dirname(outpath)))
+            outpath = File.join(File.absolute_path(outdir), filepath)
+            FileUtils.mkdir_p(File.dirname(outpath))
             FileUtils.cp(srcpath, outpath)
             update_content(outpath, outpath)
           end
@@ -90,6 +90,7 @@ module ReVIEW
         content = File.read(contentfile)
         content.gsub!(/(\/\/sideimage\[.*?\]\[.*?\])\[.*?\]/, '\1')
         content.gsub!(/\/\/sideimage/, '//image')
+        content.gsub!(/@<href>{(.*?)#.*?}/, '@<href>{\1}')
         while !content.gsub!(/(\/\/table.*)@<br>(.*?\/\/})/m, '\1\2').nil? do
         end
         delete_inline_command(content , 'xsmall')
@@ -112,7 +113,7 @@ module ReVIEW
         # contentdir = File.join(abspath, @config['contentdir'])
         contentdir = abspath
         info 'replace //sideimage to //image'
-        info 'replace xsmall'
+        info 'replace starter inline command'
         update_content_files(outdir, contentdir, catalog.predef())
         update_content_files(outdir, contentdir, catalog.chaps())
         update_content_files(outdir, contentdir, catalog.appendix())
@@ -127,33 +128,9 @@ module ReVIEW
       end
 
       def load_config(yamlfile)
-        @config = ReVIEW::Configure.values
-        error "#{yamlfile} not found." unless File.exist?(yamlfile)
-
-        begin
-          loader = ReVIEW::YAMLLoader.new
-          @config.deep_merge!(loader.load_file(yamlfile))
-        rescue => e
-          error "yaml error #{e.message}"
-        end
-
-        @basedir = File.absolute_path(File.dirname(yamlfile))
         @configs.open(yamlfile)
-
-        begin
-          @config.check_version(ReVIEW::VERSION)
-        rescue ReVIEW::ConfigError => e
-          warn e.message
-        end
-
-        # version 2 compatibility
-        unless @config['texdocumentclass']
-          if @config.check_version(2, exception: false)
-            @config['texdocumentclass'] = ['jsbook', 'uplatex,oneside']
-          else
-            @config['texdocumentclass'] = @config['_texdocumentclass']
-          end
-        end
+        @config = @configs.config
+        @basedir = @configs.basedir
       end
 
       def create_initial_project(outdir, options)
