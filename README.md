@@ -1,3 +1,6 @@
+[![Gem Version](https://badge.fury.io/rb/review-retrovert.svg)](https://badge.fury.io/rb/review-retrovert)
+[![Build Status](https://travis-ci.com/srz-zumix/review-retrovert.svg?token=ArNHjRjvfZfyqQUCbXSt&branch=master)](https://travis-ci.com/srz-zumix/review-retrovert)
+
 # Review::Retrovert
 
 ## Installation
