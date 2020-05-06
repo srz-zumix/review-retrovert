@@ -3,7 +3,7 @@ require_relative 'lib/review/retrovert/version'
 Gem::Specification.new do |spec|
   spec.name          = "review-retrovert"
   spec.version       = ReVIEW::Retrovert::VERSION
-  spec.authors       = ["srz-zumix"]
+  spec.authors       = ["srz_zumix"]
   spec.email         = ["zumix.cpp@gmail.com"]
 
   spec.summary       = %q{Re:VIEW Starter to Re:VIEW}
