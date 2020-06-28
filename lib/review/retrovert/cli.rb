@@ -10,6 +10,12 @@ module ReVIEW
       def convert(review_starter_configfile, outdir)
         Converter.execute(review_starter_configfile, outdir, options)
       end
+
+      desc "version", "show version"
+      def version()
+        puts VERSION
+      end
+
     end
   end
 end
