@@ -1,6 +1,5 @@
 FROM vvakame/review:3.2
 
-# RUN gem install review-retrovert
-RUN rake install
+RUN gem install review-retrovert
 
 ENTRYPOINT [ "review-retrovert" ]
