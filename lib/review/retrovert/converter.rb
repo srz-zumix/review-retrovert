@@ -128,7 +128,7 @@ module ReVIEW
           update_content_files(outdir, contentdir, catalog.postdef())
         else
           copy_contents(outdir)
-          update_content_files(outdir, contentdir, Dir.glob(File.join(abspath, '*.re'))
+          update_content_files(outdir, contentdir, Dir.glob(File.join(abspath, '*.re')))
         end
       end
 
