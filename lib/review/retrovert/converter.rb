@@ -103,7 +103,7 @@ module ReVIEW
         files = contentfiles.is_a?(String) ? contentfiles.split(/\R/) : contentfiles
         files.each do |content|
           contentpath = File.join(contentdir, content)
-          unless FileUtils.exist?(contentpath)
+          unless File.exist?(contentpath)
             srcpath = File.join(@basedir, content)
             if File.exist?(srcpath)
               FileUtils.cp(srcpath, contentdir)
