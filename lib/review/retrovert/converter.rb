@@ -102,22 +102,34 @@ module ReVIEW
       def update_content_files(outdir, contentdir, contentfiles)
         files = contentfiles.is_a?(String) ? contentfiles.split(/\R/) : contentfiles
         files.each do |content|
-          update_content(outdir, File.join(contentdir, content))
+          contentpath = File.join(contentdir, content)
+          unless FileUtils.exist?(contentpath)
+            srcpath = File.join(@basedir, content)
+            if File.exist?(srcpath)
+              FileUtils.cp(srcpath, contentdir)
+            end
+          end
+          update_content(outdir, contentpath)
         end
       end
 
-      def update_contents(outdir)
+      def update_contents(outdir, options)
         yamlfile = @config['catalogfile']
         abspath = File.absolute_path(outdir)
-        catalog = ReVIEW::Catalog.new(File.open(File.join(abspath, yamlfile)))
         # contentdir = File.join(abspath, @config['contentdir'])
         contentdir = abspath
         info 'replace //sideimage to //image'
         info 'replace starter inline command'
-        update_content_files(outdir, contentdir, catalog.predef())
-        update_content_files(outdir, contentdir, catalog.chaps())
-        update_content_files(outdir, contentdir, catalog.appendix())
-        update_content_files(outdir, contentdir, catalog.postdef())
+        if options['strict']
+          catalog = ReVIEW::Catalog.new(File.open(File.join(abspath, yamlfile)))
+          update_content_files(outdir, contentdir, catalog.predef())
+          update_content_files(outdir, contentdir, catalog.chaps())
+          update_content_files(outdir, contentdir, catalog.appendix())
+          update_content_files(outdir, contentdir, catalog.postdef())
+        else
+          copy_contents(outdir)
+          update_content_files(outdir, contentdir, Dir.glob(File.join(abspath, '*.re'))
+        end
       end
 
       def clean_initial_project(outdir)
@@ -145,10 +157,9 @@ module ReVIEW
 
         copy_config(outdir)
         copy_catalog(outdir)
-        copy_contents(outdir)
         copy_images(outdir)
         update_config(outdir)
-        update_contents(outdir)
+        update_contents(outdir, options)
 
         pwd = Dir.pwd
         Dir.chdir(outdir)
