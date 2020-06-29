@@ -104,7 +104,7 @@ module ReVIEW
         files.each do |content|
           contentpath = File.join(contentdir, content)
           unless File.exist?(contentpath)
-            srcpath = File.join(@basedir, content)
+            srcpath = File.join(File.join(@basedir, @config['contentdir']), content)
             if File.exist?(srcpath)
               FileUtils.cp(srcpath, contentdir)
             end
