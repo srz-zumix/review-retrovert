@@ -128,9 +128,8 @@ module ReVIEW
           update_content_files(outdir, contentdir, catalog.postdef())
         else
           # copy_contents(outdir)
-          Dir.chdir(File.join(@basedir, @srccontentsdir)) do
-            update_content_files(outdir, contentdir, Dir.glob('*.re'))
-          end
+          contentsfiles = Pathname.glob(File.join(File.join(@basedir, @srccontentsdir), '*.re')).map(&:basename)
+          update_content_files(outdir, contentdir, contentsfiles)
         end
       end
 
