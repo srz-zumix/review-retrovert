@@ -9,6 +9,7 @@ module ReVIEW
 
       def initialize
         @basedir = nil
+        @srccontentsdir = nil
         @outimagedir = nil
         @logger = ReVIEW.logger
         @configs = YamlConfig.new
@@ -37,10 +38,9 @@ module ReVIEW
       end
 
       def copy_contents(outdir)
-        contentdir = @config['contentdir']
-        path = File.join(@basedir, contentdir)
-        outpath = File.join(outdir, contentdir)
-        FileUtils.mkdir_p(outpath)
+        path = File.join(@basedir, @srccontentsdir)
+        # outpath = File.join(outdir, srccontentsdir)
+        # FileUtils.mkdir_p(outpath)
         # FileUtils.cp_r(Dir.glob(File.join(path, '*.re')), outpath)
         FileUtils.cp_r(Dir.glob(File.join(path, '*.re')), outdir)
       end
@@ -104,7 +104,8 @@ module ReVIEW
         files.each do |content|
           contentpath = File.join(contentdir, content)
           unless File.exist?(contentpath)
-            srcpath = File.join(File.join(@basedir, @config['contentdir']), content)
+            srcpath = File.join(File.join(@basedir, @srccontentsdir), content)
+            # info srcpath
             if File.exist?(srcpath)
               FileUtils.cp(srcpath, contentdir)
             end
@@ -116,7 +117,6 @@ module ReVIEW
       def update_contents(outdir, options)
         yamlfile = @config['catalogfile']
         abspath = File.absolute_path(outdir)
-        # contentdir = File.join(abspath, @config['contentdir'])
         contentdir = abspath
         info 'replace //sideimage to //image'
         info 'replace starter inline command'
@@ -127,8 +127,10 @@ module ReVIEW
           update_content_files(outdir, contentdir, catalog.appendix())
           update_content_files(outdir, contentdir, catalog.postdef())
         else
-          copy_contents(outdir)
-          update_content_files(outdir, contentdir, Dir.glob(File.join(abspath, '*.re')))
+          # copy_contents(outdir)
+          Dir.chdir(File.join(@basedir, @srccontentsdir)) do
+            update_content_files(outdir, contentdir, Dir.glob('*.re'))
+          end
         end
       end
 
@@ -143,6 +145,7 @@ module ReVIEW
         @configs.open(yamlfile)
         @config = @configs.config
         @basedir = @configs.basedir
+        @srccontentsdir = @config['contentdir']
       end
 
       def create_initial_project(outdir, options)
