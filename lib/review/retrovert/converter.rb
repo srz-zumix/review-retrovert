@@ -52,8 +52,12 @@ module ReVIEW
         outpath = File.join(outdir, outimagedir)
         FileUtils.mkdir_p(outpath)
         image_ext = @config['image_ext']
+        srcroot = Pathname.new(srcpath)
         image_ext.each { |ext|
-          FileUtils.cp_r(Dir.glob(File.join(srcpath, "**/*.#{ext}")), outpath)
+          Dir.glob(File.join(srcpath, "**/*.#{ext}").each { |img|
+            impath = Pathname.new(img).relative_path_from(srcroot)
+            FileUtils.cp(img, File.join(outpath, impath))
+          }
         }
         @configs.rewrite_yml('imagedir', outimagedir)
       end
