@@ -95,8 +95,13 @@ module ReVIEW
         content = File.read(contentfile)
         content.gsub!(/(\/\/sideimage\[.*?\]\[.*?\])\[.*?\]/, '\1')
         content.gsub!(/\/\/sideimage/, '//image')
+        content.gsub!(/@<href>{(.*?)#.*?,(.*?)}/, '@<href>{\1,\2}')
         content.gsub!(/@<href>{(.*?)#.*?}/, '@<href>{\1}')
-        while !content.gsub!(/(\/\/table.*)@<br>(.*?\/\/})/m, '\1\2').nil? do
+        # table 内の @ コマンドは不安定らしい
+        while !content.gsub!(/(\/\/table.*)@<br>{}(.*?\/\/})/m, "\\1#{@table_br_replace}\\2").nil? do
+        end
+        # 空セルが2行になることがあるらしい
+        while !content.gsub!(/(\/\/table.*\s)\.(\s.*?\/\/})/m, "\\1#{@table_empty_replace}\\2").nil? do
         end
         delete_inline_command(content , 'xsmall')
         delete_inline_command(content , 'weak')
@@ -159,6 +164,8 @@ module ReVIEW
       end
 
       def execute(yamlfile, outdir, options)
+        @table_br_replace = options['table-br-replace']
+        @table_empty_replace = options['table-empty-replace']
         load_config(yamlfile)
         create_initial_project(outdir, options)
 
