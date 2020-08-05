@@ -15,7 +15,7 @@ jobs:
         run: bundle exec rake spec
       # convert
       - name: convert
-        run: bundle exec review-retrovert convert testdata/mybook/config.yml tmp
+        run: bundle exec review-retrovert convert testdata/mybook/config.yml tmp -f
       # build
       - name: review build
         uses: docker://srzzumix/review-retrovert
