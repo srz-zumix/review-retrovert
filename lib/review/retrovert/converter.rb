@@ -69,8 +69,9 @@ module ReVIEW
         @configs.rewrite_yml('texstyle', '["reviewmacro"]')
       end
 
-      def replace_inline_command(content, command, sub)
-
+      def delete_block_command(content, command)
+        content.gsub!(/^\/\/#{command}(\[[^\r\n]*?\])*{.*?\/\/}\R/m,'')
+        content.gsub!(/^\/\/#{command}(\[.*?\])*\s*\R/,'')
       end
 
       def delete_inline_command(content, command)
@@ -103,8 +104,11 @@ module ReVIEW
         # 空セルが2行になることがあるらしい
         while !content.gsub!(/(\/\/table.*\s)\.(\s.*?\/\/})/m, "\\1#{@table_empty_replace}\\2").nil? do
         end
-        delete_inline_command(content , 'xsmall')
-        delete_inline_command(content , 'weak')
+        # Re:VIEW Starter commands
+        # //needvspace
+        delete_block_command(content, 'needvspace')
+        delete_inline_command(content, 'xsmall')
+        delete_inline_command(content, 'weak')
         File.write(contentfile, content)
         copy_embedded_contents(outdir, content)
       end
