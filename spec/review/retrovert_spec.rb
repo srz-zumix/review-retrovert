@@ -24,6 +24,22 @@ RSpec.describe 'convert', type: :aruba do
       text = File.open(File.join(aruba.current_directory, 'tmp/00-preface.re')).read()
       expect(text).not_to include('@<userinput>{')
     end
+    it 'inline command replace' do
+      expect('tmp/03-syntax.re').to be_an_existing_file
+      text = File.open(File.join(aruba.current_directory, 'tmp/03-syntax.re')).read()
+      expect(text).not_to include('@<secref>{')
+      expect(text).to include('@<hd>{')
+      expect(text).not_to include('@<file>{')
+      expect(text).to include('@<kw>{')
+      expect(text).not_to include('@<hlink>{')
+      expect(text).to include('@<href>{')
+    end
+    it 'LaTex inline command replace' do
+      expect('tmp/05-faq.re').to be_an_existing_file
+      text = File.open(File.join(aruba.current_directory, 'tmp/05-faq.re')).read()
+      expect(text).not_to include('@<LaTeX>{}')
+      expect(text).to include('LaTeX')
+    end
     it 'block command replace exclude options' do
       expect('tmp/99-postface.re').to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, 'tmp/99-postface.re')).read()
@@ -35,6 +51,8 @@ RSpec.describe 'convert', type: :aruba do
       text = File.open(File.join(aruba.current_directory, 'tmp/02-tutorial.re')).read()
       expect(text).not_to match(/^\/\/abstract/)
       expect(text).to match(/^\/\/lead/)
+      expect(text).not_to match(/^\/\/terminal/)
+      expect(text).to match(/^\/\/cmd/)
     end
   end
 end

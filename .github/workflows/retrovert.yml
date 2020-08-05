@@ -22,3 +22,9 @@ jobs:
         with:
           entrypoint: bash
           args: -c "cd tmp; rake preproc all"
+      # artifacts
+      - name: artifacts
+        uses: actions/upload-artifact@v1
+        with:
+          name: mybook
+          path: mybook.pdf
