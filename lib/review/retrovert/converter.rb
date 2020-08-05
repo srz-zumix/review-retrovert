@@ -105,6 +105,43 @@ module ReVIEW
         content.gsub!(/@<#{command}>/, "@<#{new_command}>")
       end
 
+      def replace_block_command_nested_boxed_article(content, box)
+        m = content.match(/^\/\/#{box}(.*?)^\/\/}/m)
+        unless m.nil?
+          inner = m[1]
+          n = inner.match(/^\/\/[^}]/)
+          unless n.nil?
+            inner.gsub!(/(^\/\/[^}])/, '#@#\1')
+            content.gsub!(/^\/\/#{box}(.*?)^\/\/}/m, "//#{box}#{inner}#@#//}")
+            replace_block_command_nested_boxed_article(content, box)
+          end
+        end
+      end
+
+      def replace_block_command_nested_boxed_articles(content)
+        replace_block_command_nested_boxed_article(content, 'note')
+        replace_block_command_nested_boxed_article(content, 'memo')
+        replace_block_command_nested_boxed_article(content, 'tip')
+        replace_block_command_nested_boxed_article(content, 'info')
+        replace_block_command_nested_boxed_article(content, 'warning')
+        replace_block_command_nested_boxed_article(content, 'important')
+        replace_block_command_nested_boxed_article(content, 'caution')
+        replace_block_command_nested_boxed_article(content, 'notice')
+      end
+
+      def replace_sampleoutput(content)
+        m = content.match(/^\/\/sampleoutputbegin(.*?)^\/\/sampleoutputend/m)
+        unless m.nil?
+          sample = m[1]
+          sample.gsub!(/^\/\//, '//@<nop>{}')
+          content.gsub!(/(^\/\/sampleoutputbegin)(.*?)(^\/\/sampleoutputend)/m, "\\1#{sample}\\3")
+          # while content.gsub!(/(^\/\/sampleoutputbegin.*?)(^\/\/.*?^\/\/sampleoutputend)/m, '\1@<nop>{}\2').nil? do
+          # end
+          content.gsub!(/^\/\/sampleoutputbegin(?<option>\[.*?\])*/, "\\k<option>\n//embed{")
+          content.gsub!(/^\/\/sampleoutputend/, '//}')
+        end
+      end
+
       def copy_embedded_contents(outdir, content)
         content.scan(/\#@mapfile\((.*?)\)/).each do |filepath|
           srcpath = File.join(@basedir, filepath)
@@ -115,19 +152,6 @@ module ReVIEW
             update_content(outpath, outpath)
           end
         end
-      end
-
-      def replace_sampleoutput(content)
-        m = content.match(/^\/\/sampleoutputbegin(.*?)^\/\/sampleoutputend/m)
-        unless m.nil?
-          sample = m[1]
-          sample.gsub!(/^\/\//, '//@<nop>{}')
-          content.gsub!(/(^\/\/sampleoutputbegin)(.*?)(^\/\/sampleoutputend)/m, "\\1#{sample}\\3")
-        end
-        # while content.gsub!(/(^\/\/sampleoutputbegin.*?)(^\/\/.*?^\/\/sampleoutputend)/m, '\1@<nop>{}\2').nil? do
-        # end
-        content.gsub!(/^\/\/sampleoutputbegin(?<option>\[.*?\])*/, "\\k<option>\n//embed{")
-        content.gsub!(/^\/\/sampleoutputend/, '//}')
       end
 
       def update_content(outdir, contentfile)
@@ -171,6 +195,9 @@ module ReVIEW
 
         # special command
         replace_sampleoutput(content)
+
+        # nested command
+        replace_block_command_nested_boxed_articles(content)
 
         # special charactor
         content.gsub!('@<LaTeX>{}', 'LaTeX')
