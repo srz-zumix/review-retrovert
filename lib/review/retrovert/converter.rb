@@ -73,6 +73,12 @@ module ReVIEW
         content.gsub!(/^\/\/#{command}(?<option>(\[[^\r\n]*?\]){0,#{option_count}})(\[[^\r\n]*\])*{(?<inner>.*?)\/\/}/m, "//#{new_command}\\k<option>{\\k<inner>//}")
       end
 
+      def replace_compatible_block_command_to_outside(content, command, new_command, option_count, new_body="")
+        body = new_body
+        body += '\n' unless body.empty?
+        content.gsub!(/^\/\/#{command}(?<option>(\[[^\r\n]*?\]){0,#{option_count}})(\[[^\r\n]*\])*{(?<inner>.*?)\/\/}/m, "//#{new_command}\\k<option>{\n#{new_body}//}\\k<inner>")
+      end
+
       def replace_block_command_outline(content, command, new_command, use_option)
         if use_option
           content.gsub!(/^\/\/#{command}(?<option>\[[^\r\n]*\])*{(?<inner>.*?)\/\/}/m, "//#{new_command}\\k<option>{\\k<inner>//}")
@@ -124,12 +130,13 @@ module ReVIEW
         end
         # Re:VIEW Starter commands
         replace_compatible_block_command_outline(content, 'terminal', 'cmd', 1)
+        replace_compatible_block_command_to_outside(content, 'sideimage', 'image', 1)
         replace_block_command_outline(content, 'abstract', 'lead', true)
-        replace_block_command_outline(content, 'sideimage', 'image', false)
         delete_block_command(content, 'needvspace')
         delete_block_command(content, 'clearpage')
         delete_block_command(content, 'flushright')
         delete_block_command(content, 'centering')
+        delete_block_command(content, 'noindent')
 
         replace_inline_command(content, 'secref', 'hd')
         replace_inline_command(content, 'file', 'kw')
