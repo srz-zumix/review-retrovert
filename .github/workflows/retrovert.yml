@@ -1,0 +1,19 @@
+on: [push]
+
+name: Retrovert
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.6
+      - run: bundle install
+      # convert
+      - run: bundle exec review-retrovert convert testdata/mybook/config.yml tmp"
+      # build
+      - uses: docker://srzzumix/review-retrovert
+        with:
+          entrypoint: bash
+          args: -c "cd tmp; rake preproc all"

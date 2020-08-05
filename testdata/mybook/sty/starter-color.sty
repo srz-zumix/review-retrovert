@@ -1,0 +1,79 @@
+%%% -*- coding: utf-8 -*-
+
+%%%
+%%% 色の設定
+%%%
+
+
+%%% config-starter.ymlの「target:」によって、カラーにするか決める
+\iffalse
+\else\ifstreq{\starter@target}{pbook}    % pbook (printing book) なら
+  \def\starter@colormode{mono}           %   白黒
+\else\ifstreq{\starter@target}{ebook}    % ebook (electric book) なら
+  \def\starter@colormode{rgb}            %   カラー (RGB)
+  %\def\starter@colormode{cmyk}          %   カラー (CMYK)
+\else\ifstreq{\starter@target}{tablet}   % tablet なら
+  \def\starter@colormode{rgb}            %   カラー (RGB)
+  %\def\starter@colormode{cmyk}          %   カラー (CMYK)
+\else                                    % それら以外なら
+  \def\starter@colormode{mono}           %   白黒
+\fi
+
+
+%%% 白黒 (白黒印刷用、0.0が黒で1.0が白）
+\ifstreq{\starter@colormode}{mono}
+  \definecolor{starter@deepcolor}{gray}{0.1}        % dark gray
+  \definecolor{starter@palecolor}{gray}{0.9}        % light gray
+  \definecolor{starter@chaptercolor}{gray}{0.4}     % gray
+  \definecolor{starter@sectioncolor}{gray}{0.1}     % gray
+  \definecolor{starter@subsectioncolor}{gray}{0.1}  % dark gray
+  \definecolor{starter@notecolor}{gray}{0.0}        % black
+  \definecolor{starter@captioncolor}{gray}{0.4}     % gray
+  \definecolor{starter@quotecolor}{gray}{0.4}       % gray
+     \colorlet{starter@linkcolor}{black}            % black
+     \colorlet{starter@chaptitlepagecolor}{white}   % white
+  \definecolor{starter@programcolor}{gray}{0.9}     % light gray
+  \definecolor{starter@terminalcolor}{gray}{0.1}    % dark black
+  \definecolor{starter@program@indentcolor}{gray}{0.95} % ultra light gray
+  \definecolor{starter@terminal@indentcolor}{gray}{0.18}% dark black
+  \definecolor{starter@userinputcolor}{gray}{0.35}   % dark gray
+\fi
+
+%%% カラー（RGB、PCやタブレット向け）
+\ifstreq{\starter@colormode}{rgb}
+  \definecolor{starter@deepcolor}{HTML}{990000}     % red
+ %\definecolor{starter@deepcolor}{HTML}{006699}     % blue
+  \definecolor{starter@palecolor}{HTML}{E5E5E5}     % light gray
+     \colorlet{starter@chaptercolor}{starter@deepcolor}
+     \colorlet{starter@sectioncolor}{starter@deepcolor}
+     \colorlet{starter@subsectioncolor}{starter@deepcolor}
+     \colorlet{starter@notecolor}{starter@deepcolor}
+  \definecolor{starter@captioncolor}{HTML}{999999}  % gray
+  \definecolor{starter@quotecolor}{HTML}{999999}    % gray
+     \colorlet{starter@linkcolor}{starter@deepcolor}% red
+     \colorlet{starter@chaptitlepagecolor}{starter@palecolor}
+  \definecolor{starter@programcolor}{HTML}{E5E5E5}  % light gray
+  \definecolor{starter@terminalcolor}{HTML}{191919} % dark black
+  \definecolor{starter@program@indentcolor}{HTML}{F2F2F2}  % ultra light gray
+  \definecolor{starter@terminal@indentcolor}{HTML}{2E2E2E} % dark black
+  \definecolor{starter@userinputcolor}{HTML}{595959}% dark gray
+\fi
+
+%%% カラー（CYMK、カラー印刷向け）
+\ifstreq{\starter@colormode}{cmyk}
+  \definecolor{starter@deepcolor}{cmyk}{0.0,1.0,1.0,0.4}     % red
+  \definecolor{starter@palecolor}{cmyk}{0.0,0.0,0.0,0.1}     % light gray
+     \colorlet{starter@chaptercolor}{starter@deepcolor}
+     \colorlet{starter@sectioncolor}{starter@deepcolor}
+     \colorlet{starter@subsectioncolor}{starter@deepcolor}
+     \colorlet{starter@notecolor}{starter@deepcolor}
+  \definecolor{starter@captioncolor}{cmyk}{0.0,0.0,0.0,0.5}  % gray
+  \definecolor{starter@quotecolor}{cmyk}{0.0,0.0,0.0,0.5}    % gray
+     \colorlet{starter@linkcolor}{starter@deepcolor}         % red
+     \colorlet{starter@chaptitlepagecolor}{starter@palecolor}
+  \definecolor{starter@programcolor}{cmyk}{0.0,0.0,0.0,0.1}  % light gray
+  \definecolor{starter@terminalcolor}{cmyk}{0.0,0.0,0.0,0.9} % dark black
+  \definecolor{starter@program@indentcolor}{cmyk}{0.0,0.0,0.0,0.95} % ultra light gray
+  \definecolor{starter@terminal@indentcolor}{cmyk}{0.0,0.0,0.0,0.18}% dark black
+  \definecolor{starter@userinputcolor}{cmyk}{0.0,0.0,0.0,0.35}% dark gray
+\fi

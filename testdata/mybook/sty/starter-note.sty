@@ -1,0 +1,127 @@
+%%% -*- coding: utf-8 -*-
+
+%%%
+%%% ノート（//note）のブロックコマンド
+%%%
+
+
+%%% ノート
+\newenvironment{starternote}[2][]{%
+  \addvspace{\bigskipamount}%           % \bigskipと違い、直前の余白の高さも考慮してくれる
+  \@starter@notetrue%
+  \begin{starter@note}[#1]{#2}%
+}{%
+  \end{starter@note}%
+  \@starter@notefalse%
+  \medskip%
+  \addvspace{\bigskipamount}%
+}
+%%% ノート内かどうか？
+\newif\if@starter@note
+\@starter@notefalse
+%%% itemize環境やenumerate環境で使われる\listコマンドを保存
+\let\original@list=\list
+%%% ノートブロック
+\newenvironment{starter@note}[2][]{%
+  %% ノートの左右に余白を空ける
+  \advance\rightskip\starter@note@sidemargin%
+  \advance\leftskip\starter@note@sidemargin%
+  %% プログラムやターミナルや引用の左右に余白を空ける
+  \setlength{\starter@codeblock@sidemargin}{\starter@note@sidemargin}%
+  \setlength{\starter@quote@sidemargin}{\starter@note@sidemargin}%
+  %% プログラムやターミナルの前後の余白を少し小さくする
+  \renewcommand{\starter@codeblock@vspace}{\addvspace{\smallskipamount}}%
+  %% 箇条書きの左右のスペースを調整
+  \def\list##1##2{%
+    \ifnum\@listdepth=0%
+      \advance\linewidth-\starter@note@sidemargin%  % 右側の余白分だけ行を短く
+      \advance\linewidth-2zw%                       % インデント分だけ行を短く
+      \advance\@totalleftmargin 2zw%                % 左側のインデント
+    \fi%
+    \original@list{##1}{##2}%
+  }%
+  %
+  \needvspace{2.5\Cvs}%           % 2.5行分のスペースがなければ改行
+  \starter@note@font%             % 文字を小さく、フォントをゴシック体に
+  %
+  \noindent\starter@note@line%    % 点線
+  \smallskip%
+  \ifempty{#1}\else%              % ノートに参照用ラベルがあれば
+    \phantomsection%              % hyperref用
+    \hypertarget{#1}{}%           % hyperref用
+    \label{#1}%
+  \fi%
+  \ifempty{#2}\else%              % ノートにタイトルがあれば
+    \par\noindent%
+    \starter@note@title{#2}%      % ノートのタイトルを表示
+    \smallskip%
+  \fi%
+  \par%
+  %
+}{%
+  \vspace{-\lastskip}%            % ノートの最後がプログラムやターミナルのときの空きを削除
+  \vspace{-0.2\baselineskip}%     % 空きを少し減らす
+  \noindent\starter@note@line%    % 点線
+  \par%
+}
+%%% ノートの左右のマージン幅
+\newlength{\starter@note@sidemargin}
+\setlength{\starter@note@sidemargin}{3\Cwd}  % 左右に全角3文字分ずつ
+%%% ノートの上下に入る点線
+\newcommand{\starter@note@line}[1][-0.3zw]{{%
+  \rmfamily%                      % 点線の点を丸くする（ゴシック体だと四角になる）
+  \bfseries\large                 % 点線の点を少し太くする
+  %% 横幅いっぱいの点線を \dotfill で引く
+  %% （\dotfill だけだと左右に少しすき間ができてしまうので、
+  %%   それを埋めるために左右を少し伸ばしている）
+  \textcolor{starter@notecolor}{%
+    \hspace{#1}\dotfill\hspace{#1}\mbox{}%
+  }%
+}}
+%%% ノートのフォント
+\newcommand{\starter@note@font}{%
+  \gtfamily\sffamily              % ゴシック体
+  \small                          % フォントを小さめに
+}
+%%% ノートのタイトル
+\newcommand{\starter@note@title}[1]{{%
+  \gtfamily\sffamily\bfseries     % 太字のゴシック体
+  \normalsize                     % 文字を通常の大きさにする（\smallにしない）
+  #1                              % タイトルを表示
+}}
+%%% ノートタイトルの接頭辞をカスタマイズする
+%\renewcommand{\starter@note@title}[1]{{%
+%  \gtfamily\sffamily\bfseries\normalsize ■ノート：#1
+%}}
+
+
+%%% @<noteref>{lable} でノートを参照する
+\newcommand{\starternoteref}[2]{%
+  ノート「\hyperlink{#1}{#2}」(p.\pageref{#1})%
+}
+
+
+
+%%%
+%%% ノート以外のブロック
+%%%
+\newenvironment{starter@miniblock}[1]{%
+  \addvspace{1.0\baselineskip}% 1行分空ける
+  \begin{oframed}%            % 枠線で囲む
+    \ifempty{#1}\else%        % 引数があれば
+      \noindent%              % 字下げせずに
+      {\headfont #1}%         % 太字のゴシック体で表示
+      \par\smallskip%         % 縦方向に少しスペースを空ける
+    \fi%
+}{%
+  \end{oframed}%              % 枠線による囲みの終わり
+  \addvspace{1.0\baselineskip}% 1行分空ける
+}
+
+\newenvironment{startermemo}[1]{\begin{starter@miniblock}{#1}}{\end{starter@miniblock}}
+\newenvironment{startertip}[1]{\begin{starter@miniblock}{#1}}{\end{starter@miniblock}}
+\newenvironment{starterinfo}[1]{\begin{starter@miniblock}{#1}}{\end{starter@miniblock}}
+\newenvironment{starterwarning}[1]{\begin{starter@miniblock}{#1}}{\end{starter@miniblock}}
+\newenvironment{starterimportant}[1]{\begin{starter@miniblock}{#1}}{\end{starter@miniblock}}
+\newenvironment{startercaution}[1]{\begin{starter@miniblock}{#1}}{\end{starter@miniblock}}
+\newenvironment{starternotice}[1]{\begin{starter@miniblock}{#1}}{\end{starter@miniblock}}
