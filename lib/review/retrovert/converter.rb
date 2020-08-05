@@ -69,6 +69,10 @@ module ReVIEW
         @configs.rewrite_yml('texstyle', '["reviewmacro"]')
       end
 
+      def replace_compatible_block_command_outline(content, command, new_command, option_count)
+        content.gsub!(/^\/\/#{command}(?<option>(\[[^\r\n]*?\]){0,#{option_count}})(\[[^\r\n]*\])*{(?<inner>.*?)\/\/}/m, "//#{new_command}\\k<option>{\\k<inner>//}")
+      end
+
       def replace_block_command_outline(content, command, new_command, use_option)
         if use_option
           content.gsub!(/^\/\/#{command}(?<option>\[[^\r\n]*\])*{(?<inner>.*?)\/\/}/m, "//#{new_command}\\k<option>{\\k<inner>//}")
@@ -119,7 +123,7 @@ module ReVIEW
         while !content.gsub!(/(\/\/table.*\s)\.(\s.*?\/\/})/m, "\\1#{@table_empty_replace}\\2").nil? do
         end
         # Re:VIEW Starter commands
-        replace_block_command_outline(content, 'terminal', 'cmd', true)
+        replace_compatible_block_command_outline(content, 'terminal', 'cmd', 1)
         replace_block_command_outline(content, 'abstract', 'lead', true)
         replace_block_command_outline(content, 'sideimage', 'image', false)
         delete_block_command(content, 'needvspace')

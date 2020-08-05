@@ -14,11 +14,13 @@ RSpec.describe 'convert', type: :aruba do
   context 'convert mybook' do
     let(:config_yaml) { File.join(File.dirname(__FILE__), '../../testdata/mybook/config.yml') }
     before(:each) { run_command("review-retrovert convert #{config_yaml} tmp") }
+
     it 'command result' do
       expect(last_command_started).to be_successfully_executed
       expect(last_command_started).to have_output(/.*replace starter inline command.*/)
       expect(last_command_started).to have_output(/.*replace starter block command.*/)
     end
+
     it 'inline command delete' do
       expect('tmp/03-syntax.re').to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, 'tmp/03-syntax.re')).read()
@@ -27,6 +29,7 @@ RSpec.describe 'convert', type: :aruba do
       expect(text).not_to include('@<weak>{')
       expect(text).not_to include('@<nop>{')
     end
+
     it 'inline command replace' do
       expect('tmp/03-syntax.re').to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, 'tmp/03-syntax.re')).read()
@@ -37,18 +40,27 @@ RSpec.describe 'convert', type: :aruba do
       expect(text).not_to include('@<hlink>{')
       expect(text).to include('@<href>{')
     end
+
+    it 'inline comaptible command replace with options' do
+      expect('tmp/02-tutorial.re').to be_an_existing_file
+      text = File.open(File.join(aruba.current_directory, 'tmp/02-tutorial.re')).read()
+      expect(text).not_to match(/^\/\/cmd\[.*?\]\[.*?\]/)
+    end
+
     it 'LaTex inline command replace' do
       expect('tmp/05-faq.re').to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, 'tmp/05-faq.re')).read()
       expect(text).not_to include('@<LaTeX>{}')
       expect(text).to include('LaTeX')
     end
+
     it 'block command replace exclude options' do
       expect('tmp/99-postface.re').to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, 'tmp/99-postface.re')).read()
       expect(text).not_to match(/^\/\/sideimage/)
       expect(text).to match(/^\/\/image/)
     end
+
     it 'block command replace with options' do
       expect('tmp/02-tutorial.re').to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, 'tmp/02-tutorial.re')).read()
