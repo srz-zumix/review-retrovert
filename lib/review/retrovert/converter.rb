@@ -154,7 +154,7 @@ module ReVIEW
         delete_inline_command(content, 'xxlarge')
 
         # special command
-        content.gsub!(/^\/\/sampleoutputbegin(?<option>\[.*?\])*/, '//emlist\k<option>{')
+        content.gsub!(/^\/\/sampleoutputbegin(?<option>\[.*?\])*/, "\\k<option>\n//embed{")
         content.gsub!(/^\/\/sampleoutputend/, '//}')
 
         # special charactor

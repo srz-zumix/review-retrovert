@@ -113,6 +113,7 @@ RSpec.describe 'convert', type: :aruba do
       text = File.open(File.join(aruba.current_directory, file06)).read()
       expect(text).not_to match(/^\/\/sampleoutputbegin\[.*?\]/)
       expect(text).not_to include('sampleoutputend')
+      expect(text).to match(/^\/\/embed{$/)
     end
 
   end
