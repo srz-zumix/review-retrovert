@@ -119,6 +119,7 @@ module ReVIEW
         replace_block_command_outline(content, 'abstract', 'lead', true)
         replace_block_command_outline(content, 'sideimage', 'image', false)
         delete_block_command(content, 'needvspace')
+        delete_inline_command(content, 'userinput')
         delete_inline_command(content, 'xsmall')
         delete_inline_command(content, 'weak')
         File.write(contentfile, content)
