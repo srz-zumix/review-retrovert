@@ -19,6 +19,11 @@ RSpec.describe 'convert', type: :aruba do
       expect(last_command_started).to have_output(/.*replace starter inline command.*/)
       expect(last_command_started).to have_output(/.*replace starter block command.*/)
     end
+    it 'inline command delete' do
+      expect('tmp/00-preface.re').to be_an_existing_file
+      text = File.open(File.join(aruba.current_directory, 'tmp/00-preface.re')).read()
+      expect(text).not_to include('@<userinput>{')
+    end
     it 'block command replace exclude options' do
       expect('tmp/99-postface.re').to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, 'tmp/99-postface.re')).read()
