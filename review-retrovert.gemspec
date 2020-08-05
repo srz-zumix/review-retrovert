@@ -28,6 +28,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency "thor"
+  spec.add_development_dependency "aruba"
   spec.add_runtime_dependency "review", ['>= 3.2.0', '< 4.0']
-
 end

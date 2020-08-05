@@ -11,9 +11,11 @@ jobs:
           ruby-version: 2.6
       - run: bundle install
       # convert
-      - run: bundle exec review-retrovert convert testdata/mybook/config.yml tmp
+      - name: convert
+        run: bundle exec review-retrovert convert testdata/mybook/config.yml tmp
       # build
-      - uses: docker://srzzumix/review-retrovert
+      - name: review build
+        uses: docker://srzzumix/review-retrovert
         with:
           entrypoint: bash
           args: -c "cd tmp; rake preproc all"
