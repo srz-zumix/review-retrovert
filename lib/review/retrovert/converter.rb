@@ -140,9 +140,14 @@ module ReVIEW
         delete_inline_command(content, 'cursor')
         # delete_inline_command(content, 'nop')
 
+        # special command
+        content.gsub!(/^\/\/sampleoutputbegin(?<option>\[.*?\])*/, '//emlist\k<option>{')
+        content.gsub!(/^\/\/sampleoutputend/, '//}')
+
+        # special charactor
         content.gsub!('@<LaTeX>{}', 'LaTeX')
         content.gsub!('@<TeX>{}', 'TeX')
-        content.gsub!('@<hearts>{}', 'ハート')
+        content.gsub!('@<hearts>{}', '!HEART!')
 
         # nop replace must be last step
         content.gsub!('@<nop>$$', '@<b>$$')

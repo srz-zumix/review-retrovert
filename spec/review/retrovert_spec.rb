@@ -41,17 +41,17 @@ RSpec.describe 'convert', type: :aruba do
       expect(text).to include('@<href>{')
     end
 
-    it 'inline comaptible command replace with options' do
-      expect('tmp/02-tutorial.re').to be_an_existing_file
-      text = File.open(File.join(aruba.current_directory, 'tmp/02-tutorial.re')).read()
-      expect(text).not_to match(/^\/\/cmd\[.*?\]\[.*?\]/)
-    end
-
     it 'LaTex inline command replace' do
       expect('tmp/05-faq.re').to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, 'tmp/05-faq.re')).read()
       expect(text).not_to include('@<LaTeX>{}')
       expect(text).to include('LaTeX')
+    end
+
+    it 'block comaptible command replace with options' do
+      expect('tmp/02-tutorial.re').to be_an_existing_file
+      text = File.open(File.join(aruba.current_directory, 'tmp/02-tutorial.re')).read()
+      expect(text).not_to match(/^\/\/cmd\[.*?\]\[.*?\]/)
     end
 
     it 'block command replace exclude options' do
@@ -69,5 +69,13 @@ RSpec.describe 'convert', type: :aruba do
       expect(text).not_to match(/^\/\/terminal/)
       expect(text).to match(/^\/\/cmd/)
     end
+
+    it 'sampleoutputbegin' do
+      expect('tmp/06-bestpractice.re').to be_an_existing_file
+      text = File.open(File.join(aruba.current_directory, 'tmp/06-bestpractice.re')).read()
+      expect(text).not_to match(/^\/\/sampleoutputbegin\[.*?\]/)
+      expect(text).not_to include('sampleoutputend')
+    end
+
   end
 end
