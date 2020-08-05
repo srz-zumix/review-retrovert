@@ -39,6 +39,8 @@ RSpec.describe 'convert', type: :aruba do
       expect(text).to include('@<kw>{')
       expect(text).not_to include('@<hlink>{')
       expect(text).to include('@<href>{')
+      expect(text).not_to include('@<B>{')
+      expect(text).to include('@<strong>{')
     end
 
     it 'LaTex inline command replace' do
