@@ -10,6 +10,7 @@ RSpec.configure do |config|
 
   config.expect_with :rspec do |c|
     c.syntax = :expect
+    c.max_formatted_output_length = 40
   end
 end
 $LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)

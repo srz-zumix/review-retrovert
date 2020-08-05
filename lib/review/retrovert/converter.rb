@@ -123,6 +123,9 @@ module ReVIEW
         replace_block_command_outline(content, 'abstract', 'lead', true)
         replace_block_command_outline(content, 'sideimage', 'image', false)
         delete_block_command(content, 'needvspace')
+        delete_block_command(content, 'clearpage')
+        delete_block_command(content, 'flushright')
+        delete_block_command(content, 'centering')
 
         replace_inline_command(content, 'secref', 'hd')
         replace_inline_command(content, 'file', 'kw')
@@ -130,8 +133,17 @@ module ReVIEW
         delete_inline_command(content, 'userinput')
         delete_inline_command(content, 'xsmall')
         delete_inline_command(content, 'weak')
+        delete_inline_command(content, 'cursor')
+        # delete_inline_command(content, 'nop')
 
-        content.gsub!(/@<LaTeX>{}/, 'LaTeX')
+        content.gsub!('@<LaTeX>{}', 'LaTeX')
+        content.gsub!('@<TeX>{}', 'TeX')
+        content.gsub!('@<hearts>{}', 'ハート')
+
+        # nop replace must be last step
+        content.gsub!('@<nop>$$', '@<b>$$')
+        content.gsub!('@<nop>||', '@<b>||')
+        content.gsub!('@<nop>{}', '@<b>{}')
 
         File.write(contentfile, content)
         copy_embedded_contents(outdir, content)
