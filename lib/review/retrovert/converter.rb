@@ -136,10 +136,15 @@ module ReVIEW
         replace_inline_command(content, 'hlink', 'href')
         replace_inline_command(content, 'B', 'strong')
         delete_inline_command(content, 'userinput')
-        delete_inline_command(content, 'xsmall')
         delete_inline_command(content, 'weak')
         delete_inline_command(content, 'cursor')
-        # delete_inline_command(content, 'nop')
+        # font size
+        delete_inline_command(content, 'small')
+        delete_inline_command(content, 'xsmall')
+        delete_inline_command(content, 'xxsmall')
+        delete_inline_command(content, 'large')
+        delete_inline_command(content, 'xlarge')
+        delete_inline_command(content, 'xxlarge')
 
         # special command
         content.gsub!(/^\/\/sampleoutputbegin(?<option>\[.*?\])*/, '//emlist\k<option>{')
