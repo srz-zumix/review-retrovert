@@ -69,6 +69,18 @@ module ReVIEW
         @configs.rewrite_yml('texstyle', '["reviewmacro"]')
       end
 
+      def replace_block_command_outline(content, command, new_command, use_option)
+        if use_option
+          content.gsub!(/^\/\/#{command}(?<option>\[[^\r\n]*\])*{(?<inner>.*?)\/\/}/m,"//#{new_command}\\k<option>{\\k<inner>//}")
+        else
+          content.gsub!(/^\/\/#{command}(?<option>\[[^\r\n]*?\])*{(?<inner>.*?)\/\/}/m,"//#{new_command}{\\k<inner>//}")
+        end
+      end
+
+      def delete_block_command_outer(content, command)
+        content.gsub!(/^\/\/#{command}(\[[^\r\n]*?\])*{(?<inner>.*?)\/\/}\R/m,'\k<inner>')
+      end
+
       def delete_block_command(content, command)
         content.gsub!(/^\/\/#{command}(\[[^\r\n]*?\])*{.*?\/\/}\R/m,'')
         content.gsub!(/^\/\/#{command}(\[.*?\])*\s*\R/,'')
@@ -94,8 +106,6 @@ module ReVIEW
       def update_content(outdir, contentfile)
         info contentfile
         content = File.read(contentfile)
-        content.gsub!(/(\/\/sideimage\[.*?\]\[.*?\])\[.*?\]/, '\1')
-        content.gsub!(/\/\/sideimage/, '//image')
         content.gsub!(/@<href>{(.*?)#.*?,(.*?)}/, '@<href>{\1,\2}')
         content.gsub!(/@<href>{(.*?)#.*?}/, '@<href>{\1}')
         # table 内の @ コマンドは不安定らしい
@@ -106,6 +116,8 @@ module ReVIEW
         end
         # Re:VIEW Starter commands
         # //needvspace
+        replace_block_command_outline(content, 'abstract', 'lead', true)
+        replace_block_command_outline(content, 'sideimage', 'image', false)
         delete_block_command(content, 'needvspace')
         delete_inline_command(content, 'xsmall')
         delete_inline_command(content, 'weak')
@@ -132,7 +144,7 @@ module ReVIEW
         yamlfile = @config['catalogfile']
         abspath = File.absolute_path(outdir)
         contentdir = abspath
-        info 'replace //sideimage to //image'
+        info 'replace starter block command'
         info 'replace starter inline command'
         if options['strict']
           catalog = ReVIEW::Catalog.new(File.open(File.join(abspath, yamlfile)))
