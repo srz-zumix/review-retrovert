@@ -153,6 +153,9 @@ module ReVIEW
         delete_inline_command(content, 'xlarge')
         delete_inline_command(content, 'xxlarge')
 
+        # fixed lack of options
+        content.gsub!(/^\/\/list{/, '//list[][]{')
+
         # special command
         content.gsub!(/^\/\/sampleoutputbegin(?<option>\[.*?\])*/, "\\k<option>\n//embed{")
         content.gsub!(/^\/\/sampleoutputend/, '//}')

@@ -108,6 +108,13 @@ RSpec.describe 'convert', type: :aruba do
       expect(text).to match(/^\/\/lead/)
     end
 
+    it 'fix lack options' do
+      expect(file04).to be_an_existing_file
+      text = File.open(File.join(aruba.current_directory, file04)).read()
+      expect(text).not_to match(/^\/\/list{$/)
+      expect(text).to match(/^\/\/list\[\]\[\]{/)
+    end
+
     it 'sampleoutputbegin' do
       expect(file06).to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, file06)).read()
