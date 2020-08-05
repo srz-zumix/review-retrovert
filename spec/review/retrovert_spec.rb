@@ -91,7 +91,7 @@ RSpec.describe 'convert', type: :aruba do
       expect(file99).to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, file99)).read()
       expect(text).not_to match(/^\/\/sideimage/)
-      expect(text).to match(/^\/\/image\[tw-icon\]{\R\/\/}/)
+      expect(text).to match(/^\/\/image\[tw-icon\]\[\]{\R\/\/}/)
     end
 
     # it 'block command replace exclude options' do
