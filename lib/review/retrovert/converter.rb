@@ -117,6 +117,19 @@ module ReVIEW
         end
       end
 
+      def replace_sampleoutput(content)
+        m = content.match(/^\/\/sampleoutputbegin(.*?)^\/\/sampleoutputend/m)
+        unless m.nil?
+          sample = m[1]
+          sample.gsub!(/^\/\//, '//@<nop>{}')
+          content.gsub!(/(^\/\/sampleoutputbegin)(.*?)(^\/\/sampleoutputend)/m, "\\1#{sample}\\3")
+        end
+        # while content.gsub!(/(^\/\/sampleoutputbegin.*?)(^\/\/.*?^\/\/sampleoutputend)/m, '\1@<nop>{}\2').nil? do
+        # end
+        content.gsub!(/^\/\/sampleoutputbegin(?<option>\[.*?\])*/, "\\k<option>\n//embed{")
+        content.gsub!(/^\/\/sampleoutputend/, '//}')
+      end
+
       def update_content(outdir, contentfile)
         info contentfile
         content = File.read(contentfile)
@@ -157,8 +170,7 @@ module ReVIEW
         content.gsub!(/^\/\/list{/, '//list[][]{')
 
         # special command
-        content.gsub!(/^\/\/sampleoutputbegin(?<option>\[.*?\])*/, "\\k<option>\n//embed{")
-        content.gsub!(/^\/\/sampleoutputend/, '//}')
+        replace_sampleoutput(content)
 
         # special charactor
         content.gsub!('@<LaTeX>{}', 'LaTeX')
