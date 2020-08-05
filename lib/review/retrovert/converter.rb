@@ -109,9 +109,9 @@ module ReVIEW
         m = content.match(/^\/\/#{box}(.*?)^\/\/}/m)
         unless m.nil?
           inner = m[1]
-          n = inner.match(/^\/\/[^}]/)
+          n = inner.match(/^\/\/(\w+\[.*?\])*{/)
           unless n.nil?
-            inner.gsub!(/(^\/\/[^}])/, '#@#\1')
+            inner.gsub!(/(^\/\/(\w+\[.*?\])*{)/, '#@#\1')
             content.gsub!(/^\/\/#{box}(.*?)^\/\/}/m, "//#{box}#{inner}#@#//}")
             replace_block_command_nested_boxed_article(content, box)
           end
