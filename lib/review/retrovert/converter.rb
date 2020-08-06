@@ -107,13 +107,15 @@ module ReVIEW
 
       def replace_block_command_nested_boxed_article(content, box)
         found = false
-        content.dup().scan(/(^\/\/#{box})(.*?)(^\/\/})/m) { |m|
+        content.dup().scan(/(^\/\/#{box}[^\r\n]*)(?:(\$)|(?:({)|(\|)))(.*?)(^\/\/)(?(2)(\$)|(?(3)(})|(\|)))/m) { |m|
           matched = m[0..-1].join()
-          inner = m[1]
+          inner = m[4]
           n = inner.match(/^\/\/(\w+\[.*?\])*{/)
           unless n.nil?
+            cmd_begin = m[0..3].join()
+            cmd_end = m[5..-1].join()
             inner.gsub!(/(^\/\/(\w+\[.*?\])*{)/, '#@#\1')
-            content.gsub!(/#{Regexp.escape(matched)}/m, "//#{box}#{inner}#@#//}")
+            content.gsub!(/#{Regexp.escape(matched)}/m, "#{cmd_begin}#{inner}#@##{cmd_end}")
             found = true
           end
         }
