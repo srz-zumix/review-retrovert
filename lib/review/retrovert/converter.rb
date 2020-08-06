@@ -142,6 +142,11 @@ module ReVIEW
         end
       end
 
+      def replace_empty_ids(content, command)
+        index = -1
+        content.gsub!(/^\/\/#{command}\[\]/) { |s| index += 1; "//#{command}[starter_auto_id_#{command}_#{index}]" }
+      end
+
       def copy_embedded_contents(outdir, content)
         content.scan(/\#@mapfile\((.*?)\)/).each do |filepath|
           srcpath = File.join(@basedir, filepath)
@@ -198,6 +203,10 @@ module ReVIEW
 
         # nested command
         replace_block_command_nested_boxed_articles(content)
+
+        # empty ids
+        replace_empty_ids(content, 'list')
+        replace_empty_ids(content, 'listnum')
 
         # special charactor
         content.gsub!('@<LaTeX>{}', 'LaTeX')

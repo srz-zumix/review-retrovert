@@ -120,11 +120,18 @@ RSpec.describe 'convert', type: :aruba do
       expect(text).not_to match(/^#@#\/\/footnote/)
     end
 
+    it 'empty id set to' do
+      expect(file05).to be_an_existing_file
+      text = File.open(File.join(aruba.current_directory, file05)).read()
+      expect(text).not_to match(/^\/\/list\[\]{/)
+      expect(text).to match(/^\/\/list\[starter_auto_id_list_0\]\[.*?\]{/)
+    end
+
     it 'fix lack options' do
       expect(file04).to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, file04)).read()
       expect(text).not_to match(/^\/\/list{$/)
-      expect(text).to match(/^\/\/list\[\]\[\]{/)
+      expect(text).to match(/^\/\/list\[starter_auto_id_list_[0-9]+\]\[\]{/)
     end
 
     it 'sampleoutputbegin' do
