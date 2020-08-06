@@ -153,7 +153,16 @@ module ReVIEW
           matched = m.join()
           body = m[4]
           im = body.match(/(.*)(@<.*?>)(?:(\$)|(?:({)|(\|)))(.*?)(?(3)(\$)|(?(4)(})|(\|)))(.*)/)
-          unless im.nil?
+          if im.nil?
+            im = body.match(/(.*)(@<.*?>)#{m[1..3].join()}/)
+            unless im.nil?
+              outcmd_begin = m[0] + "$|{".gsub(m[1..3].join(), '')
+              outcmd_end = "$|}".gsub(m[5..7].join(), '')
+              rep = "#{outcmd_begin}#{body}#{outcmd_end}"
+              content.gsub!(matched, rep)
+              found = true
+            end
+          else
             outcmd_begin = m[0..3].join()
             outcmd_end = m[5..7].join()
             rep = "#{outcmd_begin}#{im[1]}#{outcmd_end}#{im[2..9].join()}#{outcmd_begin}#{im[-1]}#{outcmd_end}"

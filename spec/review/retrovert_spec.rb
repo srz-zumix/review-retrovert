@@ -124,6 +124,8 @@ RSpec.describe 'convert', type: :aruba do
       expect(file01).to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, file01)).read()
       expect(text).not_to include('|@@<b>{}')
+      expect(text).not_to include('{@@<b>{}')
+      expect(text).not_to include('$@@<b>{}')
     end
 
     it 'empty id set to' do
