@@ -106,15 +106,18 @@ module ReVIEW
       end
 
       def replace_block_command_nested_boxed_article(content, box)
-        m = content.match(/^\/\/#{box}(.*?)^\/\/}/m)
-        unless m.nil?
-          inner = m[1]
+        found = false
+        content.dup().scan(/^\/\/#{box}(.*?)^\/\/}/m) { |m|
+          inner = m[0]
           n = inner.match(/^\/\/(\w+\[.*?\])*{/)
           unless n.nil?
             inner.gsub!(/(^\/\/(\w+\[.*?\])*{)/, '#@#\1')
             content.gsub!(/^\/\/#{box}(.*?)^\/\/}/m, "//#{box}#{inner}#@#//}")
-            replace_block_command_nested_boxed_article(content, box)
+            found = true
           end
+        }
+        if found
+          replace_block_command_nested_boxed_article(content, box)
         end
       end
 
