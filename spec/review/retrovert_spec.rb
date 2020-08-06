@@ -120,6 +120,12 @@ RSpec.describe 'convert', type: :aruba do
       expect(text).not_to match(/^#@#\/\/footnote/)
     end
 
+    it 'nested block command' do
+      expect(file01).to be_an_existing_file
+      text = File.open(File.join(aruba.current_directory, file01)).read()
+      expect(text).not_to include('|@@<b>{}')
+    end
+
     it 'empty id set to' do
       expect(file05).to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, file05)).read()

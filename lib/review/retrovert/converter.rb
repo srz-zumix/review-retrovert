@@ -147,6 +147,25 @@ module ReVIEW
         content.gsub!(/^\/\/#{command}\[\]/) { |s| index += 1; "//#{command}[starter_auto_id_#{command}_#{index}]" }
       end
 
+      def expand_nested_inline_command(content)
+        found = false
+        content.dup().scan(/(@<.*?>)(?:(\$)|(?:({)|(\|)))(.*?)(?(2)(\$)|(?(3)(})|(\|)))/) { |m|
+          matched = m.join()
+          body = m[4]
+          im = body.match(/(.*)(@<.*?>)(?:(\$)|(?:({)|(\|)))(.*?)(?(3)(\$)|(?(4)(})|(\|)))(.*)/)
+          unless im.nil?
+            outcmd_begin = m[0..3].join()
+            outcmd_end = m[5..7].join()
+            rep = "#{outcmd_begin}#{im[1]}#{outcmd_end}#{im[2..9].join()}#{outcmd_begin}#{im[-1]}#{outcmd_end}"
+            content.gsub!(matched, rep)
+            found = true
+          end
+        }
+        if found
+          expand_nested_inline_command(content)
+        end
+      end
+
       def copy_embedded_contents(outdir, content)
         content.scan(/\#@mapfile\((.*?)\)/).each do |filepath|
           srcpath = File.join(@basedir, filepath)
@@ -217,6 +236,9 @@ module ReVIEW
         content.gsub!('@<nop>$$', '@<b>$$')
         content.gsub!('@<nop>||', '@<b>||')
         content.gsub!('@<nop>{}', '@<b>{}')
+
+        # expand nested inline command
+        expand_nested_inline_command(content)
 
         File.write(contentfile, content)
         copy_embedded_contents(outdir, content)
