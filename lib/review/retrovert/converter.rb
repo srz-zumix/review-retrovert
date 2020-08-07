@@ -107,15 +107,49 @@ module ReVIEW
 
       def replace_block_command_nested_boxed_article(content, box)
         found = false
-        content.dup().scan(/(^\/\/#{box}[^\r\n]*)(?:(\$)|(?:({)|(\|)))(.*?)(^\/\/)(?(2)(\$)|(?(3)(})|(\|)))/m) { |m|
+        content.dup().scan(/(^\/\/#{box})(\[[^\r\n]*?\])*(?:(\$)|(?:({)|(\|)))(.*?)(^\/\/)(?(3)(\$)|(?(4)(})|(\|)).*?[\r\n]+)/m) { |m|
           matched = m[0..-1].join()
-          inner = m[4]
-          n = inner.match(/^\/\/(\w+\[.*?\])*{/)
-          unless n.nil?
-            cmd_begin = m[0..3].join()
-            cmd_end = m[5..-1].join()
-            inner.gsub!(/(^\/\/(\w+\[.*?\])*{)/, '#@#\1')
-            content.gsub!(/#{Regexp.escape(matched)}/m, "#{cmd_begin}#{inner}#@##{cmd_end}")
+          inner = m[5]
+          im = inner.match(/^\/\/(\w+)((\[.*?\])*)([$|{])/)
+          unless im.nil?
+            inner_cmd = im[1]
+            inner_open = im[4]
+            inner_opts = im[2]
+            first_opt = inner_opts.match(/^\[(.*?)\]/)[1]
+
+            is_commentout = true
+            unless first_opt.empty?
+              if inner.match(/@<.*?>[$|{]#{first_opt}/)
+                is_commentout = false
+              end
+            end
+            cmd_begin = m[0..4].join()
+            cmd_end = m[6..-1].join()
+            # check other fence inner block (block command has fence??)
+            if inner_open == m[2..4].join()
+              # if same fence then cmd_end == inner_end
+              if is_commentout
+                inner.gsub!(/(^\/\/(\w+\[.*?\])*#{inner_open})/, '#@#\1')
+                content.gsub!(/#{Regexp.escape(matched)}/m, "#{cmd_begin}#{inner}#@##{cmd_end}")
+              else
+                imb = inner.match(/(\R((^\/\/\w+(\[.*?\])*)\s*)*^\/\/\w+\[#{first_opt}\](\[.*?\])*#{inner_open}.*)\R/m)
+                to_out_block = imb[1]
+                puts to_out_block
+                inner.gsub!(/#{Regexp.escape(to_out_block)}/m, '')
+                content.gsub!(/#{Regexp.escape(matched)}/m, "#{cmd_begin}#{inner}#{cmd_end}#{to_out_block}")
+              end
+            else
+              close = inner_open == '{' ? '}' : inner_open
+              if is_commentout
+                inner.gsub!(/(^\/\/(\w+\[.*?\])*#{inner_open})(.*?)(^\/\/#{close})/m, '#@#\1\2#@#\3')
+                content.gsub!(/#{Regexp.escape(matched)}/m, "#{cmd_begin}#{inner}#{cmd_end}")
+              else
+                imb = inner.match(/\R((^\/\/\w+(\[.*?\])*)\s*)*^\/\/(\w+)\[#{first_opt}\](\[[^\r\n]*?\])*(?:(\$)|(?:({)|(\|)))(.*?)(^\/\/)(?(3)(\$)|(?(4)(})|(\|)))/m)
+                to_out_block = imb[0]
+                inner.gsub!(/#{Regexp.escape(to_out_block)}/m, '')
+                content.gsub!(/#{Regexp.escape(matched)}/m, "#{cmd_begin}#{inner}#{cmd_end}#{to_out_block}")
+              end
+            end
             found = true
           end
         }
