@@ -115,7 +115,7 @@ RSpec.describe 'convert', type: :aruba do
 
       expect(file03).to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, file03)).read()
-      expect(text).not_to match(/^\/\/}\R*^\/\/}/m)
+      # expect(text).not_to match(/^\/\/}\R*^\/\/}/m)
       expect(text).to match(/^\/\/table\[tbl-xthfx\]/)
     end
 
@@ -153,6 +153,21 @@ RSpec.describe 'convert', type: :aruba do
       expect(text).not_to match(/^\/\/sampleoutputbegin\[.*?\]/)
       expect(text).not_to include('sampleoutputend')
       expect(text).to match(/^\/\/embed{$/)
+    end
+
+    it 'block comment in sampleout' do
+      expect(file02).to be_an_existing_file
+      text = File.open(File.join(aruba.current_directory, file02)).read()
+      expect(text).to match(/^\/\/embed{.*?^#@\++.*^#@-+.*?^\/\/}/m)
+    end
+
+    it 'block comment' do
+      expect(file03).to be_an_existing_file
+      text = File.open(File.join(aruba.current_directory, file03)).read()
+      text.gsub!(/^\/\/embed{.*?^\/\/}/m, '')
+      expect(text).not_to match(/^#@\++/)
+      expect(text).not_to match(/^#@-+/)
+      expect(text).to match(/^#@#\++\R(^#@#.*)*^#@#-+/m)
     end
 
   end

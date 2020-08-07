@@ -134,7 +134,6 @@ module ReVIEW
               else
                 imb = inner.match(/(\R((^\/\/\w+(\[.*?\])*)\s*)*^\/\/\w+\[#{first_opt}\](\[.*?\])*#{inner_open}.*)\R/m)
                 to_out_block = imb[1]
-                puts to_out_block
                 inner.gsub!(/#{Regexp.escape(to_out_block)}/m, '')
                 content.gsub!(/#{Regexp.escape(matched)}/m, "#{cmd_begin}#{inner}#{cmd_end}#{to_out_block}")
               end
@@ -169,17 +168,26 @@ module ReVIEW
         replace_block_command_nested_boxed_article(content, 'notice')
       end
 
+      def replace_block_commentout(content)
+        d = content.dup()
+        d.gsub!(/(^\/\/sampleoutputbegin\[)(.*?)(\])(.*?)(^\/\/sampleoutputend)/m, '')
+        d.scan(/(^#@)(\++)(.*?)(^#@)(-+)/m) { |m|
+          matched = m[0..-1].join()
+          inner = m[2]
+          inner.gsub!(/(^.)/, '#@#\1')
+          content.gsub!(/#{Regexp.escape(matched)}/m, "#@##{m[1]}#{inner}#@##{m[4]}")
+        }
+      end
+
       def replace_sampleoutput(content)
-        m = content.match(/^\/\/sampleoutputbegin(.*?)^\/\/sampleoutputend/m)
-        unless m.nil?
-          sample = m[1]
-          sample.gsub!(/^\/\//, '//@<nop>{}')
-          content.gsub!(/(^\/\/sampleoutputbegin)(.*?)(^\/\/sampleoutputend)/m, "\\1#{sample}\\3")
-          # while content.gsub!(/(^\/\/sampleoutputbegin.*?)(^\/\/.*?^\/\/sampleoutputend)/m, '\1@<nop>{}\2').nil? do
-          # end
-          content.gsub!(/^\/\/sampleoutputbegin(?<option>\[.*?\])*/, "\\k<option>\n//embed{")
-          content.gsub!(/^\/\/sampleoutputend/, '//}')
-        end
+        replace_block_commentout(content)
+        content.dup().scan(/(^\/\/sampleoutputbegin\[)(.*?)(\])(.*?)(^\/\/sampleoutputend)/m) { |m|
+          matched = m[0..-1].join()
+          option = m[1]
+          inner = m[3]
+          # inner.gsub!(/^\/\//, '//@<nop>{}')
+          content.gsub!(/#{Regexp.escape(matched)}/m, "#{option}\n//embed{#{inner}//}")
+        }
       end
 
       def replace_empty_ids(content, command)
