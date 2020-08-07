@@ -181,12 +181,14 @@ module ReVIEW
 
       def replace_sampleoutput(content)
         replace_block_commentout(content)
-        content.dup().scan(/(^\/\/sampleoutputbegin\[)(.*?)(\])(.*?)(^\/\/sampleoutputend)/m) { |m|
+        content.dup().scan(/(^\/\/sampleoutputbegin\[)(.*?)(\].*?\R)(.*?)(^\/\/sampleoutputend)/m) { |m|
           matched = m[0..-1].join()
+          sampleoutputbegin = m[0..2].join()
+          sampleoutputend = m[4]
           option = m[1]
           inner = m[3]
           # inner.gsub!(/^\/\//, '//@<nop>{}')
-          content.gsub!(/#{Regexp.escape(matched)}/m, "#{option}\n//embed{#{inner}//}")
+          content.gsub!(/#{Regexp.escape(matched)}/m, "#{option}\n#@##{sampleoutputbegin}#{inner}#@##{sampleoutputend}")
         }
       end
 

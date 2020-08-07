@@ -151,20 +151,21 @@ RSpec.describe 'convert', type: :aruba do
       expect(file06).to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, file06)).read()
       expect(text).not_to match(/^\/\/sampleoutputbegin\[.*?\]/)
-      expect(text).not_to include('sampleoutputend')
-      expect(text).to match(/^\/\/embed{$/)
+      expect(text).not_to match(/^\/\/sampleoutputend/)
+      expect(text).to match(/^#@#\/\/sampleoutputbegin\[.*?\]/)
+      expect(text).to match(/^#@#\/\/sampleoutputend/)
     end
 
     it 'block comment in sampleout' do
       expect(file02).to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, file02)).read()
-      expect(text).to match(/^\/\/embed{.*?^#@\++.*^#@-+.*?^\/\/}/m)
+      expect(text).to match(/^#@#\/\/sampleoutputbegin.*?^#@\++.*^#@-+.*?^#@#\/\/sampleoutputend/m)
     end
 
     it 'block comment' do
       expect(file03).to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, file03)).read()
-      text.gsub!(/^\/\/embed{.*?^\/\/}/m, '')
+      text.gsub!(/^#@#\/\/sampleoutputbegin.*?^#@#\/\/sampleoutputend/m, '')
       expect(text).not_to match(/^#@\++/)
       expect(text).not_to match(/^#@-+/)
       expect(text).to match(/^#@#\++\R(^#@#.*)*^#@#-+/m)
