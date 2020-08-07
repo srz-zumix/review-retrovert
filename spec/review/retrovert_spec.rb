@@ -80,6 +80,17 @@ RSpec.describe 'convert', type: :aruba do
       expect(text).to include('LaTeX')
     end
 
+    it 'block command delete' do
+      expect(file03).to be_an_existing_file
+      text = File.open(File.join(aruba.current_directory, file03)).read()
+      expect(text).not_to match('^\/\/needvspace')
+      expect(text).not_to match('^\/\/clearpage')
+      expect(text).not_to match('^\/\/flushright')
+      expect(text).not_to match('^\/\/centering')
+      expect(text).not_to match('^\/\/noindent')
+      expect(text).not_to match('^\/\/paragraphend')
+    end
+
     it 'block comaptible command replace with options' do
       expect(file02).to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, file02)).read()

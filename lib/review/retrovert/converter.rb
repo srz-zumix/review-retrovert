@@ -257,6 +257,7 @@ module ReVIEW
         delete_block_command(content, 'flushright')
         delete_block_command(content, 'centering')
         delete_block_command(content, 'noindent')
+        delete_block_command(content, 'paragraphend')
 
         replace_inline_command(content, 'secref', 'hd')
         replace_inline_command(content, 'file', 'kw')
