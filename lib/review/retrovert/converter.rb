@@ -218,7 +218,9 @@ module ReVIEW
 
       def remove_starter_options(content)
         # image border
-        content.gsub!(/^(\/\/image\[.*?\]\[.*?\]\[.*?)((,|)border=[^,\]]*?)\]/, '\1]')
+        content.gsub!(/(^\/\/image\[.*?\]\[.*?\]\[.*?)((,|)border=[^,\]]*?)(.*?\])/, '\1\2')
+        # list lineno
+        content.gsub!(/(^\/\/list\[.*?\]\[.*?\]\[.*?)((,|)lineno=[^,\]]*?)(.*?\])/, '\1\2')
       end
 
       def expand_nested_inline_command(content)
