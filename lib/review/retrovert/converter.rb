@@ -192,9 +192,13 @@ module ReVIEW
         }
       end
 
-      def replace_empty_ids(content, command)
+      def replace_auto_ids(content, command, require_option_count)
         index = -1
-        content.gsub!(/^\/\/#{command}\[\]/) { |s| index += 1; "//#{command}[starter_auto_id_#{command}_#{index}]" }
+        content.gsub!(/^\/\/#{command}\[(|\?)\]/) { |s| index += 1; "//#{command}[starter_auto_id_#{command}_#{index}]" }
+        if require_option_count > 0
+          while !content.gsub!(/^(\/\/#{command}(\[.*?\]){0,#{require_option_count-1}})($|{})/, '\1[]\2').nil?
+          end
+        end
       end
 
       def expand_nested_inline_command(content)
@@ -284,8 +288,8 @@ module ReVIEW
         replace_block_command_nested_boxed_articles(content)
 
         # empty ids
-        replace_empty_ids(content, 'list')
-        replace_empty_ids(content, 'listnum')
+        replace_auto_ids(content, 'list', 2)
+        replace_auto_ids(content, 'listnum', 2)
 
         # special charactor
         content.gsub!('@<LaTeX>{}', 'LaTeX')

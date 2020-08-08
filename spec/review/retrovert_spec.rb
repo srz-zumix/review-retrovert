@@ -147,7 +147,7 @@ RSpec.describe 'convert', type: :aruba do
     it 'empty id set to' do
       expect(file05).to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, file05)).read()
-      expect(text).not_to match(/^\/\/list\[\]{/)
+      expect(text).not_to match(/^\/\/list\[[^\[\]]*?\]{/)
       expect(text).to match(/^\/\/list\[starter_auto_id_list_0\]\[.*?\]{/)
     end
 
