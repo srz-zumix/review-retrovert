@@ -202,7 +202,18 @@ module ReVIEW
       end
 
       def remove_starter_refid(content)
-        content.gsub!(/^\/\/note\[.*?\](\[.*?\])/, '//note\1')
+        # note - noteref
+        content.dup().scan(/(@<noteref>)(?:(\$)|(?:({)|(\|)))(.*?)(?(2)(\$)|(?(3)(})|(\|)))/) { |m|
+          matched = m[0..-1].join()
+          ref = m[4]
+          n = content.match(/^\/\/note\[#{ref}\](\[.*?\])/)
+          unless n.nil?
+            content.gsub!(/#{Regexp.escape(matched)}/, n[1])
+            content.gsub!(/^\/\/note\[#{ref}\](\[.*?\])/, '//note\1')
+          else
+            # content.gsub!(/#{Regexp.escape(matched)}/, "noteref<#{ref}>")
+          end
+        }
       end
 
       def expand_nested_inline_command(content)
