@@ -201,6 +201,10 @@ module ReVIEW
         end
       end
 
+      def remove_starter_refid(content)
+        content.gsub!(/^\/\/note\[.*?\](\[.*?\])/, '//note\1')
+      end
+
       def expand_nested_inline_command(content)
         found = false
         content.dup().scan(/(@<.*?>)(?:(\$)|(?:({)|(\|)))(.*?)(?(2)(\$)|(?(3)(})|(\|)))/) { |m|
@@ -290,6 +294,9 @@ module ReVIEW
         # empty ids
         replace_auto_ids(content, 'list', 2)
         replace_auto_ids(content, 'listnum', 2)
+
+        # remove starter refid
+        remove_starter_refid(content)
 
         # special charactor
         content.gsub!('@<LaTeX>{}', 'LaTeX')

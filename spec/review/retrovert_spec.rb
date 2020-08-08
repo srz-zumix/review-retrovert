@@ -158,6 +158,12 @@ RSpec.describe 'convert', type: :aruba do
       expect(text).to match(/^\/\/list\[starter_auto_id_list_0\]\[.*?\]{/)
     end
 
+    it 'starter refid remove' do
+      expect(file03).to be_an_existing_file
+      text = File.open(File.join(aruba.current_directory, file03)).read()
+      expect(text).not_to match(/^\/\/note\[.*?\]\[.*?\]{/)
+    end
+
     it 'fix lack options' do
       expect(file04).to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, file04)).read()
