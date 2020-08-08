@@ -162,7 +162,13 @@ RSpec.describe 'convert', type: :aruba do
       expect(file03).to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, file03)).read()
       expect(text).not_to include('@<noteref>')
-        expect(text).not_to match(/^\/\/note\[.*?\]\[.*?\]{/)
+      expect(text).not_to match(/^\/\/note\[.*?\]\[.*?\]{/)
+    end
+
+    it 'image border' do
+      expect(file03).to be_an_existing_file
+      text = File.open(File.join(aruba.current_directory, file03)).read()
+      expect(text).not_to match(/^\/\/image\[.*?border.*?\]/)
     end
 
     it 'fix lack options' do

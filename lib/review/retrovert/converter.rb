@@ -216,6 +216,11 @@ module ReVIEW
         }
       end
 
+      def remove_starter_options(content)
+        # image border
+        content.gsub!(/^(\/\/image\[.*?\]\[.*?\]\[.*?)((,|)border=[^,\]]*?)\]/, '\1]')
+      end
+
       def expand_nested_inline_command(content)
         found = false
         content.dup().scan(/(@<.*?>)(?:(\$)|(?:({)|(\|)))(.*?)(?(2)(\$)|(?(3)(})|(\|)))/) { |m|
@@ -306,8 +311,9 @@ module ReVIEW
         replace_auto_ids(content, 'list', 2)
         replace_auto_ids(content, 'listnum', 2)
 
-        # remove starter refid
+        # remove starter extension
         remove_starter_refid(content)
+        remove_starter_options(content)
 
         # special charactor
         content.gsub!('@<LaTeX>{}', 'LaTeX')
