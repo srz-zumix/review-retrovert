@@ -4,6 +4,8 @@
 
 # ReVIEW::Retrovert
 
+Re:VIEW Starter Project convert to Re:VIEW 3.X
+
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -22,7 +24,9 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+```sh
+review-retrovert convert /path/to/dir/review-starter/config.yml <output directory>
+```
 
 ## Development
 
