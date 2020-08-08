@@ -7,10 +7,12 @@ RSpec.describe ReVIEW::Retrovert do
 end
 
 RSpec.describe 'convert', type: :aruba do
+
   context 'help' do
     before(:each) { run_command('bundle exec review-retrovert help') }
     it { expect(last_command_started).to be_successfully_executed }
   end
+
   context 'convert mybook' do
     let(:config_yaml) { File.join(File.dirname(__FILE__), '../../testdata/mybook/config.yml') }
     let(:file00) { 'tmp/00-preface.re' }
@@ -168,13 +170,17 @@ RSpec.describe 'convert', type: :aruba do
     it 'image border' do
       expect(file03).to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, file03)).read()
-      expect(text).not_to match(/^\/\/image\[.*?border.*?/)
-    end
+      expect(text).not_to match(/^\/\/image\[[^\]]*?border=.*?/)
+
+      expect(file06).to be_an_existing_file
+      text = File.open(File.join(aruba.current_directory, file06)).read()
+      expect(text).not_to match(/^\/\/image\[[^\]]*?border=.*?/)
+      end
 
     it 'list lineno' do
       expect(file03).to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, file03)).read()
-      expect(text).not_to match(/^\/\/list\[.*?lineno.*?/)
+      expect(text).not_to match(/^\/\/list\[[^\]]*?lineno=.*?/)
     end
 
     it 'fix lack options' do
