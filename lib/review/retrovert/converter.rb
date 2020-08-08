@@ -196,7 +196,7 @@ module ReVIEW
         index = -1
         content.gsub!(/^\/\/#{command}\[(|\?)\]/) { |s| index += 1; "//#{command}[starter_auto_id_#{command}_#{index}]" }
         if require_option_count > 0
-          while !content.gsub!(/^(\/\/#{command}(\[.*?\]){0,#{require_option_count-1}})($|{})/, '\1[]\2').nil?
+          while !content.gsub!(/(^\/\/#{command}(\[[^\[\]]*?\]){0,#{require_option_count-1}})($|{)/, '\1[]\3').nil?
           end
         end
       end
