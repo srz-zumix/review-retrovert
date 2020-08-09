@@ -4,7 +4,7 @@
 
 # ReVIEW::Retrovert
 
-[Re:VIEW Starter](https://kauplan.org/reviewstarter/) Project convert to [Re:VIEW]() 3.X
+[Re:VIEW Starter](https://kauplan.org/reviewstarter/) Project convert to [Re:VIEW](https://reviewml.org/ja/) 3.X
 
 ## Installation
 
