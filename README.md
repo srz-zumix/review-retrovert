@@ -38,10 +38,9 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/srz-zumix/review-retrovert.
 
-
 ## Develop
 
-docker run -it --rm -v $(pwd)/../:/github vvakame/review:3.2 bash
+docker run -it --rm -v $(pwd)/:/work -w /work vvakame/review:3.2 bash
 
 ## License
 
