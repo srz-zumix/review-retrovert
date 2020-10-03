@@ -107,8 +107,8 @@ module ReVIEW
 
       def replace_block_command_nested_boxed_article(content, box)
         found = false
-        content.dup().scan(/(^\/\/#{box})(\[[^\r\n]*?\])*(?:(\$)|(?:({)|(\|)))(.*?)(^\/\/)(?(3)(\$)|(?(4)(})|(\|)).*?[\r\n]+)/m) { |m|
-          matched = m[0..-1].join()
+        content.dup.scan(/(^\/\/#{box})(\[[^\r\n]*?\])*(?:(\$)|(?:({)|(\|)))(.*?)(^\/\/)(?(3)(\$)|(?(4)(})|(\|)).*?[\r\n]+)/m) { |m|
+          matched = m[0..-1].join
           inner = m[5]
           im = inner.match(/^\/\/(\w+)((\[.*?\])*)([$|{])/)
           unless im.nil?
@@ -123,10 +123,10 @@ module ReVIEW
                 is_commentout = false
               end
             end
-            cmd_begin = m[0..4].join()
-            cmd_end = m[6..-1].join()
+            cmd_begin = m[0..4].join
+            cmd_end = m[6..-1].join
             # check other fence inner block (block command has fence??)
-            if inner_open == m[2..4].join()
+            if inner_open == m[2..4].join
               # if same fence then cmd_end == inner_end
               if is_commentout
                 inner.gsub!(/(^\/\/(\w+\[.*?\])*#{inner_open})/, '#@#\1')
@@ -169,10 +169,10 @@ module ReVIEW
       end
 
       def replace_block_commentout(content)
-        d = content.dup()
+        d = content.dup
         d.gsub!(/(^\/\/sampleoutputbegin\[)(.*?)(\])(.*?)(^\/\/sampleoutputend)/m, '')
         d.scan(/(^#@)(\++)(.*?)(^#@)(-+)/m) { |m|
-          matched = m[0..-1].join()
+          matched = m[0..-1].join
           inner = m[2]
           inner.gsub!(/(^.)/, '#@#\1')
           content.gsub!(/#{Regexp.escape(matched)}/m, "#@##{m[1]}#{inner}#@##{m[4]}")
@@ -181,9 +181,9 @@ module ReVIEW
 
       def replace_sampleoutput(content)
         replace_block_commentout(content)
-        content.dup().scan(/(^\/\/sampleoutputbegin\[)(.*?)(\].*?\R)(.*?)(^\/\/sampleoutputend)/m) { |m|
-          matched = m[0..-1].join()
-          sampleoutputbegin = m[0..2].join()
+        content.dup.scan(/(^\/\/sampleoutputbegin\[)(.*?)(\].*?\R)(.*?)(^\/\/sampleoutputend)/m) { |m|
+          matched = m[0..-1].join
+          sampleoutputbegin = m[0..2].join
           sampleoutputend = m[4]
           option = m[1]
           inner = m[3]
@@ -203,8 +203,8 @@ module ReVIEW
 
       def remove_starter_refid(content)
         # note - noteref
-        content.dup().scan(/(@<noteref>)(?:(\$)|(?:({)|(\|)))(.*?)(?(2)(\$)|(?(3)(})|(\|)))/) { |m|
-          matched = m[0..-1].join()
+        content.dup.scan(/(@<noteref>)(?:(\$)|(?:({)|(\|)))(.*?)(?(2)(\$)|(?(3)(})|(\|)))/) { |m|
+          matched = m[0..-1].join
           ref = m[4]
           n = content.match(/^\/\/note\[#{ref}\](\[.*?\])/)
           unless n.nil?
@@ -225,23 +225,23 @@ module ReVIEW
 
       def expand_nested_inline_command(content)
         found = false
-        content.dup().scan(/(@<.*?>)(?:(\$)|(?:({)|(\|)))(.*?)(?(2)(\$)|(?(3)(})|(\|)))/) { |m|
-          matched = m.join()
+        content.dup.scan(/(@<.*?>)(?:(\$)|(?:({)|(\|)))(.*?)(?(2)(\$)|(?(3)(})|(\|)))/) { |m|
+          matched = m.join
           body = m[4]
           im = body.match(/(.*)(@<.*?>)(?:(\$)|(?:({)|(\|)))(.*?)(?(3)(\$)|(?(4)(})|(\|)))(.*)/)
           if im.nil?
-            im = body.match(/(.*)(@<.*?>)#{m[1..3].join()}/)
+            im = body.match(/(.*)(@<.*?>)#{m[1..3].join}/)
             unless im.nil?
-              outcmd_begin = m[0] + "$|{".gsub(m[1..3].join(), '')
-              outcmd_end = "$|}".gsub(m[5..7].join(), '')
+              outcmd_begin = m[0] + "$|{".gsub(m[1..3].join, '')
+              outcmd_end = "$|}".gsub(m[5..7].join, '')
               rep = "#{outcmd_begin}#{body}#{outcmd_end}"
               content.gsub!(matched, rep)
               found = true
             end
           else
-            outcmd_begin = m[0..3].join()
-            outcmd_end = m[5..7].join()
-            rep = "#{outcmd_begin}#{im[1]}#{outcmd_end}#{im[2..9].join()}#{outcmd_begin}#{im[-1]}#{outcmd_end}"
+            outcmd_begin = m[0..3].join
+            outcmd_end = m[5..7].join
+            rep = "#{outcmd_begin}#{im[1]}#{outcmd_end}#{im[2..9].join}#{outcmd_begin}#{im[-1]}#{outcmd_end}"
             content.gsub!(matched, rep)
             found = true
           end
