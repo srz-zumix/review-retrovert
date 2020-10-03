@@ -1,5 +1,5 @@
 module ReVIEW
   module Retrovert
-    VERSION = "0.3.4"
+    VERSION = "0.9.1"
   end
 end
