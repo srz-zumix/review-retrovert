@@ -214,5 +214,11 @@ RSpec.describe 'convert', type: :aruba do
       expect(text).to match(/^#@#\++\R(^#@#.*)*^#@#-+/m)
     end
 
+    it 'auto url link footnote' do
+      expect(file03).to be_an_existing_file
+      text = File.open(File.join(aruba.current_directory, file03)).read()
+      expect(text).to include("//footnote[link_auto_footnote0][https://github.com/kmuto/review/blob/master/doc/format.ja.md]")
+    end
+
   end
 end
