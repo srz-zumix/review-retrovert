@@ -399,6 +399,45 @@ module ReVIEW
         end
       end
 
+      def preproc_content_files(outdir, pp, contentdir, contentfiles)
+        files = contentfiles.is_a?(String) ? contentfiles.split(/\R/) : contentfiles
+        files.each do |content|
+          contentpath = File.join(contentdir, content)
+          if File.exist?(contentpath)
+            info "preproc #{contentpath}"
+            buf = StringIO.new
+            pwd = Dir.pwd
+            Dir.chdir(outdir)
+            File.open(contentpath) { |f| pp.process(f, buf) }
+            Dir.chdir(pwd)
+            content = buf.string
+            content.gsub!(/^#[@]map.*$/, '')
+            File.write(contentpath, content)
+          end
+        end
+      end
+
+      def preproc_contents(outdir, options)
+        yamlfile = @config['catalogfile']
+        abspath = File.absolute_path(outdir)
+        contentdir = abspath
+        param = {}
+        param['tabwidth'] = options['tabwidth'].to_i
+        pp = ReVIEW::Preprocessor.new(ReVIEW::Repository.new(param), param)
+
+        if options['strict']
+          catalog = ReVIEW::Catalog.new(File.open(File.join(abspath, yamlfile)))
+          preproc_content_files(outdir, pp, contentdir, catalog.predef())
+          preproc_content_files(outdir, pp, contentdir, catalog.chaps())
+          preproc_content_files(outdir, pp, contentdir, catalog.appendix())
+          preproc_content_files(outdir, pp, contentdir, catalog.postdef())
+        else
+          # copy_contents(outdir)
+          contentsfiles = Pathname.glob(File.join(File.join(@basedir, @srccontentsdir), '*.re')).map(&:basename)
+          preproc_content_files(outdir, pp, contentdir, contentsfiles)
+        end
+      end
+
       def clean_initial_project(outdir)
         FileUtils.rm(File.join(outdir, 'config.yml'))
         FileUtils.rm(File.join(outdir, 'catalog.yml'))
@@ -438,6 +477,11 @@ module ReVIEW
         # updater.backup = false
         updater.execute()
         Dir.chdir(pwd)
+
+        if options['preproc']
+          info 'preproc'
+          preproc_contents(outdir, options)
+        end
       end
 
       def self.execute(yamlfile, outdir, options)

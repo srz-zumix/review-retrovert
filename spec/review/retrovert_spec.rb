@@ -26,7 +26,7 @@ RSpec.describe 'convert', type: :aruba do
     let(:file92) { 'tmp/92-filelist.re' }
     let(:file93) { 'tmp/93-background.re' }
     let(:file99) { 'tmp/99-postface.re' }
-    before(:each) { run_command("review-retrovert convert #{config_yaml} tmp") }
+    before(:each) { run_command("review-retrovert convert --preproc --tabwidth 4 #{config_yaml} tmp") }
 
     it 'command result' do
       expect(last_command_started).to be_successfully_executed
@@ -218,6 +218,11 @@ RSpec.describe 'convert', type: :aruba do
       expect(file03).to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, file03)).read()
       expect(text).to include("//footnote[link_auto_footnote0][https://github.com/kmuto/review/blob/master/doc/format.ja.md]")
+    end
+
+    it 'preproc' do
+      expect(last_command_started).to be_successfully_executed
+      expect(last_command_started).to have_output(/INFO: preproc/)
     end
 
   end
