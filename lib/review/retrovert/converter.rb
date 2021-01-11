@@ -263,11 +263,38 @@ module ReVIEW
         end
       end
 
+      def add_linkurl_footnote(content)
+        urls = {}
+        content.dup.scan(/(^.*)(@<href>{)(.*?)(,)(.*?)(})(.*)$/) { |m|
+          unless m[0].match(/^#@#/)
+            matched = m.join
+            prev = m[0]
+            url = m[2]
+            text = m[4]
+            post = m[6]
+            id = "link_auto_footnote#{urls.length}"
+            urls[id] = url
+            content.sub!(/#{matched}$/, "#{prev}@<href>{#{url},#{text}} @<fn>{#{id}} #{post}")
+          end
+        }
+
+        urls.each { |k,v|
+          content.sub!(/(@<href>{#{v},.*?} @<fn>{#{k}}.*?\R\R)/m, "\\1//footnote[#{k}][#{v}]\n")
+        }
+
+        urls.each { |k,v|
+          unless content.match(/\/\/footnote\[#{k}\]\[#{v}\]/)
+            content << "//footnote[#{k}][#{v}]\n"
+          end
+        }
+      end
+
       def update_content(outdir, contentfile)
         info contentfile
         content = File.read(contentfile)
         content.gsub!(/@<href>{(.*?)#.*?,(.*?)}/, '@<href>{\1,\2}')
         content.gsub!(/@<href>{(.*?)#.*?}/, '@<href>{\1}')
+        linkurl_footnote = @config['starter']['linkurl_footnote']
         # table 内の @ コマンドは不安定らしい
         while !content.gsub!(/(\/\/table.*)@<br>{}(.*?\/\/})/m, "\\1#{@table_br_replace}\\2").nil? do
         end
@@ -305,6 +332,10 @@ module ReVIEW
 
         # special command
         replace_sampleoutput(content)
+
+        if linkurl_footnote
+          add_linkurl_footnote(content)
+        end
 
         # nested command
         replace_block_command_nested_boxed_articles(content)
