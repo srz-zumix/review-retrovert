@@ -109,11 +109,12 @@ module ReVIEW
         content.gsub!(/@<#{command}>/, "@<#{new_command}>")
       end
 
-      def replace_block_command_nested_boxed_article(content, box)
+      def replace_block_command_nested_boxed_article_i(content, box, depth)
         found = false
         content.dup.scan(/(^\/\/#{box})(\[[^\r\n]*?\])*(?:(\$)|(?:({)|(\|)))(.*?)(^\/\/)(?(3)(\$)|(?(4)(})|(\|)).*?[\r\n]+)/m) { |m|
           matched = m[0..-1].join
           inner = m[5]
+          info depth
           im = inner.match(/^\/\/(\w+)((\[.*?\])*)([$|{])/)
           unless im.nil?
             inner_cmd = im[1]
@@ -121,12 +122,16 @@ module ReVIEW
             inner_opts = im[2]
             first_opt_m = inner_opts.match(/^\[(.*?)\]/)
             first_opt = ""
-            first_opt = first_opt_m[1] if first_opt_m
 
+            # is_commentout = false
             is_commentout = true
-            unless first_opt.empty?
-              if inner.match(/@<.*?>[$|{]#{first_opt}/)
-                is_commentout = false
+            if first_opt_m
+              first_opt_v = first_opt_m[1]
+              unless first_opt_v.empty?
+                if inner.match(/@<.*?>[$|{]#{first_opt}/)
+                  is_commentout = false
+                  first_opt = "\\[#{first_opt_v}\\]"
+                end
               end
             end
             cmd_begin = m[0..4].join
@@ -135,10 +140,10 @@ module ReVIEW
             if inner_open == m[2..4].join
               # if same fence then cmd_end == inner_end
               if is_commentout
-                inner.gsub!(/(^\/\/(\w+\[.*?\])*#{inner_open})/, '#@#\1')
+                inner.gsub!(/(^\/\/(\w+(\[.*?\]|))*#{inner_open})/, '#@#\1')
                 content.gsub!(/#{Regexp.escape(matched)}/m, "#{cmd_begin}#{inner}#@##{cmd_end}")
               else
-                imb = inner.match(/(\R((^\/\/\w+(\[.*?\])*)\s*)*^\/\/\w+\[#{first_opt}\](\[.*?\])*#{inner_open}.*)\R/m)
+                imb = inner.match(/(\R((^\/\/\w+(\[.*?\])*)\s*)*^\/\/#{inner_cmd}#{first_opt}(\[.*?\])*#{inner_open}.*)\R/m)
                 to_out_block = imb[1]
                 inner.gsub!(/#{Regexp.escape(to_out_block)}/m, '')
                 content.gsub!(/#{Regexp.escape(matched)}/m, "#{cmd_begin}#{inner}#{cmd_end}#{to_out_block}")
@@ -146,10 +151,10 @@ module ReVIEW
             else
               close = inner_open == '{' ? '}' : inner_open
               if is_commentout
-                inner.gsub!(/(^\/\/(\w+\[.*?\])*#{inner_open})(.*?)(^\/\/#{close})/m, '#@#\1\2#@#\3')
+                inner.gsub!(/(^\/\/(\w+(\[.*?\]|))*#{inner_open})(.*?)(^\/\/#{close})/m, '#@#\1\2#@#\3')
                 content.gsub!(/#{Regexp.escape(matched)}/m, "#{cmd_begin}#{inner}#{cmd_end}")
               else
-                imb = inner.match(/\R((^\/\/\w+(\[.*?\])*)\s*)*^\/\/(\w+)\[#{first_opt}\](\[[^\r\n]*?\])*(?:(\$)|(?:({)|(\|)))(.*?)(^\/\/)(?(3)(\$)|(?(4)(})|(\|)))/m)
+                imb = inner.match(/\R((^\/\/\w+(\[.*?\])*)\s*)*^\/\/(#{inner_cmd})#{first_opt}(\[[^\r\n]*?\])*(?:(\$)|(?:({)|(\|)))(.*?)(^\/\/)(?(3)(\$)|(?(4)(})|(\|)))/m)
                 to_out_block = imb[0]
                 inner.gsub!(/#{Regexp.escape(to_out_block)}/m, '')
                 content.gsub!(/#{Regexp.escape(matched)}/m, "#{cmd_begin}#{inner}#{cmd_end}#{to_out_block}")
@@ -159,8 +164,12 @@ module ReVIEW
           end
         }
         if found
-          replace_block_command_nested_boxed_article(content, box)
+          replace_block_command_nested_boxed_article_i(content, box, depth+1)
         end
+      end
+
+      def replace_block_command_nested_boxed_article(content, box)
+        replace_block_command_nested_boxed_article_i(content, box, 0)
       end
 
       def replace_block_command_nested_boxed_articles(content)
