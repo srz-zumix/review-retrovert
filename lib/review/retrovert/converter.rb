@@ -114,7 +114,7 @@ module ReVIEW
         content.dup.scan(/(^\/\/#{box})(\[[^\r\n]*?\])*(?:(\$)|(?:({)|(\|)))(.*?)(^\/\/)(?(3)(\$)|(?(4)(})|(\|)).*?[\r\n]+)/m) { |m|
           matched = m[0..-1].join
           inner = m[5]
-          info depth
+          # info depth
           im = inner.match(/^\/\/(\w+)((\[.*?\])*)([$|{])/)
           unless im.nil?
             inner_cmd = im[1]
