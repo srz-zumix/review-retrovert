@@ -97,7 +97,8 @@ RSpec.describe 'convert', type: :aruba do
       expect(file02).to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, file02)).read()
       expect(text).not_to match(/^\/\/terminal/)
-      expect(text).not_to match(/^\/\/cmd\[.*?\]\[.*?\]/)
+      expect(text).not_to match(/^\/\/cmd\[.*?\]/)
+      expect(text).to match(/^\/\/cmd{/)
     end
 
     it 'block comaptible command replace with options and inner text go outside' do

@@ -70,7 +70,11 @@ module ReVIEW
       end
 
       def replace_compatible_block_command_outline(content, command, new_command, option_count)
-        content.gsub!(/^\/\/#{command}(?<option>(\[[^\r\n]*?\]){0,#{option_count}})(\[[^\r\n]*\])*{(?<inner>.*?)\/\/}/m, "//#{new_command}\\k<option>{\\k<inner>//}")
+        if option_count > 0
+          content.gsub!(/^\/\/#{command}(?<option>(\[[^\r\n]*?\]){0,#{option_count}})(\[[^\r\n]*\])*{(?<inner>.*?)\/\/}/m, "//#{new_command}\\k<option>{\\k<inner>//}")
+        else
+          content.gsub!(/^\/\/#{command}(\[[^\r\n]*\])*{(?<inner>.*?)\/\/}/m, "//#{new_command}{\\k<inner>//}")
+        end
       end
 
       def replace_compatible_block_command_to_outside(content, command, new_command, option_count, add_options="", new_body="")
@@ -115,7 +119,9 @@ module ReVIEW
             inner_cmd = im[1]
             inner_open = im[4]
             inner_opts = im[2]
-            first_opt = inner_opts.match(/^\[(.*?)\]/)[1]
+            first_opt_m = inner_opts.match(/^\[(.*?)\]/)
+            first_opt = ""
+            first_opt = first_opt_m[1] if first_opt_m
 
             is_commentout = true
             unless first_opt.empty?
@@ -303,6 +309,7 @@ module ReVIEW
         end
         # Re:VIEW Starter commands
         replace_compatible_block_command_outline(content, 'terminal', 'cmd', 1)
+        replace_compatible_block_command_outline(content, 'cmd', 'cmd', 0)
         replace_compatible_block_command_to_outside(content, 'sideimage', 'image', 1, '[]')
         replace_block_command_outline(content, 'abstract', 'lead', true)
         delete_block_command(content, 'needvspace')
