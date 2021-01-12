@@ -17,9 +17,9 @@ jobs:
         with:
           ruby-version: 2.6
       - run: |
-        cp Gemfile Gemfile-${{ matrix.review-version }}
-        echo 'gem "rake", "${{ matrix.review-version }}"' >> Gemfile-${{ matrix.review-version }}
-        cat Gemfile-${{ matrix.review-version }}
+          cp Gemfile Gemfile-${{ matrix.review-version }}
+          echo 'gem "rake", "${{ matrix.review-version }}"' >> Gemfile-${{ matrix.review-version }}
+          cat Gemfile-${{ matrix.review-version }}
       - run: bundle install --gemfile=Gemfile-${{ matrix.review-version }}
       # spec
       - name: spec
