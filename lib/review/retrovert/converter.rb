@@ -67,6 +67,7 @@ module ReVIEW
         @configs.rewrite_yml('contentdir', '.')
         @configs.rewrite_yml('hook_beforetexcompile', 'null')
         @configs.rewrite_yml('texstyle', '["reviewmacro"]')
+        @configs.rewrite_yml('chapterlink', 'null')
       end
 
       def replace_compatible_block_command_outline(content, command, new_command, option_count)
@@ -173,14 +174,16 @@ module ReVIEW
       end
 
       def replace_block_command_nested_boxed_articles(content)
-        replace_block_command_nested_boxed_article(content, 'note')
-        replace_block_command_nested_boxed_article(content, 'memo')
-        replace_block_command_nested_boxed_article(content, 'tip')
-        replace_block_command_nested_boxed_article(content, 'info')
-        replace_block_command_nested_boxed_article(content, 'warning')
-        replace_block_command_nested_boxed_article(content, 'important')
-        replace_block_command_nested_boxed_article(content, 'caution')
-        replace_block_command_nested_boxed_article(content, 'notice')
+        unless Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('5.0.0')
+          replace_block_command_nested_boxed_article(content, 'note')
+          replace_block_command_nested_boxed_article(content, 'memo')
+          replace_block_command_nested_boxed_article(content, 'tip')
+          replace_block_command_nested_boxed_article(content, 'info')
+          replace_block_command_nested_boxed_article(content, 'warning')
+          replace_block_command_nested_boxed_article(content, 'important')
+          replace_block_command_nested_boxed_article(content, 'caution')
+          replace_block_command_nested_boxed_article(content, 'notice')
+        end
       end
 
       def replace_block_commentout(content)
@@ -353,6 +356,9 @@ module ReVIEW
           add_linkurl_footnote(content)
         end
 
+        # # br to blankline
+        # content.gsub!(/(.*)@<br>{}(.*)/, '\1\n//blankline\n\2')
+
         # nested command
         replace_block_command_nested_boxed_articles(content)
 
@@ -491,7 +497,10 @@ module ReVIEW
         updater = ReVIEW::Update.new
         updater.force = true
         # updater.backup = false
-        updater.execute()
+        begin
+          updater.execute()
+        rescue
+        end
         Dir.chdir(pwd)
 
         if options['preproc']

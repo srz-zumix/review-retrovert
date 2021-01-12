@@ -8,11 +8,15 @@ name: Retrovert
 jobs:
   review:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        review-version: [3.2, 4.2, 5.0]
     steps:
       - uses: actions/checkout@v2
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: 2.6
+      - run: gem install review -v ${{ matrix.review-version }}
       - run: bundle install
       # spec
       - name: spec
