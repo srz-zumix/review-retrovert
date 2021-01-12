@@ -17,6 +17,7 @@ jobs:
         with:
           ruby-version: 2.6
       - run: |
+          rm -f Gemfile.lock
           cp Gemfile Gemfile-${{ matrix.review-version }}
           echo 'gem "review", "${{ matrix.review-version }}"' >> Gemfile-${{ matrix.review-version }}
           cat Gemfile-${{ matrix.review-version }}
