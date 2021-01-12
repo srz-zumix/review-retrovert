@@ -16,8 +16,11 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: 2.6
-      - run: gem install review -v ${{ matrix.review-version }}
-      - run: bundle install
+      - run: |
+        cp Gemfile Gemfile-${{ matrix.review-version }}
+        echo 'gem "rake", "${{ matrix.review-version }}"' >> Gemfile-${{ matrix.review-version }}
+        cat Gemfile-${{ matrix.review-version }}
+      - run: bundle install --gemfile=Gemfile-${{ matrix.review-version }}
       # spec
       - name: spec
         run: bundle exec rake spec
