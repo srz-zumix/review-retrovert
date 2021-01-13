@@ -10,12 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        - review-version: 3.2
-          uses: docker://vvakame/review:3.2
-        - review-version: 4.2
-          uses: docker://vvakame/review:4.2
-        - review-version: 5.0
-          uses: docker://vvakame/review:5.0
+        review-version: [ 3.2, 4.2, 5.0 ]
     steps:
       - uses: actions/checkout@v2
       - uses: ruby/setup-ruby@v1
@@ -35,11 +30,20 @@ jobs:
       - name: convert
         run: bundle exec review-retrovert convert testdata/mybook/config.yml tmp -f
       # build
-      - name: review build
-        uses: ${{ matrix.uses }}
+      # - name: review build
+      #   uses: ${{ matrix.uses }}
+      #   with:
+      #     entrypoint: bash
+      #     args: -c "cd tmp; rake preproc all"
+      # docker login
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
         with:
-          entrypoint: bash
-          args: -c "cd tmp; rake preproc all"
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: build
+        run: |
+          docker run -it --rm -v "$(PWD)/tmp":/work -w /work vvakame/review:${{ matrix.review-version }} rake preproc pdf
       # artifacts
       - name: artifacts
         uses: actions/upload-artifact@v1
