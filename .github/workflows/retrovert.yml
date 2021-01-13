@@ -43,7 +43,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: build
         run: |
-          docker run -it --rm -v "$(PWD)/tmp":/work -w /work vvakame/review:${{ matrix.review-version }} rake preproc pdf
+          docker run -it --rm -v "$(pwd)/tmp":/work -w /work vvakame/review:${{ matrix.review-version }} rake preproc pdf
       # artifacts
       - name: artifacts
         uses: actions/upload-artifact@v1
