@@ -21,6 +21,7 @@ jobs:
           cp Gemfile Gemfile-${{ matrix.review-version }}
           echo 'gem "review", "${{ matrix.review-version }}"' >> Gemfile-${{ matrix.review-version }}
           cat Gemfile-${{ matrix.review-version }}
+          echo "BUNDLE_GEMFILE=Gemfile-${{ matrix.review-version }}" >> $GITHUB_ENV
       - run: bundle install --gemfile=Gemfile-${{ matrix.review-version }}
       # spec
       - name: spec
@@ -30,7 +31,7 @@ jobs:
         run: bundle exec review-retrovert convert testdata/mybook/config.yml tmp -f
       # build
       - name: review build
-        uses: docker://srzzumix/review-retrovert
+        uses: "docker://vvakame/review:${{ matrix.review-version }}"
         with:
           entrypoint: bash
           args: -c "cd tmp; rake preproc all"
