@@ -10,7 +10,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        review-version: [3.2, 4.2, 5.0]
+        - review-version: 3.2
+          uses: docker://vvakame/review:3.2
+        - review-version: 4.2
+          uses: docker://vvakame/review:4.2
+        - review-version: 5.0
+          uses: docker://vvakame/review:5.0
     steps:
       - uses: actions/checkout@v2
       - uses: ruby/setup-ruby@v1
@@ -31,7 +36,7 @@ jobs:
         run: bundle exec review-retrovert convert testdata/mybook/config.yml tmp -f
       # build
       - name: review build
-        uses: docker://vvakame/review:${{ matrix.review-version }}
+        uses: ${{ matrix.uses }}
         with:
           entrypoint: bash
           args: -c "cd tmp; rake preproc all"
