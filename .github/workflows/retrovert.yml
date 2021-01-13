@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        review-version: [ 3.2, 4.2, 5.0 ]
+        review-version: [ "3.2", "4.2", "5.0" ]
     steps:
       - uses: actions/checkout@v2
       - uses: ruby/setup-ruby@v1
