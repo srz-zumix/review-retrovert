@@ -463,6 +463,7 @@ module ReVIEW
             Dir.chdir(pwd)
             content = buf.string
             content.gsub!(/^#[@]map.*$/, '')
+            content.gsub!(/^#[@]end$/, '')
             File.write(contentpath, content)
           end
         end

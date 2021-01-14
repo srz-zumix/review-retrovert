@@ -228,6 +228,9 @@ RSpec.describe 'convert', type: :aruba do
       expect(last_command_started).to have_output(/INFO.*: preproc/)
     end
 
+    # it 'preproc delete #@mapXXX~#@end' do
+    # end
+
     if Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('4.0.0')
       it 'deprecated list' do
         expect(file02).to be_an_existing_file
