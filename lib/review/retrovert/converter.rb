@@ -365,6 +365,11 @@ module ReVIEW
         # fixed lack of options
         content.gsub!(/^\/\/list{/, '//list[][]{')
 
+        if Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('4.0.0')
+          # empty caption is not allow
+          content.gsub!(/^\/\/image\[(.*)\]\[\]{/, '//image[\1][ ]{')
+        end
+
         # special command
         replace_sampleoutput(content)
 
