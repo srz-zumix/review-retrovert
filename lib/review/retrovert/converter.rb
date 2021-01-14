@@ -68,6 +68,8 @@ module ReVIEW
         @configs.rewrite_yml('hook_beforetexcompile', 'null')
         @configs.rewrite_yml('texstyle', '["reviewmacro"]')
         @configs.rewrite_yml('chapterlink', 'null')
+        pagesize = @config['starter']['pagesize'].downcase
+        @configs.rewrite_yml_array('texdocumentclass', "[\"review-jsbook\", \"media=print,paper=#{pagesize}\"]")
       end
 
       def replace_compatible_block_command_outline(content, command, new_command, option_count)
