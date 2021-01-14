@@ -42,7 +42,10 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: build
+      - name: build html
+        run: |
+          docker run --rm -v "$(pwd)/tmp":/work -w /work vvakame/review:${{ matrix.review-version }} rake preproc html
+      - name: build pdf
         run: |
           docker run --rm -v "$(pwd)/tmp":/work -w /work vvakame/review:${{ matrix.review-version }} rake preproc pdf
       # artifacts
@@ -51,8 +54,8 @@ jobs:
         with:
           name: mybook
           path: tmp/mybook.pdf
-      - name: artifacts
-        uses: actions/upload-artifact@v1
-        with:
-          name: mybook
-          path: tmp/mybook.epub
+      # - name: artifacts
+      #   uses: actions/upload-artifact@v1
+      #   with:
+      #     name: mybook
+      #     path: tmp/mybook.epub
