@@ -205,7 +205,7 @@ RSpec.describe 'convert', type: :aruba do
     it 'block comment in sampleout' do
       expect(file02).to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, file02)).read()
-      expect(text).to match(/^#@#\/\/sampleoutputbegin.*?^#@\++.*^#@-+.*?^#@#\/\/sampleoutputend/m)
+      expect(text).not_to match(/^#@#\/\/sampleoutputbegin.*?^#@\++.*^#@-+.*?^#@#\/\/sampleoutputend/m)
     end
 
     it 'block comment' do

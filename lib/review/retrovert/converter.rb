@@ -188,6 +188,16 @@ module ReVIEW
 
       def replace_block_commentout(content)
         d = content.dup
+        d.scan(/(^#@)(\++)(.*?)(^#@)(-+)/m) { |m|
+          matched = m[0..-1].join
+          inner = m[2]
+          inner.gsub!(/(^.)/, '#@#\1')
+          content.gsub!(/#{Regexp.escape(matched)}/m, "#@##{m[1]}#{inner}#@##{m[4]}")
+        }
+      end
+
+      def replace_block_commentout_without_sampleout(content)
+        d = content.dup
         d.gsub!(/(^\/\/sampleoutputbegin\[)(.*?)(\])(.*?)(^\/\/sampleoutputend)/m, '')
         d.scan(/(^#@)(\++)(.*?)(^#@)(-+)/m) { |m|
           matched = m[0..-1].join
@@ -198,7 +208,7 @@ module ReVIEW
       end
 
       def replace_sampleoutput(content)
-        replace_block_commentout(content)
+        # replace_block_commentout_without_sampleout(content)
         content.dup.scan(/(^\/\/sampleoutputbegin\[)(.*?)(\].*?\R)(.*?)(^\/\/sampleoutputend)/m) { |m|
           matched = m[0..-1].join
           sampleoutputbegin = m[0..2].join
@@ -369,6 +379,9 @@ module ReVIEW
         # remove starter extension
         remove_starter_refid(content)
         remove_starter_options(content)
+
+        # replace block comment
+        replace_block_commentout(content)
 
         # special charactor
         content.gsub!('@<LaTeX>{}', 'LaTeX')
