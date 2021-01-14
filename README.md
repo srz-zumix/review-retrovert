@@ -4,7 +4,7 @@
 
 # ReVIEW::Retrovert
 
-[Re:VIEW Starter](https://kauplan.org/reviewstarter/) Project convert to [Re:VIEW](https://reviewml.org/ja/) 3.X
+[Re:VIEW Starter](https://kauplan.org/reviewstarter/) Project convert to [Re:VIEW](https://reviewml.org/ja/) 3.X/4.X/5.X
 
 ## Installation
 
@@ -40,7 +40,7 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/srz-zu
 
 ## Develop
 
-docker run -it --rm -v $(pwd)/:/work -w /work vvakame/review:3.2 bash
+docker run -it --rm -v $(pwd)/:/work -w /work vvakame/review:5.0 bash
 
 ## License
 
