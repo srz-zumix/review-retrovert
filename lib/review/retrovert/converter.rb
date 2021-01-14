@@ -229,6 +229,12 @@ module ReVIEW
         end
       end
 
+      def fix_deprecated_list(content)
+        if Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('4.0.0')
+          content.gsub!(/^: (.*)/, ' : \1')
+        end
+      end
+
       def remove_starter_refid(content)
         # note - noteref
         content.dup.scan(/(@<noteref>)(?:(\$)|(?:({)|(\|)))(.*?)(?(2)(\$)|(?(3)(})|(\|)))/) { |m|
@@ -395,6 +401,9 @@ module ReVIEW
 
         # expand nested inline command
         expand_nested_inline_command(content)
+
+        # fix deprecated
+        fix_deprecated_list(content)
 
         File.write(contentfile, content)
         copy_embedded_contents(outdir, content)
