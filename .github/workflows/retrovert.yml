@@ -8,12 +8,22 @@ name: Retrovert
 jobs:
   review:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        review-version: [ "3.2", "4.2", "5.0" ]
+      fail-fast: false
     steps:
       - uses: actions/checkout@v2
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: 2.6
-      - run: bundle install
+      - run: |
+          rm -f Gemfile.lock
+          cp Gemfile Gemfile-${{ matrix.review-version }}
+          echo 'gem "review", "${{ matrix.review-version }}"' >> Gemfile-${{ matrix.review-version }}
+          cat Gemfile-${{ matrix.review-version }}
+          echo "BUNDLE_GEMFILE=Gemfile-${{ matrix.review-version }}" >> $GITHUB_ENV
+      - run: bundle install --gemfile=Gemfile-${{ matrix.review-version }}
       # spec
       - name: spec
         run: bundle exec rake spec
@@ -21,19 +31,31 @@ jobs:
       - name: convert
         run: bundle exec review-retrovert convert testdata/mybook/config.yml tmp -f
       # build
-      - name: review build
-        uses: docker://srzzumix/review-retrovert
+      # - name: review build
+      #   uses: ${{ matrix.uses }}
+      #   with:
+      #     entrypoint: bash
+      #     args: -c "cd tmp; rake preproc all"
+      # docker login
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
         with:
-          entrypoint: bash
-          args: -c "cd tmp; rake preproc all"
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: build html
+        run: |
+          docker run --rm -v "$(pwd)/tmp":/work -w /work vvakame/review:${{ matrix.review-version }} rake preproc html
+      - name: build pdf
+        run: |
+          docker run --rm -v "$(pwd)/tmp":/work -w /work vvakame/review:${{ matrix.review-version }} rake preproc pdf
       # artifacts
       - name: artifacts
         uses: actions/upload-artifact@v1
         with:
           name: mybook
           path: tmp/mybook.pdf
-      - name: artifacts
-        uses: actions/upload-artifact@v1
-        with:
-          name: mybook
-          path: tmp/mybook.epub
+      # - name: artifacts
+      #   uses: actions/upload-artifact@v1
+      #   with:
+      #     name: mybook
+      #     path: tmp/mybook.epub

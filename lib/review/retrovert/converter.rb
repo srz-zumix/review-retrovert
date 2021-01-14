@@ -67,6 +67,9 @@ module ReVIEW
         @configs.rewrite_yml('contentdir', '.')
         @configs.rewrite_yml('hook_beforetexcompile', 'null')
         @configs.rewrite_yml('texstyle', '["reviewmacro"]')
+        @configs.rewrite_yml('chapterlink', 'null')
+        pagesize = @config['starter']['pagesize'].downcase
+        @configs.rewrite_yml_array('texdocumentclass', "[\"review-jsbook\", \"media=print,paper=#{pagesize}\"]")
       end
 
       def replace_compatible_block_command_outline(content, command, new_command, option_count)
@@ -173,17 +176,29 @@ module ReVIEW
       end
 
       def replace_block_command_nested_boxed_articles(content)
-        replace_block_command_nested_boxed_article(content, 'note')
-        replace_block_command_nested_boxed_article(content, 'memo')
-        replace_block_command_nested_boxed_article(content, 'tip')
-        replace_block_command_nested_boxed_article(content, 'info')
-        replace_block_command_nested_boxed_article(content, 'warning')
-        replace_block_command_nested_boxed_article(content, 'important')
-        replace_block_command_nested_boxed_article(content, 'caution')
-        replace_block_command_nested_boxed_article(content, 'notice')
+        unless Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('5.0.0')
+          replace_block_command_nested_boxed_article(content, 'note')
+          replace_block_command_nested_boxed_article(content, 'memo')
+          replace_block_command_nested_boxed_article(content, 'tip')
+          replace_block_command_nested_boxed_article(content, 'info')
+          replace_block_command_nested_boxed_article(content, 'warning')
+          replace_block_command_nested_boxed_article(content, 'important')
+          replace_block_command_nested_boxed_article(content, 'caution')
+          replace_block_command_nested_boxed_article(content, 'notice')
+        end
       end
 
       def replace_block_commentout(content)
+        d = content.dup
+        d.scan(/(^#@)(\++)(.*?)(^#@)(-+)/m) { |m|
+          matched = m[0..-1].join
+          inner = m[2]
+          inner.gsub!(/(^.)/, '#@#\1')
+          content.gsub!(/#{Regexp.escape(matched)}/m, "#@##{m[1]}#{inner}#@##{m[4]}")
+        }
+      end
+
+      def replace_block_commentout_without_sampleout(content)
         d = content.dup
         d.gsub!(/(^\/\/sampleoutputbegin\[)(.*?)(\])(.*?)(^\/\/sampleoutputend)/m, '')
         d.scan(/(^#@)(\++)(.*?)(^#@)(-+)/m) { |m|
@@ -195,7 +210,7 @@ module ReVIEW
       end
 
       def replace_sampleoutput(content)
-        replace_block_commentout(content)
+        # replace_block_commentout_without_sampleout(content)
         content.dup.scan(/(^\/\/sampleoutputbegin\[)(.*?)(\].*?\R)(.*?)(^\/\/sampleoutputend)/m) { |m|
           matched = m[0..-1].join
           sampleoutputbegin = m[0..2].join
@@ -213,6 +228,12 @@ module ReVIEW
         if require_option_count > 0
           while !content.gsub!(/(^\/\/#{command}(\[[^\[\]]*?\]){0,#{require_option_count-1}})($|{)/, '\1[]\3').nil?
           end
+        end
+      end
+
+      def fix_deprecated_list(content)
+        if Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('4.0.0')
+          content.gsub!(/^: (.*)/, ' : \1')
         end
       end
 
@@ -289,7 +310,7 @@ module ReVIEW
             post = m[6]
             id = "link_auto_footnote#{urls.length}"
             urls[id] = url
-            content.sub!(/#{matched}$/, "#{prev}@<href>{#{url},#{text}} @<fn>{#{id}} #{post}")
+            content.sub!(/#{Regexp.escape(matched)}$/, "#{prev}@<href>{#{url},#{text}} @<fn>{#{id}} #{post}")
           end
         }
 
@@ -346,12 +367,20 @@ module ReVIEW
         # fixed lack of options
         content.gsub!(/^\/\/list{/, '//list[][]{')
 
+        if Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('4.0.0')
+          # empty caption is not allow
+          content.gsub!(/^\/\/image\[(.*)\]\[\]{/, '//image[\1][ ]{')
+        end
+
         # special command
         replace_sampleoutput(content)
 
         if linkurl_footnote
           add_linkurl_footnote(content)
         end
+
+        # # br to blankline
+        # content.gsub!(/(.*)@<br>{}(.*)/, '\1\n//blankline\n\2')
 
         # nested command
         replace_block_command_nested_boxed_articles(content)
@@ -363,6 +392,9 @@ module ReVIEW
         # remove starter extension
         remove_starter_refid(content)
         remove_starter_options(content)
+
+        # replace block comment
+        replace_block_commentout(content)
 
         # special charactor
         content.gsub!('@<LaTeX>{}', 'LaTeX')
@@ -376,6 +408,9 @@ module ReVIEW
 
         # expand nested inline command
         expand_nested_inline_command(content)
+
+        # fix deprecated
+        fix_deprecated_list(content)
 
         File.write(contentfile, content)
         copy_embedded_contents(outdir, content)
@@ -491,7 +526,10 @@ module ReVIEW
         updater = ReVIEW::Update.new
         updater.force = true
         # updater.backup = false
-        updater.execute()
+        begin
+          updater.execute()
+        rescue
+        end
         Dir.chdir(pwd)
 
         if options['preproc']

@@ -1,4 +1,4 @@
-FROM vvakame/review:3.2
+FROM vvakame/review:5.0
 
 RUN gem install review-retrovert
 

@@ -99,6 +99,18 @@ module ReVIEW
         }
       end
 
+      def rewrite_yml_array_(yamlfile, key, val)
+        content = File.read(yamlfile)
+        content.gsub!(/^(\s*)#{key}:\s*\[.*?\]/m, '\1' + "#{key}: #{val}")
+        File.write(yamlfile, content)
+      end
+
+      def rewrite_yml_array(key, val)
+        config_files.each { |current_file|
+          rewrite_yml_array_(File.join(@basedir, current_file), key, val)
+        }
+      end
+
       def rewrite_retrovert_yml()
         @retrovert_configs.each { |current_file|
           yamlfile = File.expand_path(current_file, @basedir)

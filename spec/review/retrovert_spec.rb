@@ -105,7 +105,7 @@ RSpec.describe 'convert', type: :aruba do
       expect(file99).to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, file99)).read()
       expect(text).not_to match(/^\/\/sideimage/)
-      expect(text).to match(/^\/\/image\[tw-icon\]\[\]{\R\/\/}/)
+      expect(text).to match(/^\/\/image\[tw-icon\]\[\s*\]{\R\/\/}/)
     end
 
     # it 'block command replace exclude options' do
@@ -122,22 +122,24 @@ RSpec.describe 'convert', type: :aruba do
       expect(text).to match(/^\/\/lead/)
     end
 
-    it 'nested block command' do
-      expect(file01).to be_an_existing_file
-      text = File.open(File.join(aruba.current_directory, file01)).read()
-      expect(text).not_to match(/^\/\/}\R*^\/\/}/m)
+    unless Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('5.0.0')
+      it 'nested block command' do
+        expect(file01).to be_an_existing_file
+        text = File.open(File.join(aruba.current_directory, file01)).read()
+        expect(text).not_to match(/^\/\/}\R*^\/\/}/m)
 
-      expect(file03).to be_an_existing_file
-      text = File.open(File.join(aruba.current_directory, file03)).read()
-      # expect(text).not_to match(/^\/\/}\R*^\/\/}/m)
-      expect(text).to match(/^\/\/table\[tbl-xthfx\]/)
+        expect(file03).to be_an_existing_file
+        text = File.open(File.join(aruba.current_directory, file03)).read()
+        # expect(text).not_to match(/^\/\/}\R*^\/\/}/m)
+        expect(text).to match(/^\/\/table\[tbl-xthfx\]/)
+      end
     end
 
-    it 'nested block command exclude {}' do
-      expect(file06).to be_an_existing_file
-      text = File.open(File.join(aruba.current_directory, file06)).read()
-      expect(text).not_to match(/^#@#\/\/footnote/)
-    end
+    # it 'nested block command exclude {}' do
+    #   expect(file06).to be_an_existing_file
+    #   text = File.open(File.join(aruba.current_directory, file06)).read()
+    #   expect(text).not_to match(/^#@#\/\/footnote/)
+    # end
 
     it 'nested inline command' do
       expect(file01).to be_an_existing_file
@@ -203,7 +205,7 @@ RSpec.describe 'convert', type: :aruba do
     it 'block comment in sampleout' do
       expect(file02).to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, file02)).read()
-      expect(text).to match(/^#@#\/\/sampleoutputbegin.*?^#@\++.*^#@-+.*?^#@#\/\/sampleoutputend/m)
+      expect(text).not_to match(/^#@#\/\/sampleoutputbegin.*?^#@\++.*^#@-+.*?^#@#\/\/sampleoutputend/m)
     end
 
     it 'block comment' do
@@ -223,7 +225,15 @@ RSpec.describe 'convert', type: :aruba do
 
     it 'preproc' do
       expect(last_command_started).to be_successfully_executed
-      expect(last_command_started).to have_output(/INFO: preproc/)
+      expect(last_command_started).to have_output(/INFO.*: preproc/)
+    end
+
+    if Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('4.0.0')
+      it 'deprecated list' do
+        expect(file02).to be_an_existing_file
+        text = File.open(File.join(aruba.current_directory, file02)).read()
+        expect(text).not_to match(/^:/)
+      end
     end
 
   end
