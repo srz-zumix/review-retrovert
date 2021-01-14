@@ -308,7 +308,7 @@ module ReVIEW
             post = m[6]
             id = "link_auto_footnote#{urls.length}"
             urls[id] = url
-            content.sub!(/#{matched}$/, "#{prev}@<href>{#{url},#{text}} @<fn>{#{id}} #{post}")
+            content.sub!(/#{Regexp.escape(matched)}$/, "#{prev}@<href>{#{url},#{text}} @<fn>{#{id}} #{post}")
           end
         }
 
