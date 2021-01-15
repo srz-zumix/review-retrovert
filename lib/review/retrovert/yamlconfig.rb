@@ -28,7 +28,6 @@ module ReVIEW
 
         @basedir = File.absolute_path(File.dirname(yamlfile))
         @basename = File.basename(yamlfile)
-        @rootyaml = yamlfile
 
         begin
           @config.check_version(ReVIEW::VERSION)
@@ -95,7 +94,7 @@ module ReVIEW
       end
 
       def commentout_root_yml(key)
-        commentout(@rootyaml, key)
+        commentout(File.join(@basedir, @basename), key)
       end
 
       def rewrite_yml_(yamlfile, key, val)
