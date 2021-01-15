@@ -363,7 +363,7 @@ pdfmaker:
 
 ## @<chapref>{} や @<hd>{} で、章(Chapter)や節(Section)へのリンクを作成
 ## （Re:VIEW の機能だがドキュメントには未記載？）
-#chapterlink: true
+chapterlink: true
 
 
 ## Webページ用の設定
