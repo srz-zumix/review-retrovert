@@ -148,6 +148,14 @@ module ReVIEW
         return yaml
       end
 
+      def path()
+        File.join(@basedir, @basename)
+      end
+
+      def catalogfile()
+        File.join(@basedir, @config['catalogfile'])
+      end
+
     end
   end
 end

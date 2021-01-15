@@ -13,6 +13,8 @@ module ReVIEW
         @outimagedir = nil
         @logger = ReVIEW.logger
         @configs = YamlConfig.new
+        @embeded_contents = []
+        @catalog_contents = []
       end
 
       def error(msg)
@@ -71,7 +73,6 @@ module ReVIEW
         pagesize = @config['starter']['pagesize'].downcase
         @configs.rewrite_yml_array('texdocumentclass', "[\"review-jsbook\", \"media=print,paper=#{pagesize}\"]")
         @config['retrovert'].each{ |k,v|
-          info k
           unless v..is_a?(Hash)
             @configs.commentout_root_yml(k)
           end
@@ -300,6 +301,7 @@ module ReVIEW
             outpath = File.join(File.absolute_path(outdir), filepath)
             FileUtils.mkdir_p(File.dirname(outpath))
             FileUtils.cp(srcpath, outpath)
+            @embeded_contents.push(filepath[0])
             update_content(outpath, outpath)
           end
         end
@@ -426,8 +428,13 @@ module ReVIEW
         files = contentfiles.is_a?(String) ? contentfiles.split(/\R/) : contentfiles
         files.each do |content|
           contentpath = File.join(contentdir, content)
+          srccontentpath = File.join(@srccontentsdir, content)
+          if @embeded_contents.include?(srccontentpath)
+            info "skip copy maped file #{contentpath}"
+            next
+          end
           unless File.exist?(contentpath)
-            srcpath = File.join(File.join(@basedir, @srccontentsdir), content)
+            srcpath = File.join(@basedir, srccontentpath)
             # info srcpath
             if File.exist?(srcpath)
               FileUtils.cp(srcpath, contentdir)
@@ -443,15 +450,11 @@ module ReVIEW
         contentdir = abspath
         info 'replace starter block command'
         info 'replace starter inline command'
-        if options['strict']
-          catalog = ReVIEW::Catalog.new(File.open(File.join(abspath, yamlfile)))
-          update_content_files(outdir, contentdir, catalog.predef())
-          update_content_files(outdir, contentdir, catalog.chaps())
-          update_content_files(outdir, contentdir, catalog.appendix())
-          update_content_files(outdir, contentdir, catalog.postdef())
-        else
-          # copy_contents(outdir)
-          contentsfiles = Pathname.glob(File.join(File.join(@basedir, @srccontentsdir), '*.re')).map(&:basename)
+        catalog = ReVIEW::Catalog.new(File.open(File.join(abspath, yamlfile)))
+        update_content_files(outdir, contentdir, @catalog_contents)
+        unless options['strict']
+          all_contentsfiles = Pathname.glob(File.join(File.join(@basedir, @srccontentsdir), '*.re')).map(&:basename)
+          contentsfiles = all_contentsfiles.select{ |path| ! @catalog_contents.include?(path.to_s) }
           update_content_files(outdir, contentdir, contentsfiles)
         end
       end
@@ -485,12 +488,8 @@ module ReVIEW
 
         if options['strict']
           catalog = ReVIEW::Catalog.new(File.open(File.join(abspath, yamlfile)))
-          preproc_content_files(outdir, pp, contentdir, catalog.predef())
-          preproc_content_files(outdir, pp, contentdir, catalog.chaps())
-          preproc_content_files(outdir, pp, contentdir, catalog.appendix())
-          preproc_content_files(outdir, pp, contentdir, catalog.postdef())
+          preproc_content_files(outdir, pp, contentdir, @catalog_contents)
         else
-          # copy_contents(outdir)
           contentsfiles = Pathname.glob(File.join(File.join(@basedir, @srccontentsdir), '*.re')).map(&:basename)
           preproc_content_files(outdir, pp, contentdir, contentsfiles)
         end
@@ -503,11 +502,22 @@ module ReVIEW
         FileUtils.rm(Dir.glob(File.join(outdir, '*.re')))
       end
 
+      def add_catalog_contents(contentfiles)
+        files = contentfiles.is_a?(String) ? contentfiles.split(/\R/) : contentfiles
+        @catalog_contents.concat(files)
+      end
+
       def load_config(yamlfile)
         @configs.open(yamlfile)
         @config = @configs.config
         @basedir = @configs.basedir
         @srccontentsdir = @config['contentdir']
+
+        catalog = ReVIEW::Catalog.new(File.open(@configs.catalogfile()))
+        add_catalog_contents(catalog.predef())
+        add_catalog_contents(catalog.chaps())
+        add_catalog_contents(catalog.appendix())
+        add_catalog_contents(catalog.postdef())
       end
 
       def create_initial_project(outdir, options)
