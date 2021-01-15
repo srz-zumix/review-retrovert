@@ -29,5 +29,5 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "thor"
   spec.add_development_dependency "aruba"
-  spec.add_runtime_dependency "review", ['>= 3.2.0']
+  spec.add_runtime_dependency "review", ['>= 3.0.0']
 end

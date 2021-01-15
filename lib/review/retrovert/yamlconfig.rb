@@ -28,6 +28,7 @@ module ReVIEW
 
         @basedir = File.absolute_path(File.dirname(yamlfile))
         @basename = File.basename(yamlfile)
+        @rootyaml = yamlfile
 
         begin
           @config.check_version(ReVIEW::VERSION)
@@ -87,9 +88,19 @@ module ReVIEW
         rewrite_retrovert_yml()
       end
 
+      def commentout(yamlfile, key)
+        content = File.read(yamlfile)
+        content.gsub!(/^(\s*)#{key}:(.*)$/, "#\\1#{key}:\\2")
+        File.write(yamlfile, content)
+      end
+
+      def commentout_root_yml(key)
+        commentout(@rootyaml, key)
+      end
+
       def rewrite_yml_(yamlfile, key, val)
         content = File.read(yamlfile)
-        content.gsub!(/^(\s*)#{key}:.*$/, '\1' + "#{key}: #{val}")
+        content.gsub!(/^(\s*)#{key}:.*$/, "\\1#{key}: #{val}")
         File.write(yamlfile, content)
       end
 
@@ -121,6 +132,7 @@ module ReVIEW
           # YAML.dump(yaml, File.open(yamlfile, "w"))
           content = Psych.dump(yaml)
           content.gsub!('---','')
+          content.gsub!(/^(.*):\s*$/, '\1: null')
           File.write(yamlfile, content)
         }
       end

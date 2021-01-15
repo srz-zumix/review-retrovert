@@ -9,8 +9,8 @@ module ReVIEW
       method_option "strict", desc: 'Only process files registered in the catalog', type: :boolean
       method_option "preproc", desc: 'Execute preproc after conversion', type: :boolean
       method_option "tabwidth", desc: 'Preproc tabwidth option value', type: :numeric, default: 0
-      method_option "table-br-replace", desc: '@<br>{} in table replace string', type: :string, default: ''
-      method_option "table-empty-replace", desc: 'empty cell(.) in table replace string', type: :string, default: '　'
+      method_option "table-br-replace", desc: '@<br>{} in table replace string (Default: empty)', type: :string, default: ''
+      method_option "table-empty-replace", desc: 'empty cell(.) in table replace string (Default full-width space)', type: :string, default: '　'
       def convert(review_starter_configfile, outdir)
         Converter.execute(review_starter_configfile, outdir, options)
       end
