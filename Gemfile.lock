@@ -2,7 +2,7 @@ PATH
   remote: .
   specs:
     review-retrovert (0.9.4)
-      review (>= 3.2.0)
+      review (>= 3.0.0)
       thor
 
 GEM

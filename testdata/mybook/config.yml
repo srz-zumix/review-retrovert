@@ -15,7 +15,7 @@ review_version: 2.0
 # その値がB.ymlよりも優先される。
 # 同様にA.yml、B.yml内でさらにinherit:パラメータを使うこともできる。
 # inherit: ["A.yml", "B.yml"]
-inherit: ["config-starter.yml"]
+inherit: ["config-starter.yml", "config-retrovert.yml"]
 
 # ブック名(ファイル名になるもの。ASCII範囲の文字を使用)
 bookname: mybook

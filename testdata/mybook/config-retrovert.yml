@@ -1,0 +1,7 @@
+# review-retrovert で変換したときに上書きする設定
+# 現在はトップレベルのコメントアウトのみ対応
+# サブ階層の設定を上書きしたい場合は、対象設定を inherit な yml ファイルに記述
+# > inherit: [config-base.yml, config-retrovert.yml]
+# 上記のようにすることで retrovert 後のプロジェクトでのみ設定を上書きできます
+retrovert:
+  chapterlink: null

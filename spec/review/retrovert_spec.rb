@@ -26,6 +26,8 @@ RSpec.describe 'convert', type: :aruba do
     let(:file92) { 'tmp/92-filelist.re' }
     let(:file93) { 'tmp/93-background.re' }
     let(:file99) { 'tmp/99-postface.re' }
+    let(:config) { 'tmp/config.yml' }
+    let(:retrovert_config) { 'tmp/config-retrovert.yml' }
     before(:each) { run_command("review-retrovert convert --preproc --tabwidth 4 #{config_yaml} tmp") }
 
     it 'command result' do
@@ -237,6 +239,16 @@ RSpec.describe 'convert', type: :aruba do
         text = File.open(File.join(aruba.current_directory, file02)).read()
         expect(text).not_to match(/^:/)
       end
+    end
+
+    it 'retrovert config' do
+      expect(config).to be_an_existing_file
+      text = File.open(File.join(aruba.current_directory, config)).read()
+      expect(text).not_to match(/^chapterlink: .*/)
+
+      expect(retrovert_config).to be_an_existing_file
+      text = File.open(File.join(aruba.current_directory, retrovert_config)).read()
+      expect(text).to match(/^chapterlink: null/)
     end
 
   end

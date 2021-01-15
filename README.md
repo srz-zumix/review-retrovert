@@ -22,10 +22,67 @@ Or install it yourself as:
 
     $ gem install review-retrovert
 
-## Usage
+## Commands
+
+```sh
+Commands:
+  review-retrovert convert {review_starter_configfile} {outdir}  # convert Re:VIEW Starter project to Re:VIEW project
+  review-retrovert help [COMMAND]                                # Describe available commands or one specific command
+  review-retrovert version                                       # show version
+```
+
+### Convert
+
+e.g.
 
 ```sh
 review-retrovert convert /path/to/dir/review-starter/config.yml <output directory>
+```
+
+Options
+
+```sh
+Usage:
+  review-retrovert convert {review_starter_configfile} {outdir}
+
+Options:
+  f, [--force]                                     # Force output
+      [--strict], [--no-strict]                    # Only process files registered in the catalog
+      [--preproc], [--no-preproc]                  # Execute preproc after conversion
+      [--tabwidth=N]                               # Preproc tabwidth option value
+                                                   # Default: 0
+      [--table-br-replace=TABLE-BR-REPLACE]        # @<br>{} in table replace string (Default: empty)
+      [--table-empty-replace=TABLE-EMPTY-REPLACE]  # empty cell(.) in table replace string (Default full-width space)
+                                                   # Default: 　
+
+convert Re:VIEW Starter project to Re:VIEW project
+```
+
+#### retrovert config
+
+If the retrovert key is present in config.yml, the subordinate elements will take effect after convert.
+
+If you have a setting that you want to enable only after retrovert, use inherit as shown below.
+
+* config-retrovert.yml
+
+```yml
+retrovert:
+  chapterlink: null
+```
+
+* config-base.yml
+
+```yml
+chapterlink: true
+```
+
+* config.yml
+
+```yml
+inherit: ["config-base.yml", "config-starter.yml", "config-retrovert.yml"]
+
+#chapterlink: true
 ```
 
 ## Development
