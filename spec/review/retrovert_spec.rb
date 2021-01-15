@@ -230,9 +230,6 @@ RSpec.describe 'convert', type: :aruba do
       expect(last_command_started).to have_output(/INFO.*: preproc/)
     end
 
-    # it 'preproc delete #@mapXXX~#@end' do
-    # end
-
     if Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('4.0.0')
       it 'deprecated list' do
         expect(file02).to be_an_existing_file
@@ -251,5 +248,17 @@ RSpec.describe 'convert', type: :aruba do
       expect(text).to match(/^chapterlink: null/)
     end
 
+    it 'preproc delete #@mapXXX~#@end' do
+      expect('tmp/r0-root.re').to be_an_existing_file
+      text = File.open(File.join(aruba.current_directory, 'tmp/r0-root.re')).read()
+      expect(text).not_to match(/^#[@]mapfile.*/)
+      expect(text).not_to match(/^#[@]end$/)
+      expect(text).to match(/^== Inner file$/)
+    end
+
+    it 'no duplicate mapfile' do
+      expect('tmp/r0-root.re').to be_an_existing_file
+      expect('tmp/r0-inner.re').not_to be_an_existing_file
+    end
   end
 end
