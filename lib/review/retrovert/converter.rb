@@ -379,6 +379,8 @@ module ReVIEW
 
         # fixed lack of options
         content.gsub!(/^\/\/list{/, '//list[][]{')
+        # empty br line to blankline
+        content.gsub!(/^\s*@<br>{}\s*$/, '//blankline')
 
         if Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('4.0.0')
           # empty caption is not allow
