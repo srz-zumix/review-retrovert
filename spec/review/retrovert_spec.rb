@@ -26,6 +26,8 @@ RSpec.describe 'convert', type: :aruba do
     let(:file92) { 'tmp/92-filelist.re' }
     let(:file93) { 'tmp/93-background.re' }
     let(:file99) { 'tmp/99-postface.re' }
+    let(:root)  { 'tmp/r0-root.re' }
+    let(:inner) { 'tmp/contents/r0-inner.re' }
     let(:config) { 'tmp/config.yml' }
     let(:retrovert_config) { 'tmp/config-retrovert.yml' }
     before(:each) { run_command("review-retrovert convert --preproc --tabwidth 4 #{config_yaml} tmp") }
@@ -249,16 +251,24 @@ RSpec.describe 'convert', type: :aruba do
     end
 
     it 'preproc delete #@mapXXX~#@end' do
-      expect('tmp/r0-root.re').to be_an_existing_file
-      text = File.open(File.join(aruba.current_directory, 'tmp/r0-root.re')).read()
+      expect(root).to be_an_existing_file
+      text = File.open(File.join(aruba.current_directory, root)).read()
       expect(text).not_to match(/^#[@]mapfile.*/)
       expect(text).not_to match(/^#[@]end$/)
       expect(text).to match(/^== Inner file$/)
     end
 
     it 'no duplicate mapfile' do
-      expect('tmp/r0-root.re').to be_an_existing_file
+      expect(root).to be_an_existing_file
       expect('tmp/r0-inner.re').not_to be_an_existing_file
+    end
+
+    it 'br to blankline' do
+      expect(root).to be_an_existing_file
+      text = File.open(File.join(aruba.current_directory, root)).read()
+      expect(text).not_to match(/^\s*@<br>{}\s*$/)
+      expect(text).to match(/^\s*.*@<br>{}\s*$/)
+      expect(text).to match(/^\/\/blankline$/)
     end
   end
 end
