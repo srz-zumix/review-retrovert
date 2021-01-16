@@ -307,7 +307,11 @@ module ReVIEW
         end
       end
 
-      def add_linkurl_footnote(content)
+      def make_id_label(name)
+        name.gsub(/[^A-Za-z0-9]/, '_')
+      end
+
+      def add_linkurl_footnote(content, filename)
         urls = {}
         content.dup.scan(/(^.*)(@<href>{)(.*?)(,)(.*?)(})(.*)$/) { |m|
           unless m[0].match(/^#@#/)
@@ -316,7 +320,7 @@ module ReVIEW
             url = m[2]
             text = m[4]
             post = m[6]
-            id = "link_auto_footnote#{urls.length}"
+            id = "#{make_id_label(filename)}_link_auto_footnote#{urls.length}"
             urls[id] = url
             content.sub!(/#{Regexp.escape(matched)}$/, "#{prev}@<href>{#{url},#{text}} @<fn>{#{id}} #{post}")
           end
@@ -335,6 +339,7 @@ module ReVIEW
 
       def update_content(outdir, contentfile)
         info contentfile
+        filename = File.basename(contentfile, '.*')
         content = File.read(contentfile)
         content.gsub!(/@<href>{(.*?)#.*?,(.*?)}/, '@<href>{\1,\2}')
         content.gsub!(/@<href>{(.*?)#.*?}/, '@<href>{\1}')
@@ -384,7 +389,7 @@ module ReVIEW
         replace_sampleoutput(content)
 
         if linkurl_footnote
-          add_linkurl_footnote(content)
+          add_linkurl_footnote(content, filename)
         end
 
         # # br to blankline
