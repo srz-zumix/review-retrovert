@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    review-retrovert (0.9.4)
+    review-retrovert (0.9.5)
       review (>= 3.0.0)
       thor
 
