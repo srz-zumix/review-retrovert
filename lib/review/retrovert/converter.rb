@@ -15,6 +15,7 @@ module ReVIEW
         @configs = YamlConfig.new
         @embeded_contents = []
         @catalog_contents = []
+        @ird = false
       end
 
       def error(msg)
@@ -69,7 +70,6 @@ module ReVIEW
         @configs.rewrite_yml('contentdir', '.')
         @configs.rewrite_yml('hook_beforetexcompile', 'null')
         @configs.rewrite_yml('texstyle', '["reviewmacro"]')
-        # @configs.rewrite_yml('chapterlink', 'null')
         pagesize = @config['starter']['pagesize'].downcase
         @configs.rewrite_yml_array('texdocumentclass', "[\"review-jsbook\", \"media=print,paper=#{pagesize}\"]")
         @config['retrovert'].each{ |k,v|
@@ -77,6 +77,9 @@ module ReVIEW
             @configs.commentout_root_yml(k)
           end
         }
+        if @ird
+          @configs.rewrite_yml('chapterlink', 'null')
+        end
       end
 
       def replace_compatible_block_command_outline(content, command, new_command, option_count)
@@ -394,9 +397,6 @@ module ReVIEW
           add_linkurl_footnote(content, filename)
         end
 
-        # # br to blankline
-        # content.gsub!(/(.*)@<br>{}(.*)/, '\1\n//blankline\n\2')
-
         # nested command
         replace_block_command_nested_boxed_articles(content)
 
@@ -426,6 +426,11 @@ module ReVIEW
 
         # fix deprecated
         fix_deprecated_list(content)
+
+        if @ird
+          # br to blankline
+          content.gsub!(/(.*)@<br>{}(.*)/, '\1\n//blankline\n\2')
+        end
 
         File.write(contentfile, content)
         copy_embedded_contents(outdir, content)
@@ -536,6 +541,7 @@ module ReVIEW
       def execute(yamlfile, outdir, options)
         @table_br_replace = options['table-br-replace']
         @table_empty_replace = options['table-empty-replace']
+        @ird = options['ird']
         load_config(yamlfile)
         create_initial_project(outdir, options)
 
