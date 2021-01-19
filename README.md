@@ -21,6 +21,12 @@ And then execute:
 Or install it yourself as:
 
     $ gem install review-retrovert
+    
+## Use Docker
+
+```
+docker run -v "$(pwd):/work" -w /work srzzumix/review-retrovert convert target/config.yml outdir
+```
 
 ## Commands
 
@@ -33,13 +39,13 @@ Commands:
 
 ### Convert
 
-e.g.
+#### e.g.
 
 ```sh
 review-retrovert convert /path/to/dir/review-starter/config.yml <output directory>
 ```
 
-Options
+#### Options
 
 ```sh
 Usage:
