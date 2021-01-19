@@ -12,6 +12,7 @@ module ReVIEW
       method_option "table-br-replace", desc: '@<br>{} in table replace string (Default: empty)', type: :string, default: ''
       method_option "table-empty-replace", desc: 'empty cell(.) in table replace string (Default full-width space)', type: :string, default: '　'
       method_option "ird", desc: 'for IRD', type: :boolean
+      method_option "no-image", desc: 'donot copy image', type: :boolean
       def convert(review_starter_configfile, outdir)
         Converter.execute(review_starter_configfile, outdir, options)
       end
