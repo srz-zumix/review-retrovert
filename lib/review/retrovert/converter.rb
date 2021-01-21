@@ -1,5 +1,6 @@
 require "review"
 require 'fileutils'
+require 'tmpdir'
 require "review/retrovert/yamlconfig"
 
 module ReVIEW
@@ -15,6 +16,7 @@ module ReVIEW
         @configs = YamlConfig.new
         @embeded_contents = []
         @catalog_contents = []
+        @ird = false
       end
 
       def error(msg)
@@ -47,21 +49,50 @@ module ReVIEW
         FileUtils.cp_r(Dir.glob(File.join(path, '*.re')), outdir)
       end
 
-      def copy_images(outdir)
+      def get_out_imagedir(outdir)
         imagedir = @config['imagedir']
-        srcpath = File.join(@basedir, imagedir)
         outimagedir = File.basename(imagedir) # Re:VIEW not support sub-directory
         outpath = File.join(outdir, outimagedir)
+        return outpath
+      end
+
+      def store_out_image(outdir)
+        outpath = get_out_imagedir(outdir)
+        if File.exist?(outpath)
+          dir = Dir.mktmpdir('review-retrovert')
+          FileUtils.mv(Dir.glob(File.join(outpath, "**/*")), dir)
+          return dir
+        end
+        return nil
+      end
+
+      def restore_out_image(outpath, tmpdir)
+        if File.exist?(tmpdir)
+          FileUtils.mkdir_p(outpath)
+          FileUtils.mv(Dir.glob(File.join(tmpdir, "**/*")), outpath)
+          FileUtils.rm_rf(tmpdir)
+        end
+      end
+
+      def copy_images(outdir, store_image_dir)
+        imagedir = @config['imagedir']
+        outimagedir = File.basename(imagedir) # Re:VIEW not support sub-directory
+        outpath = get_out_imagedir(outdir)
         FileUtils.mkdir_p(outpath)
-        image_ext = @config['image_ext']
-        srcroot = Pathname.new(srcpath)
-        image_ext.each { |ext|
-          Dir.glob(File.join(srcpath, "**/*.#{ext}")).each { |srcimg|
-            outimg = File.join(outpath, Pathname.new(srcimg).relative_path_from(srcroot))
-            FileUtils.makedirs(File.dirname(outimg))
-            FileUtils.cp(srcimg, outimg)
+        if store_image_dir
+          restore_out_image(outpath, store_image_dir)
+        else
+          srcpath = File.join(@basedir, imagedir)
+          image_ext = @config['image_ext']
+          srcroot = Pathname.new(srcpath)
+          image_ext.each { |ext|
+            Dir.glob(File.join(srcpath, "**/*.#{ext}")).each { |srcimg|
+              outimg = File.join(outpath, Pathname.new(srcimg).relative_path_from(srcroot))
+              FileUtils.makedirs(File.dirname(outimg))
+              FileUtils.cp(srcimg, outimg)
+            }
           }
-        }
+        end
         @configs.rewrite_yml('imagedir', outimagedir)
       end
 
@@ -69,7 +100,6 @@ module ReVIEW
         @configs.rewrite_yml('contentdir', '.')
         @configs.rewrite_yml('hook_beforetexcompile', 'null')
         @configs.rewrite_yml('texstyle', '["reviewmacro"]')
-        # @configs.rewrite_yml('chapterlink', 'null')
         pagesize = @config['starter']['pagesize'].downcase
         @configs.rewrite_yml_array('texdocumentclass', "[\"review-jsbook\", \"media=print,paper=#{pagesize}\"]")
         @config['retrovert'].each{ |k,v|
@@ -77,6 +107,9 @@ module ReVIEW
             @configs.commentout_root_yml(k)
           end
         }
+        if @ird
+          @configs.rewrite_yml('chapterlink', 'null')
+        end
       end
 
       def replace_compatible_block_command_outline(content, command, new_command, option_count)
@@ -394,9 +427,6 @@ module ReVIEW
           add_linkurl_footnote(content, filename)
         end
 
-        # # br to blankline
-        # content.gsub!(/(.*)@<br>{}(.*)/, '\1\n//blankline\n\2')
-
         # nested command
         replace_block_command_nested_boxed_articles(content)
 
@@ -426,6 +456,12 @@ module ReVIEW
 
         # fix deprecated
         fix_deprecated_list(content)
+
+        if @ird
+          # br to blankline
+          content.gsub!(/(.*)@<br>{}$/, "\\1\n//blankline")
+          content.gsub!(/(.*)@<br>{}(.*)$/, "\\1\n//blankline\n\\2")
+        end
 
         File.write(contentfile, content)
         copy_embedded_contents(outdir, content)
@@ -536,12 +572,14 @@ module ReVIEW
       def execute(yamlfile, outdir, options)
         @table_br_replace = options['table-br-replace']
         @table_empty_replace = options['table-empty-replace']
+        @ird = options['ird']
         load_config(yamlfile)
+        store_image_dir = store_out_image(outdir) if options['no-image']
         create_initial_project(outdir, options)
 
         copy_config(outdir)
         copy_catalog(outdir)
-        copy_images(outdir)
+        copy_images(outdir, store_image_dir)
         update_config(outdir)
         update_contents(outdir, options)
 
