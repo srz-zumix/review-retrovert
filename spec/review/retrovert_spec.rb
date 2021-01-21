@@ -30,7 +30,7 @@ RSpec.describe 'convert', type: :aruba do
     let(:inner) { 'tmp/contents/r0-inner.re' }
     let(:config) { 'tmp/config.yml' }
     let(:retrovert_config) { 'tmp/config-retrovert.yml' }
-    before(:each) { run_command("review-retrovert convert --preproc --tabwidth 4 #{config_yaml} tmp") }
+    before(:each) { run_command("review-retrovert convert --preproc --tabwidth 4 --ird #{config_yaml} tmp") }
 
     it 'command result' do
       expect(last_command_started).to be_successfully_executed
