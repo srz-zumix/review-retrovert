@@ -48,7 +48,7 @@ review-retrovert convert /path/to/dir/review-starter/config.yml <output director
 #### Options
 
 ```sh
-Usage:
+sage:
   review-retrovert convert {review_starter_configfile} {outdir}
 
 Options:
@@ -60,6 +60,8 @@ Options:
       [--table-br-replace=TABLE-BR-REPLACE]        # @<br>{} in table replace string (Default: empty)
       [--table-empty-replace=TABLE-EMPTY-REPLACE]  # empty cell(.) in table replace string (Default full-width space)
                                                    # Default: 　
+      [--ird], [--no-ird]                          # for IRD
+      [--no-image]                                 # donot copy image
 
 convert Re:VIEW Starter project to Re:VIEW project
 ```
