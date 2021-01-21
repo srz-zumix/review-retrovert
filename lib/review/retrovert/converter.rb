@@ -392,8 +392,12 @@ module ReVIEW
         delete_block_command(content, 'clearpage')
         delete_block_command(content, 'flushright')
         delete_block_command(content, 'centering')
-        delete_block_command(content, 'noindent')
         delete_block_command(content, 'paragraphend')
+
+        # delete IRD unsupported commands
+        if @ird
+          delete_block_command(content, 'noindent')
+        end
 
         replace_inline_command(content, 'secref', 'hd')
         replace_inline_command(content, 'file', 'kw')
@@ -459,8 +463,8 @@ module ReVIEW
 
         if @ird
           # br to blankline
-          content.gsub!(/(.*)@<br>{}$/, "\\1\n//blankline")
-          content.gsub!(/(.*)@<br>{}(.*)$/, "\\1\n//blankline\n\\2")
+          content.gsub!(/(.*)@<br>{}$/, "\\1\n\n")
+          content.gsub!(/(.*)@<br>{}(.*)$/, "\\1\n\n\\2")
         end
 
         File.write(contentfile, content)
