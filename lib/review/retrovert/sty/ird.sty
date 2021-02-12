@@ -1,0 +1,302 @@
+%
+% フォント
+%
+
+% \tiny         5pt
+% \scriptsize	  7pt
+% \footnotesize	8pt
+% \small	      9pt
+% \normalsize	  10pt(標準)
+% \large	      12pt
+% \Large	      14.4pt
+% \LARGE	      17.28pt
+% \huge	        20.74pt
+% \Huge
+
+\def\@setfontsize#1#2#3{%
+  \ifx\protect\@typeset@protect
+    \let\@currsize#1%
+  \fi
+  \fontsize{#2}{#3}\selectfont
+  \ifdim\parindent>\z@
+    \if@english
+      \parindent=1em
+    \else
+      \parindent=1zw
+    \fi
+  \fi
+  \kanjiskip=0zw plus .1zw minus .01zw
+  \ifdim\xkanjiskip>\z@
+    \if@slide \xkanjiskip=0.1em \else
+      % \xkanjiskip=0.25em plus 0.15em minus 0.06em
+      \xkanjiskip=0.2em plus 0.15em minus 0.16em
+    \fi
+  \fi
+}
+
+%
+% 章・節・項の変更
+%
+
+\def\@afterheading{%
+  \@nobreaktrue
+  \everypar{%
+    \if@nobreak
+      \@nobreakfalse
+      % \clubpenalty \@M
+      \clubpenalty \z@ % 段落一段目での改ページを許可する
+      \if@afterindent \else
+        {\setbox\z@\lastbox}%
+      \fi
+    \else
+      \clubpenalty \@clubpenalty
+      \everypar{\everyparhook}%
+    \fi\everyparhook}}
+
+
+\def\@makechapterhead#1{%
+%  \vspace*{2\Cvs}% 欧文は50pt →上空きを無効化
+  {\parindent \z@ \raggedright \normalfont
+    \ifnum \c@secnumdepth >\m@ne
+      \if@mainmatter
+        \huge\headfont \@chapapp\thechapter\@chappos
+        % \par\nobreak
+        % \vskip \Cvs % 欧文は20pt
+      \fi
+    \fi
+    \interlinepenalty\@M
+    \huge \headfont \ #1\par\nobreak
+    \vskip 3\Cvs}} % 欧文は40pt
+
+% \usepackage[hiragino-pron]{pxchfon}
+\renewcommand{\headfont}{\gtfamily\sffamily}
+
+\hyphenpenalty=10000\relax
+
+\renewcommand{\section}{%
+  \if@slide\clearpage\fi
+  \@startsection{section}{1}{\z@}%
+  {1.2\Cvs \@plus.3\Cdp \@minus1.2\Cdp}% 前アキ
+  {.4\Cvs \@plus.3\Cdp}% 後アキ
+  {\normalfont\large\bfseries\headfont\raggedright}}
+
+\renewcommand{\subsection}{\@startsection{subsection}{2}{\z@}%
+  {.8\Cvs \@plus.5\Cdp \@minus1.2\Cdp}% 前アキ
+  {.3\Cvs \@plus.8\Cdp}% 後アキ
+  {\normalfont\normalsize\headfont}}
+
+\renewcommand{\subsubsection}{\@startsection{subsubsection}{3}{\z@}%
+  {.8\Cvs \@plus.5\Cdp \@minus1.2\Cdp}%
+  {\if@slide .2\Cvs \@plus.6\Cdp \else \z@ \fi}%
+  {\normalfont\normalsize}%
+  }
+
+\def\@startsection#1#2#3#4#5#6{%
+  \if@noskipsec \leavevmode \fi
+  \par
+  \@tempskipa #4\relax
+  \if@english \@afterindentfalse \else \@afterindenttrue \fi
+  \ifdim \@tempskipa <\z@
+    \@tempskipa -\@tempskipa \@afterindentfalse
+  \fi
+  \if@nobreak
+    \everypar{}%
+  \else
+    \addpenalty\@secpenalty\addvspace\@tempskipa
+    %改ページ後の不要な空白を削除
+%    \addpenalty\@secpenalty
+%    \ifdim \@tempskipa >\z@
+%      \if@slide
+%      \else
+%        \null
+%        \vspace*{-\baselineskip}%
+%      \fi
+%      \vskip\@tempskipa
+%    \fi
+  \fi
+  \noindent
+  \@ifstar
+    {\@ssect{#3}{#4}{#5}{#6}}%
+    {\@dblarg{\@sect{#1}{#2}{#3}{#4}{#5}{#6}}}}
+
+\def\@ssect#1#2#3#4#5{%
+  \@tempskipa #3\relax
+  \ifdim \@tempskipa<\z@
+    \def\@svsechd{#4{\hskip #1\relax #5}}%
+  \else
+    \begingroup
+      #4{%
+        \@hangfrom{\hskip #1}%
+          \interlinepenalty \@M #5\@@par}%
+    \endgroup
+    \nopagebreak[4]%
+  \fi
+  \@xsect{#3}}
+
+\def\@xsect#1{%
+  \@tempskipa #1\relax
+  \ifdim \@tempskipa<\z@
+    \@nobreakfalse
+    \global\@noskipsectrue
+    \everypar{%
+      \if@noskipsec
+        \global\@noskipsecfalse
+       {\setbox\z@\lastbox}%
+        \clubpenalty\@M
+        \begingroup \@svsechd \endgroup
+        \unskip
+        \@tempskipa #1\relax
+        \hskip -\@tempskipa
+      \else
+        \clubpenalty \@clubpenalty
+        \everypar{\everyparhook}%
+      \fi\everyparhook}%
+  \else
+    \nopagebreak[4]
+    \par \nobreak
+    \vskip \@tempskipa
+    \@afterheading
+  \fi
+  \if@slide
+    {\vskip\if@twocolumn-5\jsc@mpt\else-6\jsc@mpt\fi
+     \maybeblue\hrule height0\jsc@mpt depth1\jsc@mpt
+     \vskip\if@twocolumn 4\jsc@mpt\else 7\jsc@mpt\fi\relax}%
+  \fi
+  \par  % 2000-12-18
+  \ignorespaces}
+
+%
+% コラムの変更
+%
+
+\renewenvironment{reviewcolumn}[1][]{%
+     \begin{framed}
+     \reviewcolumnhead{}{#1}
+     \footnotesize
+  }{%
+     \end{framed}
+  % \vspace{-2pt}
+  }
+
+\renewcommand{\reviewcolumnhead}[2]{%
+  {\noindent\large\bfseries #2}\vspace{1.7mm}}
+
+
+%
+% 図
+%
+
+\renewenvironment{reviewimage}{%
+  \begin{figure}
+    \begin{flushleft}}{%
+    \end{flushleft}
+  \end{figure}
+  \vspace*{-9.5pt} % not リュウミン
+  }
+
+% \renewcommand\reviewimagecaption[1]{%
+%   \captionsetup{format=hang,font=scriptsize,labelfont=bf,margin=50pt,name=図}
+%   \caption{ \bfseries\scriptsize{#1}} \vspace{-1.5mm}}
+
+\renewcommand\reviewimagecaption[1]{%
+  \captionsetup{format=hang,font=footnotesize,labelfont=bf,margin=0pt,justification=raggedright,singlelinecheck=off,name=図}
+  \vspace*{-2mm} \caption{ \bfseries\footnotesize{#1} } \vspace{-1.5mm}}
+
+% not リュウミン
+% フォントのに対して幅が広くなりすぎて図が大きくなりすぎるので幅を狭める
+\def\irdmaxwidth{0.965\textwidth}
+\usepackage[export]{adjustbox}
+\DeclareRobustCommand{\reviewincludegraphics}[2][]{%
+  \adjustbox{max width=\irdmaxwidth}{%
+  \includegraphics[#1]{#2}}%
+  }
+
+%
+% 表
+%
+\renewcommand{\reviewtablecaption}[1]{%
+  \captionsetup{format=hang,font=footnotesize,margin=70pt,name=表}
+  \caption{ \footnotesize{#1}} \vspace{-3mm}}
+
+\renewcommand{\reviewimgtablecaption}[1]{%
+  \captionsetup{format=hang,font=footnotesize,margin=70pt,name=表}
+  \caption{ \footnotesize\noindent{#1}} \vspace{-3mm}}
+
+%
+% 箇条書き
+%
+
+% 要素の間隔を 0 にする
+
+\usepackage{enumitem}
+\setlist[enumerate]{topsep=0pt,parsep=0pt,partopsep=1pt}
+\setlist[itemize]{topsep=0pt,parsep=0pt,partopsep=1pt}
+
+%
+% リスト
+%
+
+\renewcommand{\reviewlistcaption}[1]{%
+\vspace*{0.6zw}\medskip{\small\noindent #1}\vspace*{-1.3zw}}
+
+\renewenvironment{reviewlist}{%
+  \begin{shaded}%
+    \vspace*{-1zw}% 前後の余白削除
+    \small%
+    \ifdefined\reviewlistxkanjiskip%
+      \xkanjiskip=\reviewlistxkanjiskip%
+    \fi%
+    \setlength{\baselineskip}{1.3zw}%
+    \begin{alltt}}{%
+    \end{alltt}%
+    \vspace*{-1zw}% 前後の余白削除
+  \end{shaded}%
+  \par%
+  % \vspace*{0.5zw}%
+  \vspace*{1zw}%
+  }
+
+%
+% cmd
+%
+
+\renewenvironment{reviewlistblock}{\needspace{\Cvs}}{}
+
+\renewenvironment{reviewcmd}{%
+  \medskip%
+  \ifdefined\reviewlistxkanjiskip%
+    \xkanjiskip=\reviewlistxkanjiskip%
+  \fi%
+  \vspace*{-2zw \@plus2.7\Cdp}% 枠の前の余白削除
+  \begin{framed}%
+    \vspace*{-1zw}% 前後の余白削除
+    % \setlength{\baselineskip}{1.3zw}%
+    \setlength{\baselineskip}{1.8zw}%
+    \begin{alltt}}{%
+    \end{alltt}%
+    \vspace*{-1zw}% 前後の余白削除
+  \end{framed}%
+  % この値だといい感じになる
+  \vspace*{-0.28mm}% 枠の後ろの余白の調整
+  }
+
+% \renewenvironment{reviewcmd}{%
+%   \medskip%
+%   \ifdefined\reviewlistxkanjiskip%
+%     \xkanjiskip=\reviewlistxkanjiskip%
+%   \fi%
+%   \vspace*{-2zw \@plus2.7\Cdp}% 枠の前の余白削除
+%   \begin{framed}%
+%     \vspace*{-1zw}% 前後の余白削除
+%     % \setlength{\baselineskip}{1.3zw}%
+%     \setlength{\baselineskip}{2zw}%
+%     \begin{alltt}}{%
+%     \end{alltt}%
+%     \vspace*{-1zw}% 前後の余白削除
+%   \end{framed}%
+%   % この値だといい感じになる
+%   \vspace*{-0.2mm}% 枠の後ろの余白の調整
+%   }
+
+  % code
+\DeclareRobustCommand{\reviewcode}[1]{{\small\ttfamily\reviewbreakall{#1}}}

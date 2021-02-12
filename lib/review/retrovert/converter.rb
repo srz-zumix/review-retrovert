@@ -101,7 +101,11 @@ module ReVIEW
         @configs.rewrite_yml('hook_beforetexcompile', 'null')
         @configs.rewrite_yml('texstyle', '["reviewmacro"]')
         pagesize = @config['starter']['pagesize'].downcase
-        @configs.rewrite_yml_array('texdocumentclass', "[\"review-jsbook\", \"media=print,paper=#{pagesize}\"]")
+        jsbook_config = "media=print,paper=#{pagesize}"
+        if @ird
+          jsbook_config = "media=ebook,paper=b5"
+        end
+        @configs.rewrite_yml_array('texdocumentclass', "[\"review-jsbook\", \"#{jsbook_config}\"]")
         @config['retrovert'].each{ |k,v|
           unless v..is_a?(Hash)
             @configs.commentout_root_yml(k)
@@ -542,6 +546,15 @@ module ReVIEW
         end
       end
 
+      def update_sty(outdir, options)
+        # FileUtils.cp(File.join(@basedir, 'sty/review-custom.sty'), File.join(outdir, 'sty/review-custom.sty'))
+        if @ird
+          FileUtils.cp(File.join(__dir__, 'sty/ird.sty'), File.join(outdir, 'sty/ird.sty'))
+          file = File.open(File.join(outdir, 'sty/review-custom.sty'), 'a')
+          file.puts('\RequirePackage{ird}')
+        end
+      end
+
       def clean_initial_project(outdir)
         FileUtils.rm(File.join(outdir, 'config.yml'))
         FileUtils.rm(File.join(outdir, 'catalog.yml'))
@@ -586,6 +599,7 @@ module ReVIEW
         copy_images(outdir, store_image_dir)
         update_config(outdir)
         update_contents(outdir, options)
+        update_sty(outdir, options)
 
         pwd = Dir.pwd
         Dir.chdir(outdir)
