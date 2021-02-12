@@ -103,7 +103,7 @@ module ReVIEW
         pagesize = @config['starter']['pagesize'].downcase
         jsbook_config = "media=print,paper=#{pagesize}"
         if @ird
-          jsbook_config = "media=ebook,paper=b5"
+          jsbook_config = "media=ebook,openany,paper=b5,fontsize=10pt,baselineskip=16pt,head_space=15mm,gutter=22mm,footskip=16mm,line_length=45zw,number_of_lines=38"
         end
         @configs.rewrite_yml_array('texdocumentclass', "[\"review-jsbook\", \"#{jsbook_config}\"]")
         @config['retrovert'].each{ |k,v|
