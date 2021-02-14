@@ -278,5 +278,9 @@ RSpec.describe 'convert', type: :aruba do
       text = File.open(File.join(aruba.current_directory, custom_sty)).read()
       expect(text).to include('\RequirePackage{ird}')
     end
+
+    it 'ext' do
+      expect('tmp/review-ext.rb').to be_an_existing_file
+    end
   end
 end
