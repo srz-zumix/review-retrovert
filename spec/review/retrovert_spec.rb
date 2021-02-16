@@ -30,6 +30,7 @@ RSpec.describe 'convert', type: :aruba do
     let(:inner) { 'tmp/contents/r0-inner.re' }
     let(:config) { 'tmp/config.yml' }
     let(:retrovert_config) { 'tmp/config-retrovert.yml' }
+    let(:custom_sty) { 'tmp/sty/review-custom.sty' }
     before(:each) { run_command("review-retrovert convert --preproc --tabwidth 4 --ird #{config_yaml} tmp") }
 
     it 'command result' do
@@ -267,8 +268,19 @@ RSpec.describe 'convert', type: :aruba do
       expect(root).to be_an_existing_file
       text = File.open(File.join(aruba.current_directory, root)).read()
       expect(text).not_to match(/^\s*@<br>{}\s*$/)
-      expect(text).to match(/^\s*.*@<br>{}\s*$/)
+      # expect(text).to match(/^\s*.*@<br>{}\s*$/)
       expect(text).to match(/^\/\/blankline$/)
+    end
+
+    it 'sty' do
+      expect('tmp/sty/ird.sty').to be_an_existing_file
+      expect(custom_sty).to be_an_existing_file
+      text = File.open(File.join(aruba.current_directory, custom_sty)).read()
+      expect(text).to include('\RequirePackage{ird}')
+    end
+
+    it 'ext' do
+      expect('tmp/review-ext.rb').to be_an_existing_file
     end
   end
 end
