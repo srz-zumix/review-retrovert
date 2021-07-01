@@ -5,6 +5,7 @@
 ##
 
 require 'pathname'
+require 'open3'
 
 require 'review/logger'
 require 'review/version'
@@ -34,9 +35,10 @@ module ReVIEW
       @config.maker = @maker_name
       @config.check_version(ReVIEW::VERSION)   # may raise ReVIEW::ConfigError
       #
-      yamlfile = File.join(@basedir, 'config-starter.yml')
-      yamldata = File.open(yamlfile) {|f| YAML.safe_load(f) }
-      @starter_config = yamldata['starter']
+      #yamlfile = File.join(@basedir, 'config-starter.yml')
+      #yamldata = File.open(yamlfile) {|f| YAML.safe_load(f) }
+      #@starter_config = yamldata['starter']
+      @starter_config = @config['starter']
     end
 
     def self.execute(*args)
@@ -57,7 +59,7 @@ module ReVIEW
       maker = nil
       begin
         maker = self.new(config_filename, cmdopts)
-        maker.generate()
+        return maker.generate()
       rescue ApplicationError, ReVIEW::ConfigError => ex
         raise if maker && maker.config['debug']
         error(ex.message)
@@ -86,6 +88,8 @@ module ReVIEW
       # YAML configs will be overridden by command line options.
       config.deep_merge!(additionals)
       I18n.setup(config['language'])
+      #
+      validate_config(config)
       #
       if ENV['STARTER_CHAPTER'].present?
         modify_config(config)
@@ -116,6 +120,76 @@ module ReVIEW
       return book
     end
 
+    def validate_config(config)
+      _validate_obsoletes(config)
+      _validate_pdffiles(config)
+    end
+
+    private
+
+    def _validate_obsoletes(config)
+      d = config['pdfmaker']
+      return unless d
+      obsolete_keys = ['coverpdf_files', 'backcoverpdf_files', 'coverpdf_option']
+      if obsolete_keys.any? {|key| d.key?(key) }
+        errmsg = CONFIG_PDFFILES_ERRMSG
+        $stderr.puts "\033[0;31m\n#{errmsg}\033[0m"
+        error "obsolete config entry exists."
+      end
+    end
+
+    CONFIG_PDFFILES_ERRMSG = <<END
+***** ERROR *****
+'config.yml' contains old entries.
+
+Please move the followings from 'config.yml' ...
+
+  * coverpdf_files:
+  * backcoverpdf_files:
+  * coverpdf_option:
+
+into 'config-starter.yml' with renaming to ...
+
+  * frontcover_pdffile:
+  * backcover_pdffile:
+  * includepdf_option:
+END
+
+    def _validate_pdffiles(config)
+      d = config['starter']
+      return unless d
+      imagedir = config['imagedir']
+      pdffile_keys = ['frontcover_pdffile', 'backcover_pdffile', 'titlepage_pdffile', 'colophon_pdffile']
+      pdffile_keys.each do |key|
+        [d[key]].flatten.compact.each do |pdffile|
+          pdffile = pdffile.gsub(/(<.*?>)?\*?\z/, '')
+          errmsg = _validate_pdffile(File.join(imagedir, pdffile))
+          error "(config-starter.yml) '#{key}: #{pdffile}': #{errmsg}" if errmsg
+        end
+      end
+      #
+      key = 'includepdf_option'; val = d[key]
+      if val.present?
+        val =~ /\Aoffset=/  or
+          error "(config-starter.yml) '#{key}: #{val}': unexpected value. only 'offset=...' available here."
+      end
+    end
+
+    def _validate_pdffile(filepath)
+      filepath =~ /\.pdf\z/i  or
+        return "expected pdf file ('*.pdf'), but not."
+      return _validate_file(filepath)
+    end
+
+    def _validate_file(filepath)
+      File.exist?(filepath)     or return "file not found."
+      File.file?(filepath)      or return "not a file."
+      File.readable?(filepath)  or return "cannot read (permission denied?)."
+      return nil
+    end
+
+    protected
+
     def system_or_raise(*args)
       Kernel.system(*args) or raise("failed to run command: #{args.join(' ')}")
     end
@@ -145,15 +219,47 @@ module ReVIEW
       path
     end
 
-    def run_cmd(cmd)
+    def echoback(cmd)
       puts ""
       puts "[#{@maker_name}]$ #{cmd}"
-      return Kernel.system(cmd)
+    end
+
+    def run_cmd(cmd)
+      time = @_usr_bin_time ? "time " : ""
+      echoback("#{time}#{cmd}")
+      return Kernel::system(cmd)
     end
 
     def run_cmd!(cmd)
       run_cmd(cmd)  or raise("failed to run command: #{cmd}")
     end
+
+    def run_cmd_capturing_output(cmd, append=nil)
+      time = @_usr_bin_time ? "time " : ""
+      echoback("#{time}#{cmd}#{append}")
+      output, status = Open3.capture2(cmd)
+      return output, status.success?
+    end
+
+    def usr_bin_time(&b)
+      result = nil
+      @_usr_bin_time = true
+      start_t = Time.now
+      ptime1  = Process.times
+      result  = yield
+      end_t   = Time.now
+      ptime2  = Process.times
+      @_usr_bin_time = false
+      #
+      real_time = end_t - start_t
+      user_time = ptime2.cutime - ptime1.cutime
+      sys_time  = ptime2.cstime - ptime1.cstime
+      format    = "%12.2f real %12.2f user %12.2f sys"
+      $stderr.puts format % [real_time, user_time, sys_time]
+      #
+      return result
+    end
+    protected :usr_bin_time
 
     def call_hook(hookname)
       d = @config[@maker_name]
@@ -181,6 +287,11 @@ module ReVIEW
     def ruby_fullpath
       c = RbConfig::CONFIG
       return File.join(c['bindir'], c['ruby_install_name']) + c['EXEEXT'].to_s
+    end
+
+    def colored_errmsg(msg)
+      #return msg unless $stderr.tty?
+      return "\033[0;31m#{msg}\033[0m"
     end
 
   end

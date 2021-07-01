@@ -3,7 +3,7 @@
 %%%
 
 \usepackage{afterpage}                  % for '\afterpage'
-\usepackage[pagecolor=none]{pagecolor}  % for '\newpagecolor'
+\usepackage{pagecolor}                  % for '\newpagecolor'
 
 %% 背景色を指定
 %\definecolor{starter@titlepagecolor}{gray}{0.90}  % 薄いグレー
@@ -40,7 +40,7 @@
     {
       \Large           % フォントサイズを大きめに
       {\rmfamily ---}~ % ローマン体で「--」
-      \@subtitle       % サブタイトル
+      \@subtitle{}%    % サブタイトル
       ~{\rmfamily ---} % ローマン体で「--」
       \par             % 段落を区切る（デザイン崩れを防ぐため）
     }
@@ -51,15 +51,38 @@
   %\rmfamily           % ローマン体（英語）
   \normalfont          % デフォルトの書体
 
-  %% 著者
-  \ifx\@author\empty\else
-    \vspace{8zw}       % 縦方向のスペース
-    {
-      \LARGE           % フォントサイズを大きく
-      \@author         % 著者
-      \par             % 段落を区切る（デザイン崩れを防ぐため）
-    }
-  \fi
+  %% 著者、翻訳者、監修者
+  {
+    \Large                      % 大きめのフォントに変更
+    \newcommand{\@render@who}[2]{{
+      \edef\@tempa{##2}         % 第2引数を一時変数に代入
+      \ifx\@tempa\empty\else    % 第2引数が空でなければ、
+        ［##1］##2              %   第1引数とともに表示する
+      \fi
+    }}
+    \def\render@bookauthor{\@render@who{著}{\book@author}}            % 著者
+    \def\render@booktranslator{\@render@who{訳}{\book@translator}}    % 翻訳者
+    \def\render@booksupervisor{\@render@who{監修}{\book@supervisor}}  % 監修者
+    %% その中でいちばん長い表示幅を調べる
+    %% （テキストが複数行だと \settowidth が表示幅をうまく取得できない。
+    %%   仕方ないので1行ずつ調べて長さを比較し、いちばん長いものを選ぶ。）
+    \setlength{\@tempdimb}{0pt}
+    \settowidth{\@tempdimc}{\render@bookauthor}
+    \ifdim\@tempdimb<\@tempdimc \setlength{\@tempdimb}{\@tempdimc} \fi
+    \settowidth{\@tempdimc}{\render@booktranslator}
+    \ifdim\@tempdimb<\@tempdimc \setlength{\@tempdimb}{\@tempdimc} \fi
+    \settowidth{\@tempdimc}{\render@booksupervisor}
+    \ifdim\@tempdimb<\@tempdimc \setlength{\@tempdimb}{\@tempdimc} \fi
+    %% 表示幅のボックスを作ると、そのボックスが左右の中央に位置する
+    \ifdim\@tempdimb>0pt
+      \vspace{3\baselineskip}          % 縦方向の空き
+      \parbox[t]{\@tempdimb}{{         % 表示幅のボックスを作る
+        \render@bookauthor\par         % 著者
+        \render@booktranslator\par     % 翻訳者
+        \render@booksupervisor\par     % 監修者
+      }}
+    \fi
+  }
 
   %% 日付、バージョン、イベント名
   \vfill               % 縦方向のスペース

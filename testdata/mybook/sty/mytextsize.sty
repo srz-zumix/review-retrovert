@@ -59,3 +59,32 @@
 \addtolength{\topmargin}{-2\Cvs}   % ページ上部の余白を2行分減らす
 \addtolength{\textheight}{2\Cvs}   % ページ本文の高さを2行分増やす
 \addtolength{\headsep}{1mm}
+
+
+%% 塗り足し幅が設定されていて、かつ印刷用PDFの場合
+\if@pbook
+  \ifx\starter@bleedsize\empty\else
+    %% 塗り足しの分だけ、本文をずらす
+    \setlength{\@tempdimb}{\starter@bleedsize}
+    \addtolength{\oddsidemargin}{\@tempdimb}   % 右ページを右にずらす
+    \addtolength{\evensidemargin}{\@tempdimb}  % 左ページも右にずらす
+    \addtolength{\topmargin}{\@tempdimb}       % 左右のページを下にずらす
+    %% 塗り足しの分だけ、ページサイズを増やす
+    \setlength{\@tempdimc}{2\@tempdimb}
+    \addtolength{\paperwidth}{\@tempdimc}      % ページ幅を増やす
+    \addtolength{\paperheight}{\@tempdimc}     % ページ高さを増やす
+    %% 塗り足しの分だけ、PDFの縦横サイズを増やす
+    \def\@tempa{A5}
+    \ifx\starter@pagesize\@tempa
+      \AtBeginDvi{\special{papersize=154mm,216mm}}  % A5 (148x210mm)
+    \fi
+    \def\@tempb{B5}
+    \ifx\starter@pagesize\tempb
+      \AtBeginDvi{\special{papersize=188mm,263mm}}  % B5 (182x257mm)
+    \fi
+    \def\@tempc{A4}
+    \ifx\starter@pagesize\tempc
+      \AtBeginDvi{\special{papersize=216mm,303mm}}  % A4 (210x297mm)
+    \fi
+  \fi
+\fi

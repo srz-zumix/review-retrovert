@@ -155,6 +155,21 @@ h2.numbox > span.secno {
 	color: #fff;
 	margin: 0 20px 0 0;
 }
+h2.circle {
+	vertical-align: middle;
+}
+h2.circle > span.secno {
+	display: inline-block;
+	background: #08c;
+	color: #fff;
+	border-radius: 50%;
+	width: 3.0em;
+	height: 2.1em;
+	text-align: center;
+	vertical-align: middle;
+	padding-top: 0.9em;
+	margin-right: 0.3em;
+}
 h3 {
 	margin: 40px 0 5px 0;
 }
@@ -182,8 +197,7 @@ pre, code, tt, kdb, var, samp {
 	font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
 	font-size: 0.875;
 }
-pre.list, pre.emlist {
-	background: #eee;
+pre.list, pre.emlist, pre.output {
 	padding: 3px 6px;
 	margin: 0;
 	border: solid 1px #ddd;
@@ -192,9 +206,19 @@ pre.list, pre.emlist {
 	white-space: pre-wrap;
 	line-height: 150%;
 }
+pre.list, pre.emlist {
+	background: #eee;
+}
+pre.output {
+	background: #fff;
+}
+
+
 code.inline-code {
 	background: #eee;
 	padding: 2px 4px;
+	white-space: pre;
+	border-radius: 2px;
 }
 h1 > code.inline-code, h2 > code.inline-code, h3 > code.inline-code, h4 > code.inline-code, h5 > code.inline-code {
 	background: none;
@@ -244,6 +268,10 @@ div.cmd-code > pre > .indentbar {
 	margin: 0 0 5px 0;
 	display: inline-block;
 }
+p.caption {
+	display: block;
+}
+
 .caption:before {
 	content: '\25BC  ';  /* ▼ */
 	color: #777;
@@ -287,6 +315,14 @@ div.abstract {
 }
 
 
+div.chapterauthor {
+	text-align: right;
+}
+div.chapterauthor::before {
+	content: "［著］";
+}
+
+
 
 div.column {
 	border: solid 1px #08c;
@@ -320,6 +356,43 @@ div.note > h5:before {
 
 
 
+.miniblock {
+	border: solid 1px gray;
+	border-radius: 2px;
+	margin-top: 5ex;
+	margin-bottom: 5ex;
+	padding: 10px 15px 10px 15px;
+	background-repeat: no-repeat;
+	background-size: 64px;
+	background-position: 15px 15px;
+	font-size: small;
+}
+
+.miniblock.miniblock-info {
+	padding-left: 100px;
+	background-image: url("../images/info-icon.png")
+}
+
+.miniblock.miniblock-warning {
+	padding-left: 100px;
+	background-image: url("../images/warning-icon.png")
+}
+
+.miniblock.miniblock-caution {
+	padding-left: 100px;
+	background-image: url("../images/caution-icon.png")
+}
+
+.miniblock-caption {
+	font-family: sans-serif;
+	font-size: medium;
+	font-weight: bold;
+	margin-top: 0.5ex;
+	margin-bottom: -0.5ex;
+}
+
+
+
 div.table {
 	margin: 30px auto;
 	text-align: center;
@@ -339,6 +412,15 @@ div.table > table th {
 	background: #ddd;
 }
 
+div.table.table-nohline > table, div.table.table-nohline > table {
+	border: solid 1px #ccc !important;
+}
+div.table.table-nohline > table td, div.table.table-nohline > table th {
+	border: none;
+}
+div.table > table tr.hline, div.table > table tr.hline {
+	border-bottom: solid 1px #ccc;
+}
 
 
 strong {
@@ -396,6 +478,98 @@ p.footnote {
 	top: -0.2rem;
 }
 
+
+.talk-list {
+	list-style-type: none;
+	padding-left: 0px;
+	margin-top: 20px;
+	margin-bottom: 20px;
+}
+.talk-item {
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+.talk-item::after {
+	content: "";
+	display: block;
+	clear: both;
+}
+.talk-image {
+	width: 60px;
+}
+.talk-chara {
+	float: left;
+}
+.talk-name {
+	font-family: sans-serif;
+	font-weight: normal;
+	padding-top: 5px;
+	display: inline-block;
+}
+.talk-name::after {
+	content: "：";
+	display: inline-block;
+	width: 1.5em;
+}
+.talk-text {
+	display: block;
+	margin-left: 100px;
+	padding-top: 5px;
+}
+.talk-text > p:first-child {
+	/*margin-top: 0;*/
+	display: inline;
+}
+.talk-text::before {
+	content: "「";
+	display: inline-block;
+	text-align: right;
+	width: 1em;
+	margin-left: -1em;
+}
+.talk-text::after {
+	content: "」";
+	display: inline-block;
+	text-align: left;
+	width: 1em;
+}
+
+
+dl.desc-list {
+	margin-top: 20px;
+	margin-bottom: 20px;
+}
+dl.desc-list > dl.desc-list {
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+dt.desc {
+	display: inline-block;
+	font-weight: normal;
+	font-family: sans-serif;
+}
+dd.desc {
+	display: block;
+	margin-left: 40px;
+}
+dd.desc > p:first-child {
+	margin-top: 0;
+}
+dl.desc-list.item-bold > dt.desc {
+	font-weight: bold;
+}
+dl.desc-list.compact > dt.desc {
+	margin-right: 1em;
+	float: left;
+}
+dl.desc-list.compact > dd.desc {
+	margin-left: 80px;
+}
+dl.desc-list.compact > dd.desc::after {
+	content: "";
+	display: block;
+	clear: both;
+}
 
 
 .sampleoutput {
@@ -472,6 +646,10 @@ p.footnote {
 .balloon:before {
 	content: "←";
 }
+.term {
+	font-family: sans-serif;
+}
+
 
 .rebuild {
 	background: #eee;

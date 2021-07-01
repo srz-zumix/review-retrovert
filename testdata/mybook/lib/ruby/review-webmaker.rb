@@ -82,7 +82,9 @@ module ReVIEW
     end
 
     def build_part(part, htmlfile)
-      new_renderer().render_part(part, File.join(@docroot, htmlfile))
+      html = new_renderer().render_part(part)
+      filepath = File.join(@docroot, htmlfile)
+      File.write(filepath, html)
     end
 
     def build_chap(chap, base_path, ispart)
@@ -101,9 +103,11 @@ module ReVIEW
       #
       begin
         @converter.convert(filename, File.join(@docroot, htmlfile))
-      rescue => ex
+      ## 文法エラーだけキャッチし、それ以外のエラーはキャッチしないよう変更
+      #rescue => ex
+      rescue ApplicationError => ex
         warn "compile error in #{filename} (#{ex.class})"
-        warn ex.message
+        warn colored_errmsg(ex.message)
         generate_errorpage(ex, filename, htmlfile)
       end
     end
@@ -206,6 +210,11 @@ module ReVIEW
 
   class WEBBuilder < HTMLBuilder
 
+    def target_name
+      #"web"
+      "html"
+    end
+
     def layoutfile
       "layouts/layout.html5.erb"
     end
@@ -242,8 +251,14 @@ module ReVIEW
       #
       sb = ""
       sb << "<div class=\"part\">\n"
-      sb << "<h1 class=\"part-number\">#{i18n('part', part.number)}</h1>\n"
-      sb << "<h2 class=\"part-title\">#{part_name}</h2>\n" if part_name.present?
+      sb << "<h1 class=\"part-number\">#{h i18n('part', part.number)}</h1>\n"
+      sb << "<h2 class=\"part-title\">#{h part_name}</h2>\n" if part_name.present?
+      sb << "<ul>\n"
+      part.chapters.each do |c|
+        htmlfile = c.path.sub(/\.re\z/, ".#{@config['htmlext']}")
+        sb << "  <li><a href=\"#{h htmlfile}\">第#{h c.number}章 #{h c.title}</a></li>\n"
+      end
+      sb << "</ul>\n"
       sb << "</div>\n"
       @body = sb
       #

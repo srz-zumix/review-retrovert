@@ -41,7 +41,7 @@
 \newcommand{\Heading@heading}[4]{% #1: Chapter, Section, etc, #2: 番号, #3: タイトル, #4: 目次用タイトル
   %% タイトル前の余白
   \@eval{#1@topmargin}{#2}%       % #2: 番号
-  \pagebreak[0]%                  % 必要なら改ページをする
+  %;\pagebreak[0]%                % 必要なら改ページをする ← TODO:要調査
   %% 目次をクリックしたときのジャンプ先（アンカー）
   \@eval{#1@anchor}{#2}%          % #2: 番号
   %% 番号とタイトル
@@ -107,8 +107,10 @@
   \chaptermark{#2}%               % ページヘッダに章タイトルを設定
 }
 \newcommand{\Chapter@topmargin}[1]{%
-  \if@openleft\cleardoublepage\else%
-  \if@openright\cleardoublepage\else\clearpage\fi\fi%
+  \if@Chapter@clearpage@%
+    \if@openleft\cleardoublepage\else%
+    \if@openright\cleardoublepage\else\clearpage\fi\fi%
+  \fi%
   \plainifnotempty% 元: \thispagestyle{plain}%
   \global\@topnum\z@%
  %\vspace*{2.0\Cvs}%     % (jsbook.cls) 2\Cvs
@@ -151,6 +153,8 @@
   \ifstreq{\@align}{center}\centering\fi    % 中央寄せ
 }
 \newif\if@FirstSectionPerChapter@           % 章における最初の節ならtrue
+\newif\if@Chapter@clearpage@                % trueなら章タイトル直前で改ページ
+\@Chapter@clearpage@true
 
 %%% 章タイトルのカスタマイズ：下に細い下線
 \iffalse
@@ -207,6 +211,7 @@
   \fi\fi%
 }
 \newcommand{\Section@heading}[3]{%
+  \pagebreak[1]%       % 節タイトルの直前では改ページしやすくする
   \Heading@heading{Section}{#1}{#2}{#3}%
 }
 \newcommand{\Section@anchor}[1]{%  #1: 節番号
@@ -276,11 +281,11 @@
 \iffalse
 \else\ifstreq{\starter@section@decoration}{grayback}
 
-  \renewcommand{\Section@number}[1]{%  #1: 章番号
+  \renewcommand{\Section@number}[1]{%  #1: 節番号
     \textcolor{starter@palecolor}{%    % タイトルの背景色（薄いグレー）
       \rlap{\rule[-0.6zh]{\textwidth}{2zh}}%  % 本文幅の背景色
     }%
-    \textcolor{starter@sectioncolor}{% % 章番号の背景色（主色）
+    \textcolor{starter@sectioncolor}{% % 節番号の背景色（主色）
       \rlap{\rule[-0.6zh]{3.5zw}{2zh}}%% 全角3.5文字分の背景色
     }%
     \makebox[3.5zw][c]{\textcolor{white}{#1}}% 白抜き文字で章番号
@@ -290,8 +295,8 @@
 %%% 節タイトルのカスタマイズ：節番号を白抜き（背景色がないので複数行向き）
 \else\ifstreq{\starter@section@decoration}{numbox}
 
-  \renewcommand{\Section@number}[1]{%  #1: 章番号
-    \textcolor{starter@sectioncolor}{% % 章番号の背景色（主色）
+  \renewcommand{\Section@number}[1]{%  #1: 節番号
+    \textcolor{starter@sectioncolor}{% % 節番号の背景色（主色）
       \rlap{\rule[-0.6zh]{3.5zw}{2zh}}%% 全角3.5文字分の背景色
     }%
     \makebox[3.5zw][c]{\textcolor{white}{#1}}% 白抜き文字で章番号
@@ -301,23 +306,57 @@
 %%% 節タイトルのカスタマイズ：節タイトルに下線を引く
 \else\ifstreq{\starter@section@decoration}{underline}
 
-  \renewcommand{\Section@number}[1]{%  #1: 章番号
+  \renewcommand{\Section@number}[1]{%  #1: 節番号
     \textcolor{starter@sectioncolor}{% % 線の色
       \rlap{\rule[-0.6zh]{\textwidth}{0.2pt}}% 本文幅の下線
       \rlap{\rule[-0.6zh]{0.75zw}{2zh}}%     % 左端に太い縦線
     }%
-    \hspace{1.5zw}#1\hspace{1.0zw}%    % 章番号（と空白）
+    \hspace{1.5zw}#1\hspace{1.0zw}%    % 節番号（と空白）
   }%
 
 %%% 節タイトルのカスタマイズ：節タイトル右に太い縦線（下線がないので複数行向き）
 \else\ifstreq{\starter@section@decoration}{leftline}
 
-  \renewcommand{\Section@number}[1]{%  #1: 章番号
+  \renewcommand{\Section@number}[1]{%  #1: 節番号
     \textcolor{starter@sectioncolor}{% % 線の色
       \rlap{\rule[-0.6zh]{0.75zw}{2zh}}% 左端に太い縦線
     }%
-    \hspace{1.5zw}#1\hspace{1.0zw}%    % 章番号（と空白）
+    \hspace{1.5zw}#1\hspace{1.0zw}%    % 節番号（と空白）
   }%
+
+%%% 節タイトルのカスタマイズ：大きな円（複数行向き）
+\else\ifstreq{\starter@section@decoration}{circle}
+
+  \renewcommand{\Section@number}[1]{%  #1: 節番号
+    \hspace{-0.40\Cwd}%                % 円をちょっとだけ右にはみ出させる
+    \rlap{{%                           % 現在位置を変えずに右側に表示
+      \parbox[c]{6\Cwd}{%              % 全角6文字分の幅で上下の中央揃え
+        \fontsize{6\Cwd}{0}\selectfont%% 文字サイズを大きくする
+        \textcolor{starter@sectioncolor}{●}% 大きな円
+        %%% if you prefer math symbol rather than CJK font
+        %\fontsize{7\Cwd}{0}\selectfont%
+        %\textcolor{starter@sectioncolor}{\ding{108}}%   % requires \usepackage{pifont}
+      }%
+    }}%
+    \hspace{-0.20\Cwd}%                % 節番号をちょっとだけ右にずらす
+    \makebox[6\Cwd][c]{%               % 全角6文字分の幅で左右の中央揃え
+      \textcolor{white}{\raisebox{-0.14\Cwd}{#1}}% 白い文字で節番号を表示
+    }%
+    \hspace{0.60\Cwd}%                 % ちょっとだけ右にずらしていたのを戻す
+  }%
+  \renewcommand{\Section@title}[2]{{%  #1: 節番号, #2: 節タイトル
+    \setlength{\@tempdima}{\textwidth}%% 本文幅
+    \edef\@tempa{#1}%
+    \ifx\@tempa\empty\else%            % 節番号があれば
+      \Section@number{#1}%             %   節番号を表示
+      \addtolength{\@tempdima}{-6\Cwd}%%   本文幅から全角6文字分引く
+    \fi%
+    \parbox[c]{\@tempdima}{%           % 本文幅から全角6文字分引いた幅で上下の中央揃え
+      \baselineskip=0.85\baselineskip% % 行間隔を狭くする
+      #2%                              % 節タイトルを表示（\parboxのおかげで2行にも対応）
+    }%
+    \par%                              % 改行がわりの改段落
+  }}
 
 %%% 節タイトルのカスタマイズ：装飾なし
 \else
@@ -464,7 +503,7 @@
 
 %%% 段 (Paragraph)
 \newcommand\Paragraph{%
-  \@ifstar{\Paragraph@title}{\@Paragraph@title}% '*' がついていたら読み飛ばす
+  \@ifstar{\Paragraph@title}{\Paragraph@title}% '*' がついていたら読み飛ばす
 }
 \newcommand\Paragraph@title[1]{%       % #1: タイトル
   \Paragraph@separator%          % 少しだけ余白を空ける
@@ -480,7 +519,7 @@
 
 %%% 小段 (Subparagraph)
 \newcommand\Subparagraph{%
-  \@ifstar{\Subparagraph@title}{\@Subparagraph@title}% '*' がついていたら読み飛ばす
+  \@ifstar{\Subparagraph@title}{\Subparagraph@title}% '*' がついていたら読み飛ばす
 }
 \newcommand\Subparagraph@title[1]{%    % #1: タイトル
   \Subparagraph@separator%       % 少しだけ余白を空ける
@@ -512,3 +551,11 @@
 \def\subsubsection{\Subsubsection}
 \def\paragraph{\Paragraph}
 \def\subparagraph{\Subparagraph}
+
+
+%%% 索引ページのタイトルデザインを変更
+\renewcommand{\@makeschapterhead}[1]{%
+  \@Chapter@clearpage@false%  % もとの \@makeschapterhead は改ページしないので、それに倣う
+  \Chapter*[]{#1}%            % まえがきや目次と同じタイトルデザインを使う
+  \@Chapter@clearpage@true%
+}

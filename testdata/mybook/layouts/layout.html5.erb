@@ -60,9 +60,11 @@ body_ext = @body_ext || (@error ? ' class="has-compile-error"' : nil)
           <p>Traceback:</p>
           <pre class="compile-error-backtrace"><% @error.backtrace.each do |x| %><%=h x %><%= "\n" %><% end %></pre>
 
-<% else %>
+<% elsif @toc %>
           <h1><%=h @book.config.name_of("booktitle") %></h1>
 <%= @toc %>
+<% else %>
+<%= @body %>
 <% end %>
         </main>
         <nav class="page-navi">

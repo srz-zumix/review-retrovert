@@ -25,8 +25,6 @@ namespace :docker do
 
   docker_image = ENV['DOCKER_IMAGE']
   docker_image = "kauplan/review2.5" if docker_image.to_s.empty?
-  docker_opts  = "--rm -v $PWD:/work -w /work"
-  docker_opts += ENV.keys().grep(/^STARTER_/).map {|k| " -e #{k}" }.join()
 
   desc "+ pull docker image for building PDF file"
   task :setup do
@@ -34,11 +32,16 @@ namespace :docker do
   end
 
   docker_run = proc do |command, opt=nil|
+    docker_opts  = "--rm -v $PWD:/work -w /work"
+    docker_opts += ENV.keys().grep(/^STARTER_/).map {|k| " -e #{k}" }.join()
     sh "docker run #{docker_opts} #{opt} #{docker_image} #{command}"
   end
 
   desc "+ run 'rake pdf' on docker"
-  task :pdf do docker_run.call('rake pdf') end
+  task :pdf do
+    setup_envvars()   # defined in 'review.rake'
+    docker_run.call('rake pdf')
+  end
 
   desc "+ run 'rake pdf:nombre' on docker"
   task :'pdf:nombre' do docker_run.call('rake pdf:nombre') end
@@ -56,6 +59,115 @@ namespace :docker do
     docker_run.call('rake web:server', opt)
   end
 
+  desc "+ run 'rake markdown' on docker"
+  task :markdown do docker_run.call('rake markdown') end
+
+  desc "+ run 'rake textlint' on docker"
+  task :textlint do docker_run.call('rake textlint') end
+
+  desc "+ run 'rake textlint:setup' on docker"
+  task :'textlint:setup' do docker_run.call('rake textlint:setup') end
+
+end
+
+
+##
+## 初期設定
+##
+namespace :setup do
+
+  desc "+ install rubygems packages"
+  task :rubygems do
+    if ENV['GEM_HOME'].to_s.empty?
+      ENV['GEM_HOME'] = File.join(Dir.pwd, 'rubygems')
+      mkdir_p 'rubygems'
+    end
+    ruby_version = RUBY_VERSION.split('.').map(&:to_i)  # ex: "2.5.0" -> [2, 5, 0]
+    rubyzip_requires = [2, 4, 0]  # rubyzip >= 2.0 requires Ruby >= 2.4
+    ruby_too_old = (ruby_version <=> rubyzip_requires) < 0
+    sh "gem install rubyzip --version 1.3" if ruby_too_old
+    sh "gem install review --version 2.5"
+  end
+
+  desc "+ download docker image"
+  task :dockerimage do
+    sh "docker pull kauplan/review2.5"
+  end
+
+end
+
+
+##
+## Markdownに変換する（主にtextlistを使うため）
+##
+desc "+ convert '*.re' files into '*.md'"
+task :markdown => :prepare do
+  require 'review'
+  require './lib/ruby/review-markdownmaker'
+  #
+  setup_envvars()  # ex: `c=01-install` => ENV['STARTER_CHAPTER']='01-install'
+  #
+  begin
+    builddir = ReVIEW::MarkdownMaker.execute(config_file())
+    $_builddir = builddir
+  rescue RuntimeError => ex
+    if ex.message =~ /^failed to run command:/
+      abort "*\n* ERROR (review-pdfmaker):\n*  #{ex.message}\n*"
+    else
+      raise
+    end
+  end
+end
+
+
+##
+## textlintを実行する
+##
+task :textlint => :markdown do
+  builddir = $_builddir
+  textlint_path = "./node_modules/.bin/textlint"
+  if File.exist?(textlint_path)
+    sh "#{textlint_path} #{builddir}/*.md"
+  else
+    sh "textlint #{builddir}/*.md"
+  end
+end
+
+
+namespace :textlint do
+
+  ## see:
+  ##  - https://github.com/textlint/textlint
+  ##  - https://github.com/textlint/textlint/wiki/Collection-of-textlint-rule#rule-presets-japanese
+  task :setup do
+    require 'json'
+    rcfile = ".textlintrc"
+    rcdata = File.open(rcfile, encoding: 'utf-8') {|f| JSON.load(f) }
+    keys = ['filters', 'rules']
+    #
+    failed = false
+    sh "npm --version" do |ok, _| failed = !ok end
+    if failed
+      $stderr.puts <<END
+**
+** ERROR: `npm' command not installed.
+**
+** Please install Node.js (and npm) at first.
+**
+END
+      exit 1
+    end
+    #
+    sh "npm init --yes"
+    sh "npm install --save-dev textlint"
+    keys.each do |key|
+      rcdata[key].each do |name, enabled|
+        next unless enabled
+        sh "npm install --save-dev textlint-rule-#{name}"
+      end if rcdata[key]
+    end
+  end
+
 end
 
 
@@ -65,6 +177,21 @@ end
 ## https://booth.pm/ja/items/708196
 ##
 namespace :pdf do
+
+  color2rgb = {
+    'black'     => [0.0, 0.0, 0.0],
+    'white'     => [1.0, 1.0, 1.0],
+    'red'       => [1.0, 0.0, 0.0],
+    'green'     => [0.0, 1.0, 0.0],
+    'blue'      => [0.0, 0.0, 1.0],
+    'cyan'      => [0.0, 1.0, 1.0],
+    'magenta'   => [1.0, 0.0, 1.0],
+    'yellow'    => [1.0, 1.0, 0.0],
+    #
+    'gray'      => [0.50, 0.50, 0.50],
+    'darkgray'  => [0.25, 0.25, 0.25],
+    'lightgray' => [0.75, 0.75, 0.75],
+  }
 
   desc "+ add nombre (rake pdf:nombre [file=*.pdf] [out=*.pdf])"
   task :nombre do
@@ -76,6 +203,23 @@ namespace :pdf do
     rescue LoadError
       abort "ERROR: 'combine_pdf' gem not installed; please run `gem install combine_pdf` at first."
     end
+    #
+    nombre_opts = proc {
+      require 'yaml'
+      conffile = 'config-starter.yml'
+      confdict = File.open(conffile, encoding: 'utf-8') {|f| YAML.load(f) }
+      d = confdict['starter']
+      mm2pt = 72.0 / 25.4    # 1 pt == 1/72 inch, 1 inch == 25.4 mm
+      {
+        :start     => d['nombre_startnumber'],
+        :margin_h  => d['nombre_bottommargin'].to_f * mm2pt,
+        :margin_w  => d['nombre_sidemargin'].to_f * mm2pt,
+        :font      => nil,
+        :size      => d['nombre_fontsize'].to_i,
+        :color     => color2rgb[d['nombre_fontcolor']],
+        :binding   => nil,
+      }
+    }.call()
     #
     class CombinePDF::PDF
       def add_nombre(options={})
@@ -131,7 +275,7 @@ namespace :pdf do
     #pdf.add_nombre()
     #File.binwrite(outfile, pdf.to_pdf())
     pdf = CombinePDF.load(infile)
-    pdf.add_nombre()
+    pdf.add_nombre(nombre_opts)
     pdf.save(outfile)
   end
 
