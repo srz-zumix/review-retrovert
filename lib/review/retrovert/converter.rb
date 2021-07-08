@@ -305,25 +305,37 @@ module ReVIEW
         content.gsub!(/(^\/\/list\[.*?\]\[.*?\]\[.*?)((,|)lineno=[^,\]]*)(.*?\])/, '\1\4')
       end
 
+      # @<XXX>{AAA@<YYY>{BBB}} -> @<XXX>{AAA}@<YYY>{BBB}
       def expand_nested_inline_command(content)
         found = false
         content.dup.scan(/(@<.*?>)(?:(\$)|(?:({)|(\|)))(.*?)(?(2)(\$)|(?(3)(})|(\|)))/) { |m|
           matched = m.join
           body = m[4]
-          im = body.match(/(.*)(@<.*?>)(?:(\$)|(?:({)|(\|)))(.*?)(?(3)(\$)|(?(4)(})|(\|)))(.*)/)
+          im = body.match(/(.*[^@])(@<.*?>)(?:(\$)|(?:({)|(\|)))(.*?)(?(3)(\$)|(?(4)(})|(\|)))(.*)/)
+          if content.match(/^#@#.*#{Regexp.escape(matched)}.*/)
+            next
+          end
           if im.nil?
-            im = body.match(/(.*)(@<.*?>)#{m[1..3].join}/)
-            unless im.nil?
-              outcmd_begin = m[0] + "$|{".gsub(m[1..3].join, '')
-              outcmd_end = "$|}".gsub(m[5..7].join, '')
-              rep = "#{outcmd_begin}#{body}#{outcmd_end}"
+            im2 = body.match(/(.*[^@])(@<.*?>)#{Regexp.escape(m[1..3].join)}(.*)/)
+            unless im2.nil?
+              rep = ""
+              if im2[3].length > 0
+                outcmd_begin = m[0..3].join + im2[1..2].join + "$|{".gsub(m[1..3].join, '')[0]
+                outcmd_end = "$|}".gsub(m[5..7].join, '')[0]
+                rep = "#{outcmd_begin}#{im2[3]}#{outcmd_end}"
+              else
+                rep = m[0..3].join + im2[1]
+              end
               content.gsub!(matched, rep)
               found = true
             end
           else
             outcmd_begin = m[0..3].join
             outcmd_end = m[5..7].join
-            rep = "#{outcmd_begin}#{im[1]}#{outcmd_end}#{im[2..9].join}#{outcmd_begin}#{im[-1]}#{outcmd_end}"
+            rep = ""
+            rep += "#{outcmd_begin}#{im[1]}#{outcmd_end}" if im[1].length > 0
+            rep += "#{im[2..9].join}"
+            rep += "#{outcmd_begin}#{im[-1]}#{outcmd_end}" if im[-1].length > 0
             content.gsub!(matched, rep)
             found = true
           end
