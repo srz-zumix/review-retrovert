@@ -108,53 +108,53 @@ RSpec.describe 'convert result' do
     it 'block command delete' do
       expect(File).to exist(file03)
       text = File.open(file03).read()
-      expect(text).not_to match('^\/\/needvspace')
-      expect(text).not_to match('^\/\/clearpage')
-      expect(text).not_to match('^\/\/flushright')
-      expect(text).not_to match('^\/\/centering')
-      expect(text).not_to match('^\/\/noindent')
-      expect(text).not_to match('^\/\/paragraphend')
+      expect(text).not_to be_match('^\/\/needvspace')
+      expect(text).not_to be_match('^\/\/clearpage')
+      expect(text).not_to be_match('^\/\/flushright')
+      expect(text).not_to be_match('^\/\/centering')
+      expect(text).not_to be_match('^\/\/noindent')
+      expect(text).not_to be_match('^\/\/paragraphend')
     end
 
     it 'block comaptible command replace with options' do
       expect(File).to exist(file02)
       text = File.open(file02).read()
-      expect(text).not_to match(/^\/\/terminal/)
-      expect(text).not_to match(/^\/\/cmd\[.*?\]/)
-      expect(text).to match(/^\/\/cmd{/)
+      expect(text).not_to be_match(/^\/\/terminal/)
+      expect(text).not_to be_match(/^\/\/cmd\[.*?\]/)
+      expect(text).to     be_match(/^\/\/cmd{/)
     end
 
     it 'block comaptible command replace with options and inner text go outside' do
       expect(File).to exist(file99)
       text = File.open(file99).read()
-      expect(text).not_to match(/^\/\/sideimage/)
-      expect(text).to match(/^\/\/image\[tw-icon\]\[\s*\]{\R\/\/}/)
+      expect(text).not_to be_match(/^\/\/sideimage/)
+      expect(text).to     be_match(/^\/\/image\[tw-icon\]\[\s*\]{\R\/\/}/)
     end
 
     # it 'block command replace exclude options' do
     #   expect(File).to exist(file99)
     #   text = File.open(file99).read()
-    #   expect(text).not_to match(/^\/\/sideimage/)
-    #   expect(text).to match(/^\/\/image/)
+    #   expect(text).not_to be_match(/^\/\/sideimage/)
+    #   expect(text).to     be_match(/^\/\/image/)
     # end
 
     it 'block command replace with options' do
       expect(File).to exist(file02)
       text = File.open(file02).read()
-      expect(text).not_to match(/^\/\/abstract/)
-      expect(text).to match(/^\/\/lead/)
+      expect(text).not_to be_match(/^\/\/abstract/)
+      expect(text).to     be_match(/^\/\/lead/)
     end
 
     unless Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('5.0.0')
       it 'nested block command' do
         expect(File).to exist(file01)
         text = File.open(file01).read()
-        expect(text).not_to match(/^\/\/}\R*^\/\/}/m)
+        expect(text).not_to be_match(/^\/\/}\R*^\/\/}/m)
 
         expect(File).to exist(file03)
         text = File.open(file03).read()
-        # expect(text).not_to match(/^\/\/}\R*^\/\/}/m)
-        expect(text).to match(/^\/\/table\[tbl-xthfx\]/)
+        # expect(text).not_to be_match(/^\/\/}\R*^\/\/}/m)
+        expect(text).to     be_match(/^\/\/table\[tbl-xthfx\]/)
       end
     end
 
@@ -175,68 +175,68 @@ RSpec.describe 'convert result' do
     it 'empty id set to' do
       expect(File).to exist(file05)
       text = File.open(file05).read()
-      expect(text).not_to match(/^\/\/list\[[^\[\]]*?\]{/)
-      expect(text).to match(/^\/\/list\[starter_auto_id_list_0\]\[.*?\]{/)
+      expect(text).not_to be_match(/^\/\/list\[[^\[\]]*?\]{/)
+      expect(text).to     be_match(/^\/\/list\[starter_auto_id_list_0\]\[.*?\]{/)
     end
 
     it '? id set to' do
       expect(File).to exist(file03)
       text = File.open(file03).read()
-      expect(text).not_to match(/^\/\/list\[[^\[\]]*?\]{/)
-      expect(text).to match(/^\/\/list\[starter_auto_id_list_0\]\[.*?\]{/)
+      expect(text).not_to be_match(/^\/\/list\[[^\[\]]*?\]{/)
+      expect(text).to     be_match(/^\/\/list\[starter_auto_id_list_0\]\[.*?\]{/)
     end
 
     it 'noteref' do
       expect(File).to exist(file03)
       text = File.open(file03).read()
       expect(text).not_to be_include('@<noteref>')
-      expect(text).not_to match(/^\/\/note\[.*?\]\[.*?\]{/)
+      expect(text).not_to be_match(/^\/\/note\[.*?\]\[.*?\]{/)
     end
 
     it 'image border' do
       expect(File).to exist(file03)
       text = File.open(file03).read()
-      expect(text).not_to match(/^\/\/image\[[^\]]*?border=.*?/)
+      expect(text).not_to be_match(/^\/\/image\[[^\]]*?border=.*?/)
 
       expect(File).to exist(file06)
       text = File.open(file06).read()
-      expect(text).not_to match(/^\/\/image\[[^\]]*?border=.*?/)
+      expect(text).not_to be_match(/^\/\/image\[[^\]]*?border=.*?/)
       end
 
     it 'list lineno' do
       expect(File).to exist(file03)
       text = File.open(file03).read()
-      expect(text).not_to match(/^\/\/list\[[^\]]*?lineno=.*?/)
+      expect(text).not_to be_match(/^\/\/list\[[^\]]*?lineno=.*?/)
     end
 
     it 'fix lack options' do
       expect(File).to exist(file04)
       text = File.open(file04).read()
-      expect(text).not_to match(/^\/\/list{$/)
-      expect(text).to match(/^\/\/list\[starter_auto_id_list_[0-9]+\]\[\]{/)
+      expect(text).not_to be_match(/^\/\/list{$/)
+      expect(text).to     be_match(/^\/\/list\[starter_auto_id_list_[0-9]+\]\[\]{/)
     end
 
     it 'sampleoutputbegin' do
       expect(File).to exist(file06)
       text = File.open(file06).read()
-      expect(text).not_to match(/^\/\/sampleoutputbegin\[.*?\]/)
-      expect(text).not_to match(/^\/\/sampleoutputend/)
-      expect(text).to match(/^#@#\/\/sampleoutputbegin\[.*?\]/)
-      expect(text).to match(/^#@#\/\/sampleoutputend/)
+      expect(text).not_to be_match(/^\/\/sampleoutputbegin\[.*?\]/)
+      expect(text).not_to be_match(/^\/\/sampleoutputend/)
+      expect(text).to     be_match(/^#@#\/\/sampleoutputbegin\[.*?\]/)
+      expect(text).to     be_match(/^#@#\/\/sampleoutputend/)
     end
 
     it 'block comment in sampleout' do
       expect(File).to exist(file02)
       text = File.open(file02).read()
-      expect(text).not_to match(/^#@#\/\/sampleoutputbegin.*?^#@\++.*^#@-+.*?^#@#\/\/sampleoutputend/m)
+      expect(text).not_to be_match(/^#@#\/\/sampleoutputbegin.*?^#@\++.*^#@-+.*?^#@#\/\/sampleoutputend/m)
     end
 
     it 'block comment' do
       expect(File).to exist(file03)
       text = File.open(file03).read()
       text.gsub!(/^#@#\/\/sampleoutputbegin.*?^#@#\/\/sampleoutputend/m, '')
-      expect(text).not_to match(/^#@\++/)
-      expect(text).not_to match(/^#@-+/)
+      expect(text).not_to be_match(/^#@\++/)
+      expect(text).not_to be_match(/^#@-+/)
       # expect(text).to match(/^#@#\++\R(^#@#.*)*^#@#-+/m)
     end
 
@@ -250,26 +250,26 @@ RSpec.describe 'convert result' do
       it 'deprecated list' do
         expect(File).to exist(file02)
         text = File.open(file02).read()
-        expect(text).not_to match(/^:/)
+        expect(text).not_to be_match(/^:/)
       end
     end
 
     it 'retrovert config' do
       expect(File).to exist(config)
       text = File.open(config).read()
-      expect(text).not_to match(/^chapterlink: .*/)
+      expect(text).not_to be_match(/^chapterlink: .*/)
 
       expect(File).to exist(retrovert_config)
       text = File.open(retrovert_config).read()
-      expect(text).to match(/^chapterlink: null/)
+      expect(text).to be_match(/^chapterlink: null/)
     end
 
     it 'preproc delete #@mapXXX~#@end' do
       expect(File).to exist(root)
       text = File.open(root).read()
-      expect(text).not_to match(/^#[@]mapfile.*/)
-      expect(text).not_to match(/^#[@]end$/)
-      expect(text).to match(/^== Inner file$/)
+      expect(text).not_to be_match(/^#[@]mapfile.*/)
+      expect(text).not_to be_match(/^#[@]end$/)
+      expect(text).to     be_match(/^== Inner file$/)
     end
 
     it 'no duplicate mapfile' do
@@ -280,9 +280,9 @@ RSpec.describe 'convert result' do
     it 'br to blankline' do
       expect(File).to exist(root)
       text = File.open(root).read()
-      expect(text).not_to match(/^\s*@<br>{}\s*$/)
+      expect(text).not_to be_match(/^\s*@<br>{}\s*$/)
       # expect(text).to match(/^\s*.*@<br>{}\s*$/)
-      expect(text).to match(/^\/\/blankline$/)
+      expect(text).to     be_match(/^\/\/blankline$/)
     end
 
     it 'sty' do
