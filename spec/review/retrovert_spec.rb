@@ -74,35 +74,35 @@ RSpec.describe 'convert result' do
     it 'inline command delete' do
       expect(File).to exist(file03)
       text = File.open(file03).read()
-      expect(text).not_to include('@<userinput>{')
-      expect(text).not_to include('@<small>{')
-      expect(text).not_to include('@<xsmall>{')
-      expect(text).not_to include('@<xxsmall>{')
-      expect(text).not_to include('@<large>{')
-      expect(text).not_to include('@<xlarge>{')
-      expect(text).not_to include('@<xxlarge>{')
-      expect(text).not_to include('@<weak>{')
-      expect(text).not_to include('@<nop>{')
+      expect(text).not_to be_include('@<userinput>{')
+      expect(text).not_to be_include('@<small>{')
+      expect(text).not_to be_include('@<xsmall>{')
+      expect(text).not_to be_include('@<xxsmall>{')
+      expect(text).not_to be_include('@<large>{')
+      expect(text).not_to be_include('@<xlarge>{')
+      expect(text).not_to be_include('@<xxlarge>{')
+      expect(text).not_to be_include('@<weak>{')
+      expect(text).not_to be_include('@<nop>{')
     end
 
     it 'inline command replace' do
       expect(File).to exist(file03)
       text = File.open(file03).read()
-      expect(text).not_to include('@<secref>{')
-      expect(text).to include('@<hd>{')
-      expect(text).not_to include('@<file>{')
-      expect(text).to include('@<kw>{')
-      expect(text).not_to include('@<hlink>{')
-      expect(text).to include('@<href>{')
-      expect(text).not_to include('@<B>{')
-      expect(text).to include('@<strong>{')
+      expect(text).not_to be_include('@<secref>{')
+      expect(text).to     be_include('@<hd>{')
+      expect(text).not_to be_include('@<file>{')
+      expect(text).to     be_include('@<kw>{')
+      expect(text).not_to be_include('@<hlink>{')
+      expect(text).to     be_include('@<href>{')
+      expect(text).not_to be_include('@<B>{')
+      expect(text).to     be_include('@<strong>{')
     end
 
     it 'LaTex inline command replace' do
       expect(File).to exist(file05)
       text = File.open(file05).read()
-      expect(text).not_to include('@<LaTeX>{}')
-      expect(text).to include('LaTeX')
+      expect(text).not_to be_include('@<LaTeX>{}')
+      expect(text).to     be_include('LaTeX')
     end
 
     it 'block command delete' do
@@ -167,9 +167,9 @@ RSpec.describe 'convert result' do
     it 'nested inline command' do
       expect(File).to exist(file01)
       text = File.open(file01).read()
-      expect(text).not_to include('|@@<b>{}')
-      expect(text).not_to include('{@@<b>{}')
-      expect(text).not_to include('$@@<b>{}')
+      expect(text).not_to be_include('|@@<b>{}')
+      expect(text).not_to be_include('{@@<b>{}')
+      expect(text).not_to be_include('$@@<b>{}')
     end
 
     it 'empty id set to' do
@@ -189,7 +189,7 @@ RSpec.describe 'convert result' do
     it 'noteref' do
       expect(File).to exist(file03)
       text = File.open(file03).read()
-      expect(text).not_to include('@<noteref>')
+      expect(text).not_to be_include('@<noteref>')
       expect(text).not_to match(/^\/\/note\[.*?\]\[.*?\]{/)
     end
 
