@@ -1,5 +1,7 @@
 require "spec_helper"
 
+outpath = File.join(File.dirname(__FILE__), '../../tmp/rspec')
+
 RSpec.describe ReVIEW::Retrovert do
   it "has a version number" do
     expect(ReVIEW::Retrovert::VERSION).not_to be nil
@@ -7,6 +9,7 @@ RSpec.describe ReVIEW::Retrovert do
 end
 
 RSpec.describe 'command test', type: :aruba do
+  let(:config_yaml) { File.join(File.dirname(__FILE__), '../../testdata/mybook/config.yml') }
 
   context 'help' do
     before(:each) { run_command('bundle exec review-retrovert help') }
@@ -14,14 +17,19 @@ RSpec.describe 'command test', type: :aruba do
   end
 
   context 'convert mybook' do
-    let(:config_yaml) { File.join(File.dirname(__FILE__), '../../testdata/mybook/config.yml') }
-    let(:outpath) { File.join(File.dirname(__FILE__), '../../tmp/rspec') }
-    before(:each) { run_command("review-retrovert convert --preproc --tabwidth 4 --ird #{config_yaml} #{outpath}") }
-
-    it 'command result' do
+    before(:each) { run_command("review-retrovert convert --preproc --tabwidth 4 --ird -f #{config_yaml} #{outpath}") }
+    it 'result' do
       expect(last_command_started).to be_successfully_executed
       expect(last_command_started).to have_output(/.*replace starter inline command.*/)
       expect(last_command_started).to have_output(/.*replace starter block command.*/)
+    end
+  end
+
+  context 'convert no preproc' do
+    before(:each) { run_command("review-retrovert convert --tabwidth 4 #{config_yaml} tmp") }
+    it 'result' do
+      expect(last_command_started).to be_successfully_executed
+      expect(last_command_started).not_to have_output(/INFO.*: preproc/)
     end
   end
 
@@ -30,7 +38,6 @@ end
 RSpec.describe 'convert result' do
 
   context 'convert result' do
-    let(:outpath) { File.join(File.dirname(__FILE__), '../../tmp/rspec') }
     let(:file00) { File.join(outpath, '00-preface.re') }
     let(:file01) { File.join(outpath, '01-install.re') }
     let(:file02) { File.join(outpath, '02-tutorial.re') }
@@ -43,10 +50,12 @@ RSpec.describe 'convert result' do
     let(:file93) { File.join(outpath, '93-background.re') }
     let(:file99) { File.join(outpath, '99-postface.re') }
     let(:root)   { File.join(outpath, 'r0-root.re') }
-    let(:inner)  { File.join(outpath, 'contents/r0-inner.re') }
+    let(:inner)  { File.join(outpath, 'r0-inner.re') }
     let(:config) { File.join(outpath, 'config.yml') }
     let(:retrovert_config) { File.join(outpath, 'config-retrovert.yml') }
     let(:custom_sty) { File.join(outpath, 'sty/review-custom.sty') }
+    let(:ird_sty)    { File.join(outpath, 'sty/ird.sty') }
+    let(:review_ext) { File.join(outpath, 'review-ext.rb') }
 
     it 'file exist' do
       expect(File).to exist(file00)
@@ -234,12 +243,7 @@ RSpec.describe 'convert result' do
     it 'auto url link footnote' do
       expect(File).to exist(file03)
       text = File.open(file03).read()
-      expect(text).to include("//footnote[03_syntax_link_auto_footnote0][https://github.com/kmuto/review/blob/master/doc/format.ja.md]")
-    end
-
-    it 'preproc' do
-      expect(last_command_started).to be_successfully_executed
-      expect(last_command_started).to have_output(/INFO.*: preproc/)
+      expect(text).to be_include "//footnote[03_syntax_link_auto_footnote0][https://github.com/kmuto/review/blob/master/doc/format.ja.md]"
     end
 
     if Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('4.0.0')
@@ -270,7 +274,7 @@ RSpec.describe 'convert result' do
 
     it 'no duplicate mapfile' do
       expect(File).to exist(root)
-      expect(File).to exist('tmp/r0-inner.re').not
+      expect(File).not_to exist(inner)
     end
 
     it 'br to blankline' do
@@ -282,14 +286,14 @@ RSpec.describe 'convert result' do
     end
 
     it 'sty' do
-      expect(File).to exist('tmp/sty/ird.sty')
+      expect(File).to exist(ird_sty)
       expect(File).to exist(custom_sty)
       text = File.open(custom_sty).read()
       expect(text).to include('\RequirePackage{ird}')
     end
 
     it 'ext' do
-      expect(File).to exist('tmp/review-ext.rb')
+      expect(File).to exist(review_ext)
     end
   end
 end
