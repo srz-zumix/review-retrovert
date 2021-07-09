@@ -190,23 +190,23 @@ module ReVIEW
               # if same fence then cmd_end == inner_end
               if is_commentout
                 inner.gsub!(/(^\/\/(\w+(\[.*?\]|))*#{inner_open})/, '#@#\1')
-                content.gsub!(/#{Regexp.escape(matched)}/m, "#{cmd_begin}#{inner}#@##{cmd_end}")
+                content.gsub!(matched, "#{cmd_begin}#{inner}#@##{cmd_end}")
               else
                 imb = inner.match(/(\R((^\/\/\w+(\[.*?\])*)\s*)*^\/\/#{inner_cmd}#{first_opt}(\[.*?\])*#{inner_open}.*)\R/m)
                 to_out_block = imb[1]
-                inner.gsub!(/#{Regexp.escape(to_out_block)}/m, '')
-                content.gsub!(/#{Regexp.escape(matched)}/m, "#{cmd_begin}#{inner}#{cmd_end}#{to_out_block}")
+                inner.gsub!(to_out_block, '')
+                content.gsub!(matched, "#{cmd_begin}#{inner}#{cmd_end}#{to_out_block}")
               end
             else
               close = inner_open == '{' ? '}' : inner_open
               if is_commentout
                 inner.gsub!(/(^\/\/(\w+(\[.*?\]|))*#{inner_open})(.*?)(^\/\/#{close})/m, '#@#\1\2#@#\3')
-                content.gsub!(/#{Regexp.escape(matched)}/m, "#{cmd_begin}#{inner}#{cmd_end}")
+                content.gsub!(matched, "#{cmd_begin}#{inner}#{cmd_end}")
               else
                 imb = inner.match(/\R((^\/\/\w+(\[.*?\])*)\s*)*^\/\/(#{inner_cmd})#{first_opt}(\[[^\r\n]*?\])*(?:(\$)|(?:({)|(\|)))(.*?)(^\/\/)(?(3)(\$)|(?(4)(})|(\|)))/m)
                 to_out_block = imb[0]
-                inner.gsub!(/#{Regexp.escape(to_out_block)}/m, '')
-                content.gsub!(/#{Regexp.escape(matched)}/m, "#{cmd_begin}#{inner}#{cmd_end}#{to_out_block}")
+                inner.gsub!(to_out_block, '')
+                content.gsub!(matched, "#{cmd_begin}#{inner}#{cmd_end}#{to_out_block}")
               end
             end
             found = true
@@ -241,7 +241,7 @@ module ReVIEW
           matched = m[0..-1].join
           inner = m[2]
           inner.gsub!(/^/, '#@#')
-          content.gsub!(/#{Regexp.escape(matched)}/m, "#@##{m[1]}#{inner}#@##{m[4]}")
+          content.gsub!(matched, "#@##{m[1]}#{inner}#@##{m[4]}")
         }
       end
 
@@ -252,7 +252,7 @@ module ReVIEW
           matched = m[0..-1].join
           inner = m[2]
           inner.gsub!(/(^.)/, '#@#\1')
-          content.gsub!(/#{Regexp.escape(matched)}/m, "#@##{m[1]}#{inner}#@##{m[4]}")
+          content.gsub!(matched, "#@##{m[1]}#{inner}#@##{m[4]}")
         }
       end
 
@@ -265,7 +265,7 @@ module ReVIEW
           option = m[1]
           inner = m[3]
           # inner.gsub!(/^\/\//, '//@<nop>{}')
-          content.gsub!(/#{Regexp.escape(matched)}/m, "#{option}\n#@##{sampleoutputbegin}#{inner}#@##{sampleoutputend}")
+          content.gsub!(matched, "#{option}\n#@##{sampleoutputbegin}#{inner}#@##{sampleoutputend}")
         }
       end
 
@@ -291,10 +291,10 @@ module ReVIEW
           ref = m[4]
           n = content.match(/^\/\/note\[#{ref}\](\[.*?\])/)
           unless n.nil?
-            content.gsub!(/#{Regexp.escape(matched)}/, n[1])
+            content.gsub!(matched, n[1])
             content.gsub!(/^\/\/note\[#{ref}\](\[.*?\])/, '//note\1')
           else
-            # content.gsub!(/#{Regexp.escape(matched)}/, "noteref<#{ref}>")
+            # content.gsub!(matched, "noteref<#{ref}>")
           end
         }
       end
