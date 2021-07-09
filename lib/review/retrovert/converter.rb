@@ -234,12 +234,13 @@ module ReVIEW
         end
       end
 
+      # #@+++ ~ #@--- to #@#+++ #@#~ #@#---
       def replace_block_commentout(content)
         d = content.dup
         d.scan(/(^#@)(\++)(.*?)(^#@)(-+)/m) { |m|
           matched = m[0..-1].join
           inner = m[2]
-          inner.gsub!(/(^.)/, '#@#\1')
+          inner.gsub!(/^/, '#@#')
           content.gsub!(/#{Regexp.escape(matched)}/m, "#@##{m[1]}#{inner}#@##{m[4]}")
         }
       end
@@ -305,7 +306,7 @@ module ReVIEW
         content.gsub!(/(^\/\/list\[.*?\]\[.*?\]\[.*?)((,|)lineno=[^,\]]*)(.*?\])/, '\1\4')
       end
 
-      # @<XXX>{AAA@<YYY>{BBB}} -> @<XXX>{AAA}@<YYY>{BBB}
+      # @<XXX>{AAA@<YYY>{BBB}} to @<XXX>{AAA}@<YYY>{BBB}
       def expand_nested_inline_command(content)
         found = false
         content.dup.scan(/(@<.*?>)(?:(\$)|(?:({)|(\|)))(.*?)(?(2)(\$)|(?(3)(})|(\|)))/) { |m|
