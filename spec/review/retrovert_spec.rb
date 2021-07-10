@@ -237,7 +237,7 @@ RSpec.describe 'convert result' do
       text.gsub!(/^#@#\/\/sampleoutputbegin.*?^#@#\/\/sampleoutputend/m, '')
       expect(text).not_to be_match(/^#@\++/)
       expect(text).not_to be_match(/^#@-+/)
-      # expect(text).to match(/^#@#\++\R(^#@#.*)*^#@#-+/m)
+      expect(text).to     be_match(/^#@#\++\R(^#@#.*)*^#@#-+/m)
     end
 
     it 'auto url link footnote' do
