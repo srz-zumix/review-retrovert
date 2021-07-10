@@ -168,8 +168,14 @@ RSpec.describe 'convert result' do
       expect(File).to exist(file01)
       text = File.open(file01).read()
       expect(text).not_to be_include('|@@<b>{}')
+      expect(text).not_to be_include('|@@<b>$$')
+      expect(text).not_to be_include('|@@<b>||')
       expect(text).not_to be_include('{@@<b>{}')
+      expect(text).not_to be_include('{@@<b>$$')
+      expect(text).not_to be_include('{@@<b>||')
       expect(text).not_to be_include('$@@<b>{}')
+      expect(text).not_to be_include('$@@<b>$$')
+      expect(text).not_to be_include('$@@<b>||')
     end
 
     it 'empty id set to' do

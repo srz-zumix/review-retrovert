@@ -320,12 +320,12 @@ module ReVIEW
         content.dup.scan(/(@<.*?>)(?:(\$)|(?:({)|(\|)))(.*?)(?(2)(\$)|(?(3)(})|(\|)))/) { |m|
           matched = m.join
           body = m[4]
-          im = body.match(/(.*[^@])(@<.*?>)(?:(\$)|(?:({)|(\|)))(.*?)(?(3)(\$)|(?(4)(})|(\|)))(.*)/)
+          im = body.match(/(.*)(@<.*?>)(?:(\$)|(?:({)|(\|)))(.*?)(?(3)(\$)|(?(4)(})|(\|)))(.*)/)
           if content.match(/^#@#.*#{Regexp.escape(matched)}.*/)
             next
           end
           if im.nil?
-            im2 = body.match(/(.*[^@])(@<.*?>)#{Regexp.escape(m[1..3].join)}(.*)/)
+            im2 = body.match(/(.*)(@<.*?>)#{Regexp.escape(m[1..3].join)}(.*)/)
             unless im2.nil?
               rep = ""
               if im2[3].length > 0
