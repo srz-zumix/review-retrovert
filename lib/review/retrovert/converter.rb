@@ -437,6 +437,9 @@ module ReVIEW
 
         # talklist
         talklist_to_nested_contents_list(content, @talklist_replace_cmd)
+
+        content.gsub!('@<par>{}' , '@<br>{}')
+        content.gsub!('@<par>{i}', '@<br>{}')
       end
 
       def update_content(outdir, contentfile)

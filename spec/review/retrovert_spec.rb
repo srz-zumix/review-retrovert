@@ -259,6 +259,17 @@ RSpec.describe 'convert result' do
       expect(text).not_to be_match(/^\/\/talklist\[.*\]/)
     end
 
+    it 'par' do
+      expect(File).to exist(file03)
+      text = File.open(file03).read()
+      expect(text).not_to be_include('@<par>{}')
+      expect(text).not_to be_include('@<par>$$')
+      expect(text).not_to be_include('@<par>||')
+      expect(text).not_to be_include('@<par>{i}')
+      expect(text).not_to be_include('@<par>$i$')
+      expect(text).not_to be_include('@<par>|i|')
+    end
+
     if Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('4.0.0')
       it 'deprecated list' do
         expect(File).to exist(file02)
