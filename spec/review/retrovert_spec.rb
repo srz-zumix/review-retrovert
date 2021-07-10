@@ -237,13 +237,14 @@ RSpec.describe 'convert result' do
       text.gsub!(/^#@#\/\/sampleoutputbegin.*?^#@#\/\/sampleoutputend/m, '')
       expect(text).not_to be_match(/^#@\++/)
       expect(text).not_to be_match(/^#@-+/)
-      expect(text).to     be_match(/^#@#\++\R(^#@#.*)*^#@#-+/m)
+      inner = text.match(/^#@#\++\R(.*)^#@#-+/m)[1]
+      expect(inner).to     be_match(/(^#@#.*\R)*/m)
     end
 
     it 'auto url link footnote' do
       expect(File).to exist(file03)
       text = File.open(file03).read()
-      expect(text).to be_include "//footnote[03_syntax_link_auto_footnote0][https://github.com/kmuto/review/blob/master/doc/format.ja.md]"
+      expect(text).to be_include "//footnote[03_syntax_link_auto_footnote1][https://github.com/kmuto/review/blob/master/doc/format.ja.md]"
     end
 
     if Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('4.0.0')

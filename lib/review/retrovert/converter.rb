@@ -190,23 +190,27 @@ module ReVIEW
               # if same fence then cmd_end == inner_end
               if is_commentout
                 inner.gsub!(/(^\/\/(\w+(\[.*?\]|))*#{inner_open})/, '#@#\1')
-                content.gsub!(matched) { |m| "#{cmd_begin}#{inner}#@##{cmd_end}" }
+                rep = "#{cmd_begin}#{inner}#@##{cmd_end}"
+                content.gsub!(matched) { |mm| rep }
               else
                 imb = inner.match(/(\R((^\/\/\w+(\[.*?\])*)\s*)*^\/\/#{inner_cmd}#{first_opt}(\[.*?\])*#{inner_open}.*)\R/m)
                 to_out_block = imb[1]
                 inner.gsub!(/#{Regexp.escape(to_out_block)}/m, '')
-                content.gsub!(matched) { |m| "#{cmd_begin}#{inner}#{cmd_end}#{to_out_block}" }
+                rep = "#{cmd_begin}#{inner}#{cmd_end}#{to_out_block}"
+                content.gsub!(matched) { |mm| rep }
               end
             else
               close = inner_open == '{' ? '}' : inner_open
               if is_commentout
                 inner.gsub!(/(^\/\/(\w+(\[.*?\]|))*#{inner_open})(.*?)(^\/\/#{close})/m, '#@#\1\2#@#\3')
-                content.gsub!(matched) { |m| "#{cmd_begin}#{inner}#{cmd_end}" }
+                rep = "#{cmd_begin}#{inner}#{cmd_end}"
+                content.gsub!(matched) { |mm| rep }
               else
                 imb = inner.match(/\R((^\/\/\w+(\[.*?\])*)\s*)*^\/\/(#{inner_cmd})#{first_opt}(\[[^\r\n]*?\])*(?:(\$)|(?:({)|(\|)))(.*?)(^\/\/)(?(3)(\$)|(?(4)(})|(\|)))/m)
                 to_out_block = imb[0]
                 inner.gsub!(/#{Regexp.escape(to_out_block)}/m, '')
-                content.gsub!(matched) { |m| "#{cmd_begin}#{inner}#{cmd_end}#{to_out_block}" }
+                rep = "#{cmd_begin}#{inner}#{cmd_end}#{to_out_block}"
+                content.gsub!(matched) { |mm| rep }
               end
             end
             found = true
@@ -237,22 +241,24 @@ module ReVIEW
       # #@+++ ~ #@--- to #@#+++ #@#~ #@#---
       def replace_block_commentout(content)
         d = content.dup
-        d.scan(/(^#@)(\++)(.*?)(^#@)(-+)/m) { |m|
+        d.scan(/(^#@)(\++\R)(.*?)(^#@)(-+)/m) { |m|
           matched = m[0..-1].join
           inner = m[2]
           inner.gsub!(/^/, '#@#')
-          content.gsub!(matched) { |m| "#@##{m[1]}#{inner}#@##{m[4]}" }
+          rep = "#@##{m[1]}#{inner}#@##{m[4]}"
+          content.gsub!(matched) { |mm| rep }
         }
       end
 
       def replace_block_commentout_without_sampleout(content)
         d = content.dup
         d.gsub!(/(^\/\/sampleoutputbegin\[)(.*?)(\])(.*?)(^\/\/sampleoutputend)/m, '')
-        d.scan(/(^#@)(\++)(.*?)(^#@)(-+)/m) { |m|
+        d.scan(/(^#@)(\++\R)(.*?)(^#@)(-+)/m) { |m|
           matched = m[0..-1].join
           inner = m[2]
-          inner.gsub!(/(^.)/, '#@#\1')
-          content.gsub!(matched) { |m| "#@##{m[1]}#{inner}#@##{m[4]}" }
+          inner.gsub!(/^/, '#@#\1')
+          rep = "#@##{m[1]}#{inner}#@##{m[4]}"
+          content.gsub!(matched) { |mm| rep }
         }
       end
 
@@ -265,7 +271,8 @@ module ReVIEW
           option = m[1]
           inner = m[3]
           # inner.gsub!(/^\/\//, '//@<nop>{}')
-          content.gsub!(matched) { |m| "#{option}\n#@##{sampleoutputbegin}#{inner}#@##{sampleoutputend}" }
+          rep = "#{option}\n#@##{sampleoutputbegin}#{inner}#@##{sampleoutputend}"
+          content.gsub!(matched) { |mm| rep }
         }
       end
 
@@ -291,7 +298,8 @@ module ReVIEW
           ref = m[4]
           n = content.match(/^\/\/note\[#{ref}\](\[.*?\])/)
           unless n.nil?
-            content.gsub!(matched) { |m| n[1] }
+            rep = n[1]
+            content.gsub!(matched) { |mm| rep }
             content.gsub!(/^\/\/note\[#{ref}\](\[.*?\])/, '//note\1')
           else
             # content.gsub!(matched, "noteref<#{ref}>")
@@ -327,7 +335,7 @@ module ReVIEW
               else
                 rep = m[0..3].join + im2[1]
               end
-              content.gsub!(matched) { |m| rep }
+              content.gsub!(matched) { |mm| rep }
               found = true
             end
           else
@@ -337,7 +345,7 @@ module ReVIEW
             rep += "#{outcmd_begin}#{im[1]}#{outcmd_end}" if im[1].length > 0
             rep += "#{im[2..9].join}"
             rep += "#{outcmd_begin}#{im[-1]}#{outcmd_end}" if im[-1].length > 0
-            content.gsub!(matched) { |m| rep }
+            content.gsub!(matched) { |mm| rep }
             found = true
           end
         }
