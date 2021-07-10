@@ -435,6 +435,8 @@ module ReVIEW
         delete_inline_command(content, 'xlarge')
         delete_inline_command(content, 'xxlarge')
 
+        # chapterauthor
+        content.gsub!(/\/\/chapterauthor\[(.*)\]/, "//lead{\n\\1\n//}")
         # talklist
         talklist_to_nested_contents_list(content, @talklist_replace_cmd)
 
