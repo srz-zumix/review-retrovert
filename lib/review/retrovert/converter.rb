@@ -190,23 +190,23 @@ module ReVIEW
               # if same fence then cmd_end == inner_end
               if is_commentout
                 inner.gsub!(/(^\/\/(\w+(\[.*?\]|))*#{inner_open})/, '#@#\1')
-                content.gsub!(matched, "#{cmd_begin}#{inner}#@##{cmd_end}")
+                content.gsub!(matched) { |m| "#{cmd_begin}#{inner}#@##{cmd_end}" }
               else
                 imb = inner.match(/(\R((^\/\/\w+(\[.*?\])*)\s*)*^\/\/#{inner_cmd}#{first_opt}(\[.*?\])*#{inner_open}.*)\R/m)
                 to_out_block = imb[1]
-                inner.gsub!(to_out_block, '')
-                content.gsub!(matched, "#{cmd_begin}#{inner}#{cmd_end}#{to_out_block}")
+                inner.gsub!(/#{Regexp.escape(to_out_block)}/m, '')
+                content.gsub!(matched) { |m| "#{cmd_begin}#{inner}#{cmd_end}#{to_out_block}" }
               end
             else
               close = inner_open == '{' ? '}' : inner_open
               if is_commentout
                 inner.gsub!(/(^\/\/(\w+(\[.*?\]|))*#{inner_open})(.*?)(^\/\/#{close})/m, '#@#\1\2#@#\3')
-                content.gsub!(matched, "#{cmd_begin}#{inner}#{cmd_end}")
+                content.gsub!(matched) { |m| "#{cmd_begin}#{inner}#{cmd_end}" }
               else
                 imb = inner.match(/\R((^\/\/\w+(\[.*?\])*)\s*)*^\/\/(#{inner_cmd})#{first_opt}(\[[^\r\n]*?\])*(?:(\$)|(?:({)|(\|)))(.*?)(^\/\/)(?(3)(\$)|(?(4)(})|(\|)))/m)
                 to_out_block = imb[0]
-                inner.gsub!(to_out_block, '')
-                content.gsub!(matched, "#{cmd_begin}#{inner}#{cmd_end}#{to_out_block}")
+                inner.gsub!(/#{Regexp.escape(to_out_block)}/m, '')
+                content.gsub!(matched) { |m| "#{cmd_begin}#{inner}#{cmd_end}#{to_out_block}" }
               end
             end
             found = true
@@ -241,7 +241,7 @@ module ReVIEW
           matched = m[0..-1].join
           inner = m[2]
           inner.gsub!(/^/, '#@#')
-          content.gsub!(matched, "#@##{m[1]}#{inner}#@##{m[4]}")
+          content.gsub!(matched) { |m| "#@##{m[1]}#{inner}#@##{m[4]}" }
         }
       end
 
@@ -252,7 +252,7 @@ module ReVIEW
           matched = m[0..-1].join
           inner = m[2]
           inner.gsub!(/(^.)/, '#@#\1')
-          content.gsub!(matched, "#@##{m[1]}#{inner}#@##{m[4]}")
+          content.gsub!(matched) { |m| "#@##{m[1]}#{inner}#@##{m[4]}" }
         }
       end
 
@@ -265,7 +265,7 @@ module ReVIEW
           option = m[1]
           inner = m[3]
           # inner.gsub!(/^\/\//, '//@<nop>{}')
-          content.gsub!(matched, "#{option}\n#@##{sampleoutputbegin}#{inner}#@##{sampleoutputend}")
+          content.gsub!(matched) { |m| "#{option}\n#@##{sampleoutputbegin}#{inner}#@##{sampleoutputend}" }
         }
       end
 
@@ -291,7 +291,7 @@ module ReVIEW
           ref = m[4]
           n = content.match(/^\/\/note\[#{ref}\](\[.*?\])/)
           unless n.nil?
-            content.gsub!(matched, n[1])
+            content.gsub!(matched) { |m| n[1] }
             content.gsub!(/^\/\/note\[#{ref}\](\[.*?\])/, '//note\1')
           else
             # content.gsub!(matched, "noteref<#{ref}>")
@@ -327,7 +327,7 @@ module ReVIEW
               else
                 rep = m[0..3].join + im2[1]
               end
-              content.gsub!(matched, rep)
+              content.gsub!(matched) { |m| rep }
               found = true
             end
           else
@@ -337,7 +337,7 @@ module ReVIEW
             rep += "#{outcmd_begin}#{im[1]}#{outcmd_end}" if im[1].length > 0
             rep += "#{im[2..9].join}"
             rep += "#{outcmd_begin}#{im[-1]}#{outcmd_end}" if im[-1].length > 0
-            content.gsub!(matched, rep)
+            content.gsub!(matched) { |m| rep }
             found = true
           end
         }
@@ -397,10 +397,10 @@ module ReVIEW
         content.gsub!(/@<href>{(.*?)#.*?}/, '@<href>{\1}')
         linkurl_footnote = @config['starter']['linkurl_footnote']
         # table 内の @ コマンドは不安定らしい
-        while !content.gsub!(/(\/\/table.*)@<br>{}(.*?\/\/})/m, "\\1#{@table_br_replace}\\2").nil? do
+        while !content.gsub!(/(\/\/table.*)@<br>{}(.*?\/\/})/m, "\\1#{Regexp.escape(@table_br_replace)}\\2").nil? do
         end
         # 空セルが2行になることがあるらしい
-        while !content.gsub!(/(\/\/table.*\s)\.(\s.*?\/\/})/m, "\\1#{@table_empty_replace}\\2").nil? do
+        while !content.gsub!(/(\/\/table.*\s)\.(\s.*?\/\/})/m, "\\1#{Regexp.escape(@table_empty_replace)}\\2").nil? do
         end
         # Re:VIEW Starter commands
         replace_compatible_block_command_outline(content, 'terminal', 'cmd', 1)
