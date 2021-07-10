@@ -17,6 +17,7 @@ module ReVIEW
         @embeded_contents = []
         @catalog_contents = []
         @ird = false
+        @talklist_replace_cmd = "note"
       end
 
       def error(msg)
@@ -354,6 +355,12 @@ module ReVIEW
         end
       end
 
+      # talklist to //note[]{ //list[]{}... }
+      def talklist_to_nested_contents_list(content, cmd)
+        content.gsub!(/^\/\/talklist(.*){/, "//#{cmd}\\1{")
+        content.gsub!(/^\/\/talk((\[.*\])*){/, '//list\1{')
+      end
+
       def copy_embedded_contents(outdir, content)
         content.scan(/\#@mapfile\((.*?)\)/).each do |filepath|
           srcpath = File.join(@basedir, filepath)
@@ -397,20 +404,7 @@ module ReVIEW
         }
       end
 
-      def update_content(outdir, contentfile)
-        info contentfile
-        filename = File.basename(contentfile, '.*')
-        content = File.read(contentfile)
-        content.gsub!(/@<href>{(.*?)#.*?,(.*?)}/, '@<href>{\1,\2}')
-        content.gsub!(/@<href>{(.*?)#.*?}/, '@<href>{\1}')
-        linkurl_footnote = @config['starter']['linkurl_footnote']
-        # table 内の @ コマンドは不安定らしい
-        while !content.gsub!(/(\/\/table.*)@<br>{}(.*?\/\/})/m, "\\1#{Regexp.escape(@table_br_replace)}\\2").nil? do
-        end
-        # 空セルが2行になることがあるらしい
-        while !content.gsub!(/(\/\/table.*\s)\.(\s.*?\/\/})/m, "\\1#{Regexp.escape(@table_empty_replace)}\\2").nil? do
-        end
-        # Re:VIEW Starter commands
+      def replace_starter_command(content)
         replace_compatible_block_command_outline(content, 'terminal', 'cmd', 1)
         replace_compatible_block_command_outline(content, 'cmd', 'cmd', 0)
         replace_compatible_block_command_to_outside(content, 'sideimage', 'image', 1, '[]')
@@ -440,6 +434,26 @@ module ReVIEW
         delete_inline_command(content, 'large')
         delete_inline_command(content, 'xlarge')
         delete_inline_command(content, 'xxlarge')
+
+        # talklist
+        talklist_to_nested_contents_list(content, @talklist_replace_cmd)
+      end
+
+      def update_content(outdir, contentfile)
+        info contentfile
+        filename = File.basename(contentfile, '.*')
+        content = File.read(contentfile)
+        content.gsub!(/@<href>{(.*?)#.*?,(.*?)}/, '@<href>{\1,\2}')
+        content.gsub!(/@<href>{(.*?)#.*?}/, '@<href>{\1}')
+        linkurl_footnote = @config['starter']['linkurl_footnote']
+        # table 内の @ コマンドは不安定らしい
+        while !content.gsub!(/(\/\/table.*)@<br>{}(.*?\/\/})/m, "\\1#{Regexp.escape(@table_br_replace)}\\2").nil? do
+        end
+        # 空セルが2行になることがあるらしい
+        while !content.gsub!(/(\/\/table.*\s)\.(\s.*?\/\/})/m, "\\1#{Regexp.escape(@table_empty_replace)}\\2").nil? do
+        end
+        # Re:VIEW Starter commands
+        replace_starter_command(content)
 
         # fixed lack of options
         content.gsub!(/^\/\/list{/, '//list[][]{')

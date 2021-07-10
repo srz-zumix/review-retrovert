@@ -253,6 +253,12 @@ RSpec.describe 'convert result' do
       expect(text).to be_include "//footnote[03_syntax_link_auto_footnote1][https://github.com/kmuto/review/blob/master/doc/format.ja.md]"
     end
 
+    it 'talklist' do
+      expect(File).to exist(file03)
+      text = File.open(file03).read()
+      expect(text).not_to be_match(/^\/\/talklist\[.*\]/)
+    end
+
     if Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('4.0.0')
       it 'deprecated list' do
         expect(File).to exist(file02)
