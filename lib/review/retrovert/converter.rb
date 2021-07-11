@@ -2,6 +2,7 @@ require "review"
 require 'fileutils'
 require 'tmpdir'
 require "review/retrovert/yamlconfig"
+require "review/retrovert/reviewdef"
 
 module ReVIEW
   module Retrovert
@@ -171,17 +172,19 @@ module ReVIEW
             inner_cmd = im[1]
             inner_open = im[4]
             inner_opts = im[2]
-            first_opt_m = inner_opts.match(/^\[(.*?)\]/)
-            first_opt = ""
+            id_opt = ""
 
             # is_commentout = false
             is_commentout = true
-            if first_opt_m
-              first_opt_v = first_opt_m[1]
-              unless first_opt_v.empty?
-                if inner.match(/@<.*?>[$|{]#{first_opt}/)
-                  is_commentout = false
-                  first_opt = "\\[#{first_opt_v}\\]"
+            if ReViewDef::is_has_id_block_command(inner_cmd)
+              first_opt_m = inner_opts.match(/^\[(.*?)\]/)
+              if first_opt_m
+                first_opt_v = first_opt_m[1]
+                unless first_opt_v.empty?
+                  if inner.match(/@<#{ReViewDef::id_ref_inline_commands().join('|')}>[$|{]#{first_opt_v}/)
+                    is_commentout = false
+                    id_opt = "\\[#{first_opt_v}\\]"
+                  end
                 end
               end
             end
@@ -195,7 +198,7 @@ module ReVIEW
                 rep = "#{cmd_begin}#{inner}#@##{cmd_end}"
                 content.gsub!(matched) { |mm| rep }
               else
-                imb = inner.match(/(\R((^\/\/\w+(\[.*?\])*)\s*)*^\/\/#{inner_cmd}#{first_opt}(\[.*?\])*#{inner_open}.*)\R/m)
+                imb = inner.match(/(\R((^\/\/\w+(\[.*?\])*)\s*)*^\/\/#{inner_cmd}#{id_opt}(\[.*?\])*#{inner_open}.*)\R/m)
                 to_out_block = imb[1]
                 inner.gsub!(/#{Regexp.escape(to_out_block)}/m, '')
                 rep = "#{cmd_begin}#{inner}#{cmd_end}#{to_out_block}"
@@ -208,7 +211,7 @@ module ReVIEW
                 rep = "#{cmd_begin}#{inner}#{cmd_end}"
                 content.gsub!(matched) { |mm| rep }
               else
-                imb = inner.match(/\R((^\/\/\w+(\[.*?\])*)\s*)*^\/\/(#{inner_cmd})#{first_opt}(\[[^\r\n]*?\])*(?:(\$)|(?:({)|(\|)))(.*?)(^\/\/)(?(3)(\$)|(?(4)(})|(\|)))/m)
+                imb = inner.match(/\R((^\/\/\w+(\[.*?\])*)\s*)*^\/\/(#{inner_cmd})#{id_opt}(\[[^\r\n]*?\])*(?:(\$)|(?:({)|(\|)))(.*?)(^\/\/)(?(3)(\$)|(?(4)(})|(\|)))/m)
                 to_out_block = imb[0]
                 inner.gsub!(/#{Regexp.escape(to_out_block)}/m, '')
                 rep = "#{cmd_begin}#{inner}#{cmd_end}#{to_out_block}"
@@ -424,6 +427,7 @@ module ReVIEW
       def replace_starter_command(content)
         replace_compatible_block_command_outline(content, 'terminal', 'cmd', 1)
         replace_compatible_block_command_outline(content, 'cmd', 'cmd', 0)
+        replace_compatible_block_command_outline(content, 'table', 'table', 2)
         replace_compatible_block_command_to_outside(content, 'sideimage', 'image', 1, '[]')
         replace_block_command_outline(content, 'abstract', 'lead', true)
         delete_block_command(content, 'needvspace')
