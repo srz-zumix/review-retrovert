@@ -37,25 +37,52 @@ end
 
 RSpec.describe 'convert result' do
 
-  context 'convert result' do
-    let(:file00) { File.join(outpath, '00-preface.re') }
-    let(:file01) { File.join(outpath, '01-install.re') }
-    let(:file02) { File.join(outpath, '02-tutorial.re') }
-    let(:file03) { File.join(outpath, '03-syntax.re') }
-    let(:file04) { File.join(outpath, '04-customize.re') }
-    let(:file05) { File.join(outpath, '05-faq.re') }
-    let(:file06) { File.join(outpath, '06-bestpractice.re') }
-    let(:file91) { File.join(outpath, '91-compare.re') }
-    let(:file92) { File.join(outpath, '92-filelist.re') }
-    let(:file93) { File.join(outpath, '93-background.re') }
-    let(:file99) { File.join(outpath, '99-postface.re') }
-    let(:root)   { File.join(outpath, 'r0-root.re') }
-    let(:inner)  { File.join(outpath, 'r0-inner.re') }
-    let(:config) { File.join(outpath, 'config.yml') }
-    let(:retrovert_config) { File.join(outpath, 'config-retrovert.yml') }
-    let(:custom_sty) { File.join(outpath, 'sty/review-custom.sty') }
-    let(:ird_sty)    { File.join(outpath, 'sty/ird.sty') }
-    let(:review_ext) { File.join(outpath, 'review-ext.rb') }
+  let(:file00) { File.join(outpath, '00-preface.re') }
+  let(:file01) { File.join(outpath, '01-install.re') }
+  let(:file02) { File.join(outpath, '02-tutorial.re') }
+  let(:file03) { File.join(outpath, '03-syntax.re') }
+  let(:file04) { File.join(outpath, '04-customize.re') }
+  let(:file05) { File.join(outpath, '05-faq.re') }
+  let(:file06) { File.join(outpath, '06-bestpractice.re') }
+  let(:file91) { File.join(outpath, '91-compare.re') }
+  let(:file92) { File.join(outpath, '92-filelist.re') }
+  let(:file93) { File.join(outpath, '93-background.re') }
+  let(:file99) { File.join(outpath, '99-postface.re') }
+  let(:root)   { File.join(outpath, 'r0-root.re') }
+  let(:inner)  { File.join(outpath, 'r0-inner.re') }
+  let(:config) { File.join(outpath, 'config.yml') }
+  let(:retrovert_config) { File.join(outpath, 'config-retrovert.yml') }
+  let(:custom_sty) { File.join(outpath, 'sty/review-custom.sty') }
+  let(:ird_sty)    { File.join(outpath, 'sty/ird.sty') }
+  let(:review_ext) { File.join(outpath, 'review-ext.rb') }
+
+  context 'config result' do
+
+    context 'config' do
+      subject(:config_text) { File.open(config).read() }
+
+      it 'chapterlink' do
+        expect(config_text).not_to be_match(/^chapterlink: .*/)
+      end
+
+      it 'words_file' do
+        expect(config_text).to be_match(/^words_file:\s*.*\.csv.*/)
+      end
+
+    end
+
+    context 'retrovert config' do
+      subject(:config_text) { File.open(retrovert_config).read() }
+
+      it 'chapterlink' do
+        expect(config_text).to be_match(/^chapterlink: null/)
+      end
+
+    end
+
+  end
+
+  context 'contents result' do
 
     it 'file exist' do
       expect(File).to exist(file00)
@@ -291,16 +318,6 @@ RSpec.describe 'convert result' do
         text = File.open(file02).read()
         expect(text).not_to be_match(/^:/)
       end
-    end
-
-    it 'retrovert config' do
-      expect(File).to exist(config)
-      text = File.open(config).read()
-      expect(text).not_to be_match(/^chapterlink: .*/)
-
-      expect(File).to exist(retrovert_config)
-      text = File.open(retrovert_config).read()
-      expect(text).to be_match(/^chapterlink: null/)
     end
 
     it 'preproc delete #@mapXXX~#@end' do

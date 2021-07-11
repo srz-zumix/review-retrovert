@@ -3,6 +3,7 @@ require 'fileutils'
 require 'tmpdir'
 require "review/retrovert/yamlconfig"
 require "review/retrovert/reviewdef"
+require "review/retrovert/utils"
 
 module ReVIEW
   module Retrovert
@@ -99,12 +100,38 @@ module ReVIEW
         @configs.rewrite_yml('imagedir', outimagedir)
       end
 
+      def copy_wards(outdir, words_file)
+        new_file = words_file
+        FileUtils.mkdir_p(File.join(outdir, File.dirname(words_file)))
+        if File.extname(words_file) == ".csv"
+          FileUtils.copy(File.join(@basedir, words_file), File.join(outdir, new_file))
+        else
+          new_file += ".csv"
+          Utils.Tsv2Csv(File.join(@basedir, words_file), File.join(outdir, new_file))
+        end
+        new_file
+      end
+
       def update_config(outdir)
         @configs.rewrite_yml('contentdir', '.')
         @configs.rewrite_yml('hook_beforetexcompile', 'null')
         @configs.rewrite_yml('texstyle', '["reviewmacro"]')
         pagesize = @config['starter']['pagesize'].downcase
         jsbook_config = "media=print,paper=#{pagesize}"
+
+        # words
+        words_files = @config['words_file']
+        if words_files.is_a?(Array)
+          new_words_files = []
+          words_files.each do |words_file|
+            new_words_files.push copy_wards(outdir, words_file)
+          end
+          @configs.rewrite_yml('words_file', "[#{new_words_files.join(',')}]")
+        else
+          new_words_file = copy_wards(outdir, words_files)
+          @configs.rewrite_yml('words_file', new_words_file)
+        end
+
         if @ird
           # # リュウミン Pr6N R-KL 12.5Q 22H (9pt = 12.7Q 15.5pt = 21.8Q(H))
           # texdocumentclass: ["review-jsbook", "media=ebook,openany,paper=b5,fontsize=9pt,baselineskip=15.5pt,head_space=15mm,gutter=22mm,footskip=16mm,line_length=45zw,number_of_lines=38"]
