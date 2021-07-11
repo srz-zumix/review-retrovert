@@ -522,6 +522,11 @@ module ReVIEW
         # 空セルが2行になることがあるらしい
         while !content.gsub!(/(\/\/table.*\s)\.(\s.*?\/\/})/m, "\\1#{Regexp.escape(@table_empty_replace)}\\2").nil? do
         end
+        # noop を最後に消すためにダミーに変える
+        content.gsub!('@<nop>$$', '@<must_be_replace_nop>$must_be_replace_nop$')
+        content.gsub!('@<nop>||', '@<must_be_replace_nop>|must_be_replace_nop|')
+        content.gsub!('@<nop>{}', '@<must_be_replace_nop>{must_be_replace_nop}')
+
         # Re:VIEW Starter commands
         replace_starter_command(content)
 
@@ -562,9 +567,9 @@ module ReVIEW
         content.gsub!('@<hearts>{}', '!HEART!')
 
         # nop replace must be last step
-        content.gsub!('@<nop>$$', '@<b>$$')
-        content.gsub!('@<nop>||', '@<b>||')
-        content.gsub!('@<nop>{}', '@<b>{}')
+        content.gsub!('@<must_be_replace_nop>$must_be_replace_nop$', '@<b>$$')
+        content.gsub!('@<must_be_replace_nop>|must_be_replace_nop|', '@<b>||')
+        content.gsub!('@<must_be_replace_nop>{must_be_replace_nop}', '@<b>{}')
 
         # expand nested inline command
         expand_nested_inline_command(content)
