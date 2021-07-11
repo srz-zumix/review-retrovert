@@ -151,8 +151,10 @@ module ReVIEW
       def replace_compatible_block_command_outline(content, command, new_command, option_count)
         if option_count > 0
           content.gsub!(/^\/\/#{command}(?<option>(\[[^\r\n]*?\]){0,#{option_count}})(\[[^\r\n]*\])*{(?<inner>.*?)\/\/}/m, "//#{new_command}\\k<option>{\\k<inner>//}")
+          content.gsub!(/^\/\/#{command}(?<option>(\[[^\r\n]*?\]){0,#{option_count}})(\[[^\r\n]*\])*$/, "//#{new_command}\\k<option>")
         else
           content.gsub!(/^\/\/#{command}(\[[^\r\n]*\])*{(?<inner>.*?)\/\/}/m, "//#{new_command}{\\k<inner>//}")
+          content.gsub!(/^\/\/#{command}(\[[^\r\n]*\])*$/, "//#{new_command}")
         end
       end
 
@@ -451,10 +453,12 @@ module ReVIEW
         }
       end
 
+      def exclude_exta_option(content, cmd, max_option_num)
+        replace_compatible_block_command_outline(content, cmd, cmd, max_option_num)
+      end
+
       def replace_starter_command(content)
         replace_compatible_block_command_outline(content, 'terminal', 'cmd', 1)
-        replace_compatible_block_command_outline(content, 'cmd', 'cmd', 0)
-        replace_compatible_block_command_outline(content, 'table', 'table', 2)
         replace_compatible_block_command_to_outside(content, 'sideimage', 'image', 1, '[]')
         replace_block_command_outline(content, 'abstract', 'lead', true)
         delete_block_command(content, 'needvspace')
@@ -462,6 +466,11 @@ module ReVIEW
         delete_block_command(content, 'flushright')
         delete_block_command(content, 'centering')
         delete_block_command(content, 'paragraphend')
+
+        #
+        exclude_exta_option(content, 'cmd', 0)
+        exclude_exta_option(content, 'table', 2)
+        exclude_exta_option(content, 'tsize', 1)
 
         # delete IRD unsupported commands
         if @ird

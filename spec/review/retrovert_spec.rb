@@ -242,6 +242,13 @@ RSpec.describe 'convert result' do
       expect(text).not_to be_match(/^\/\/list\[[^\]]*?lineno=.*?/)
     end
 
+    it 'exclude starter option' do
+      expect(File).to exist(file03)
+      text = File.open(file03).read()
+      expect(text).not_to be_match(/^\/\/table\[.*?\]\[.*?\]\[.*?\].*/)
+      expect(text).not_to be_match(/^\/\/tsize\[.*?\]\[.*?\].*/)
+    end
+
     it 'fix lack options' do
       expect(File).to exist(file04)
       text = File.open(file04).read()
