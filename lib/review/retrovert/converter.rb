@@ -410,6 +410,14 @@ module ReVIEW
         content.gsub!(/^\/\/desc((\[.*?\])*){/, '//emlist\1{')
       end
 
+      def starter_list_to_nested_contents_list(content)
+        # talklist
+        talklist_to_nested_contents_list(content, @talklist_replace_cmd)
+        # desclist
+        desclist_to_nested_contents_list(content, @desclist_replace_cmd)
+        replace_block_command_nested_boxed_article(content, 'emlist')
+      end
+
       def copy_embedded_contents(outdir, content)
         content.scan(/\#@mapfile\((.*?)\)/).each do |filepath|
           srcpath = File.join(@basedir, filepath)
@@ -494,10 +502,8 @@ module ReVIEW
 
         # chapterauthor
         content.gsub!(/^\/\/chapterauthor\[(.*?)\]/, "//lead{\n\\1\n//}")
-        # talklist
-        talklist_to_nested_contents_list(content, @talklist_replace_cmd)
-        # desclist
-        desclist_to_nested_contents_list(content, @desclist_replace_cmd)
+        # talklist/desclist
+        starter_list_to_nested_contents_list(content)
 
         content.gsub!('@<par>{}' , '@<br>{}')
         content.gsub!('@<par>{i}', '@<br>{}')

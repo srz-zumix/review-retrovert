@@ -287,18 +287,24 @@ RSpec.describe 'convert result' do
       expect(text).to be_include "//footnote[03_syntax_link_auto_footnote1][https://github.com/kmuto/review/blob/master/doc/format.ja.md]"
     end
 
-    it 'talklist' do
-      expect(File).to exist(file03)
-      text = File.open(file03).read()
-      expect(text).not_to be_match(/^\/\/talklist\[.*\]/)
-      expect(text).not_to be_match(/^\/\/talk\[.*\]/)
-    end
+    context 'starter list expand to emlist' do
+      subject(:file03_text) { File.open(file03).read() }
 
-    it 'desclist' do
-      expect(File).to exist(file03)
-      text = File.open(file03).read()
-      expect(text).not_to be_match(/^\/\/desclist\[.*\]/)
-      expect(text).not_to be_match(/^\/\/desc\[.*\]/)
+      it 'talklist' do
+        expect(file03_text).not_to be_match(/^\/\/talklist\[.*\]/)
+        expect(file03_text).not_to be_match(/^\/\/talk\[.*\]/)
+      end
+
+      it 'desclist' do
+        expect(file03_text).not_to be_match(/^\/\/desclist\[.*\]/)
+        expect(file03_text).not_to be_match(/^\/\/desc\[.*\]/)
+      end
+
+      it 'emlist not nested' do
+        m = file03_text.match(/^\/\/emlist.*?{(.*?)^\/\/}/m)
+        inner = m[1]
+        expect(inner).not_to be_match(/^\/\/.*?{.*?^\/\/}/m)
+      end
     end
 
     it 'chapterauthor' do
