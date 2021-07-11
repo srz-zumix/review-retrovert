@@ -257,11 +257,20 @@ RSpec.describe 'convert result' do
       expect(File).to exist(file03)
       text = File.open(file03).read()
       expect(text).not_to be_match(/^\/\/talklist\[.*\]/)
+      expect(text).not_to be_match(/^\/\/talk\[.*\]/)
+    end
+
+    it 'desclist' do
+      expect(File).to exist(file03)
+      text = File.open(file03).read()
+      expect(text).not_to be_match(/^\/\/desclist\[.*\]/)
+      expect(text).not_to be_match(/^\/\/desc\[.*\]/)
     end
 
     it 'chapterauthor' do
       expect(File).to exist(file03)
       text = File.open(file03).read()
+      expect(text).to     be_match(/.\/\/chapterauthor\[.*\]/)
       expect(text).not_to be_match(/^\/\/chapterauthor\[.*\]/)
     end
 

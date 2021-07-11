@@ -18,6 +18,7 @@ module ReVIEW
         @catalog_contents = []
         @ird = false
         @talklist_replace_cmd = "note"
+        @desclist_replace_cmd = "info"
       end
 
       def error(msg)
@@ -355,10 +356,26 @@ module ReVIEW
         end
       end
 
-      # talklist to //note[]{ //list[]{}... }
+      # talklist to //#{cmd}[]{ //emlist[]{}... }
       def talklist_to_nested_contents_list(content, cmd)
         content.gsub!(/^\/\/talklist(.*){/, "//#{cmd}\\1{")
-        content.gsub!(/^\/\/talk((\[.*\])*){/, '//list\1{')
+        content.gsub!(/^\/\/talk(\[.*?\]\[.*?\])\[(.*?)\]/, "//talk\\1{\n\\2\n//}")
+        content.gsub!(/^\/\/talk((\[.*?\])*){/) { |s|
+          m = s.scan(/(\[.*?\])/)
+          # 1st option is image id
+          if m[0][0].length > 2
+            "//indepimage#{m[0][0]}\n//emlist[]#{m[1..-1].join}{"
+          else
+            "//emlist#{m.join}{"
+          end
+        }
+      end
+
+      # desclist to //#{cmd}[]{ //emlist[]{}... }
+      def desclist_to_nested_contents_list(content, cmd)
+        content.gsub!(/^\/\/desclist(.*){/, "//#{cmd}\\1{")
+        content.gsub!(/^\/\/desc(\[.*?\])\[(.*?)\]/, "//desc\\1{\n\\2\n//}")
+        content.gsub!(/^\/\/desc((\[.*?\])*){/, '//emlist\1{')
       end
 
       def copy_embedded_contents(outdir, content)
@@ -436,9 +453,11 @@ module ReVIEW
         delete_inline_command(content, 'xxlarge')
 
         # chapterauthor
-        content.gsub!(/\/\/chapterauthor\[(.*)\]/, "//lead{\n\\1\n//}")
+        content.gsub!(/^\/\/chapterauthor\[(.*?)\]/, "//lead{\n\\1\n//}")
         # talklist
         talklist_to_nested_contents_list(content, @talklist_replace_cmd)
+        # desclist
+        desclist_to_nested_contents_list(content, @desclist_replace_cmd)
 
         content.gsub!('@<par>{}' , '@<br>{}')
         content.gsub!('@<par>{i}', '@<br>{}')
