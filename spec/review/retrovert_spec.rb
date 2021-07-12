@@ -17,6 +17,9 @@ RSpec.describe 'command test', type: :aruba do
   end
 
   context 'convert mybook' do
+    before(:each) do
+      Aruba.configure { |c| c.exit_timeout = 30 }
+    end
     before(:each) { run_command("review-retrovert convert --preproc --tabwidth 4 --ird -f #{config_yaml} #{outpath}") }
     it 'result' do
       expect(last_command_started).to be_successfully_executed
@@ -287,57 +290,56 @@ RSpec.describe 'convert result' do
       expect(text).to be_include "//footnote[03_syntax_link_auto_footnote1][https://github.com/kmuto/review/blob/master/doc/format.ja.md]"
     end
 
-    context 'starter list expand to emlist' do
-      subject(:file03_text) { File.open(file03).read() }
+    context 'syntax' do
+      subject(:text) { File.open(file03).read() }
+      context 'starter list expand to emlist' do
+        it 'talklist' do
+          expect(text).not_to be_match(/^\/\/talklist\[.*\]/)
+          expect(text).not_to be_match(/^\/\/talk\[.*\]/)
+        end
 
-      it 'talklist' do
-        expect(file03_text).not_to be_match(/^\/\/talklist\[.*\]/)
-        expect(file03_text).not_to be_match(/^\/\/talk\[.*\]/)
+        it 'desclist' do
+          expect(text).not_to be_match(/^\/\/desclist\[.*\]/)
+          expect(text).not_to be_match(/^\/\/desc\[.*\]/)
+        end
+
+        it 'emlist not nested' do
+          m = text.match(/^\/\/emlist.*?{(.*?)^\/\/}/m)
+          inner = m[1]
+          expect(inner).not_to be_match(/^\/\/.*?{.*?^\/\/}/m)
+        end
       end
 
-      it 'desclist' do
-        expect(file03_text).not_to be_match(/^\/\/desclist\[.*\]/)
-        expect(file03_text).not_to be_match(/^\/\/desc\[.*\]/)
+      it 'chapterauthor' do
+        expect(text).to     be_match(/.\/\/chapterauthor\[.*\]/)
+        expect(text).not_to be_match(/^\/\/chapterauthor\[.*\]/)
       end
 
-      it 'emlist not nested' do
-        m = file03_text.match(/^\/\/emlist.*?{(.*?)^\/\/}/m)
-        inner = m[1]
-        expect(inner).not_to be_match(/^\/\/.*?{.*?^\/\/}/m)
+      it 'qq' do
+        expect(text).not_to be_match(/@<qq>\$.*?\$/)
+        expect(text).not_to be_match(/@<qq>\|.*?\|/)
+        expect(text).not_to be_match(/@<qq>{.*?}/)
       end
-    end
 
-    it 'chapterauthor' do
-      expect(File).to exist(file03)
-      text = File.open(file03).read()
-      expect(text).to     be_match(/.\/\/chapterauthor\[.*\]/)
-      expect(text).not_to be_match(/^\/\/chapterauthor\[.*\]/)
-    end
+      it 'B' do
+        expect(text).not_to be_match(/@<B>\$.*?\$/)
+        expect(text).not_to be_match(/@<B>\|.*?\|/)
+        expect(text).not_to be_match(/@<B>{.*?}/)
+      end
 
-    it 'B' do
-      expect(File).to exist(file03)
-      text = File.open(file03).read()
-      expect(text).not_to be_match(/@<B>\$.*?\$/)
-      expect(text).not_to be_match(/@<B>\|.*?\|/)
-      expect(text).not_to be_match(/@<B>{.*?}/)
-    end
+      it 'noop' do
+        expect(text).to     be_match(/@<b>({}|\|\||\$\$)/)
+        expect(text).not_to include("must_be_replace_nop")
+      end
 
-    it 'noop' do
-      expect(File).to exist(file03)
-      text = File.open(file03).read()
-      expect(text).to     be_match(/@<b>({}|\|\||\$\$)/)
-      expect(text).not_to include("must_be_replace_nop")
-    end
-
-    it 'par' do
-      expect(File).to exist(file03)
-      text = File.open(file03).read()
-      expect(text).not_to be_include('@<par>{}')
-      expect(text).not_to be_include('@<par>$$')
-      expect(text).not_to be_include('@<par>||')
-      expect(text).not_to be_include('@<par>{i}')
-      expect(text).not_to be_include('@<par>$i$')
-      expect(text).not_to be_include('@<par>|i|')
+      it 'par' do
+        expect(text).not_to be_include('@<par>{}')
+        expect(text).not_to be_include('@<par>$$')
+        expect(text).not_to be_include('@<par>||')
+        expect(text).not_to be_include('@<par>{i}')
+        expect(text).not_to be_include('@<par>$i$')
+        expect(text).not_to be_include('@<par>|i|')
+      end
     end
 
     if Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('4.0.0')

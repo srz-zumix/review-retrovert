@@ -181,15 +181,6 @@ module ReVIEW
         content.gsub!(/^\/\/#{command}(\[.*?\])*\s*\R/, '')
       end
 
-      def delete_inline_command(content, command)
-        # FIXME: 入れ子のフェンス記法({}|$)
-        content.gsub!(/@<#{command}>(?:(\$)|(?:({)|(\|)))((?:.*@<\w*>[\|${].*?[\|$}].*?|.*?)*)(?(1)(\$)|(?(2)(})|(\|)))/){"#{$4}"}
-      end
-
-      def replace_inline_command(content, command, new_command)
-        content.gsub!(/@<#{command}>/, "@<#{new_command}>")
-      end
-
       def replace_block_command_nested_boxed_article_i(content, box, depth)
         found = false
         content.dup.scan(/(^\/\/#{box})(\[[^\r\n]*?\])*(?:(\$)|(?:({)|(\|)))(.*?)(^\/\/)(?(3)(\$)|(?(4)(})|(\|)).*?[\r\n]+)/m) { |m|
@@ -348,46 +339,6 @@ module ReVIEW
         content.gsub!(/(^\/\/list\[.*?\]\[.*?\]\[.*?)((,|)lineno=[^,\]]*)(.*?\])/, '\1\4')
       end
 
-      # @<XXX>{AAA@<YYY>{BBB}} to @<XXX>{AAA}@<YYY>{BBB}
-      def expand_nested_inline_command(content)
-        found = false
-        content.dup.scan(/(@<.*?>)(?:(\$)|(?:({)|(\|)))(.*?)(?(2)(\$)|(?(3)(})|(\|)))/) { |m|
-          matched = m.join
-          body = m[4]
-          im = body.match(/(.*)(@<.*?>)(?:(\$)|(?:({)|(\|)))(.*?)(?(3)(\$)|(?(4)(})|(\|)))(.*)/)
-          if content.match(/^#@#.*#{Regexp.escape(matched)}.*/)
-            next
-          end
-          if im.nil?
-            im2 = body.match(/(.*)(@<.*?>)#{Regexp.escape(m[1..3].join)}(.*)/)
-            unless im2.nil?
-              rep = ""
-              if im2[3].length > 0
-                outcmd_begin = m[0..3].join + im2[1..2].join + "$|{".gsub(m[1..3].join, '')[0]
-                outcmd_end = "$|}".gsub(m[5..7].join, '')[0]
-                rep = "#{outcmd_begin}#{im2[3]}#{outcmd_end}"
-              else
-                rep = m[0..3].join + im2[1]
-              end
-              content.gsub!(matched) { |mm| rep }
-              found = true
-            end
-          else
-            outcmd_begin = m[0..3].join
-            outcmd_end = m[5..7].join
-            rep = ""
-            rep += "#{outcmd_begin}#{im[1]}#{outcmd_end}" if im[1].length > 0
-            rep += "#{im[2..9].join}"
-            rep += "#{outcmd_begin}#{im[-1]}#{outcmd_end}" if im[-1].length > 0
-            content.gsub!(matched) { |mm| rep }
-            found = true
-          end
-        }
-        if found
-          expand_nested_inline_command(content)
-        end
-      end
-
       # talklist to //#{cmd}[]{ //emlist[]{}... }
       def talklist_to_nested_contents_list(content, cmd)
         content.gsub!(/^\/\/talklist(.*){/, "//#{cmd}\\1{")
@@ -475,7 +426,7 @@ module ReVIEW
         delete_block_command(content, 'centering')
         delete_block_command(content, 'paragraphend')
 
-        #
+        # delete starter option
         exclude_exta_option(content, 'cmd', 0)
         exclude_exta_option(content, 'table', 2)
         exclude_exta_option(content, 'tsize', 1)
@@ -484,6 +435,71 @@ module ReVIEW
         if @ird
           delete_block_command(content, 'noindent')
         end
+
+        # chapterauthor
+        content.gsub!(/^\/\/chapterauthor\[(.*?)\]/, "//lead{\n\\1\n//}")
+        # talklist/desclist
+        starter_list_to_nested_contents_list(content)
+      end
+
+      def delete_inline_command(content, command)
+        # 既に入れ子は展開されている前提
+        content.gsub!(/@<#{command}>(?:(\$)|(?:({)|(\|)))(.*?)(?(1)(\$)|(?(2)(})|(\|)))/, '\4')
+      end
+
+      def do_replace_inline_command(content, command, &blk)
+        # 既に入れ子は展開されている前提
+        content.gsub!(/@<#{command}>(?:(\$)|(?:({)|(\|)))(.*?)(?(1)(\$)|(?(2)(})|(\|)))/) { blk.call([$1, $2, $3].join, $4, [$5, $6, $7].join) }
+      end
+
+      def replace_inline_command(content, command, new_command)
+        do_replace_inline_command(content, command) { |open, inner, close|
+          "@<#{new_command}>#{open}#{inner}#{close}"
+        }
+      end
+
+      # @<XXX>{AAA@<YYY>{BBB}} to @<XXX>{AAA}@<YYY>{BBB}
+      def expand_nested_inline_command(content)
+        found = false
+        content.dup.scan(/(@<.*?>)(?:(\$)|(?:({)|(\|)))(.*?)(?(2)(\$)|(?(3)(})|(\|)))/) { |m|
+          matched = m.join
+          body = m[4]
+          im = body.match(/(.*)(@<.*?>)(?:(\$)|(?:({)|(\|)))(.*?)(?(3)(\$)|(?(4)(})|(\|)))(.*)/)
+          if content.match(/^#@#.*#{Regexp.escape(matched)}.*/)
+            next
+          end
+          if im.nil?
+            im2 = body.match(/(.*)(@<.*?>)#{Regexp.escape(m[1..3].join)}(.*)/)
+            unless im2.nil?
+              rep = ""
+              if im2[3].length > 0
+                outcmd_begin = m[0..3].join + im2[1..2].join + "$|{".gsub(m[1..3].join, '')[0]
+                outcmd_end = "$|}".gsub(m[5..7].join, '')[0]
+                rep = "#{outcmd_begin}#{im2[3]}#{outcmd_end}"
+              else
+                rep = m[0..3].join + im2[1]
+              end
+              content.gsub!(matched) { |mm| rep }
+              found = true
+            end
+          else
+            outcmd_begin = m[0..3].join
+            outcmd_end = m[5..7].join
+            rep = ""
+            rep += "#{outcmd_begin}#{im[1]}#{outcmd_end}" if im[1].length > 0
+            rep += "#{im[2..9].join}"
+            rep += "#{outcmd_begin}#{im[-1]}#{outcmd_end}" if im[-1].length > 0
+            content.gsub!(matched) { |mm| rep }
+            found = true
+          end
+        }
+        if found
+          expand_nested_inline_command(content)
+        end
+      end
+
+      def replace_starter_inline_command(content)
+        expand_nested_inline_command(content)
 
         replace_inline_command(content, 'secref', 'hd')
         replace_inline_command(content, 'file', 'kw')
@@ -500,13 +516,8 @@ module ReVIEW
         delete_inline_command(content, 'xlarge')
         delete_inline_command(content, 'xxlarge')
 
-        # chapterauthor
-        content.gsub!(/^\/\/chapterauthor\[(.*?)\]/, "//lead{\n\\1\n//}")
-        # talklist/desclist
-        starter_list_to_nested_contents_list(content)
-
-        content.gsub!('@<par>{}' , '@<br>{}')
-        content.gsub!('@<par>{i}', '@<br>{}')
+        do_replace_inline_command(content, 'par') { |open, inner, close| "@<br>#{open}#{close}" }
+        do_replace_inline_command(content, 'qq' ) { |open, inner, close| "\"#{inner}\"" }
       end
 
       def update_content(outdir, contentfile)
@@ -566,8 +577,7 @@ module ReVIEW
         content.gsub!('@<TeX>{}', 'TeX')
         content.gsub!('@<hearts>{}', '!HEART!')
 
-        # expand nested inline command
-        expand_nested_inline_command(content)
+        replace_starter_inline_command(content)
 
         # fix deprecated
         fix_deprecated_list(content)
