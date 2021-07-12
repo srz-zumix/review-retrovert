@@ -314,10 +314,18 @@ RSpec.describe 'convert result' do
       expect(text).not_to be_match(/^\/\/chapterauthor\[.*\]/)
     end
 
+    it 'B' do
+      expect(File).to exist(file03)
+      text = File.open(file03).read()
+      expect(text).not_to be_match(/@<B>\$.*?\$/)
+      expect(text).not_to be_match(/@<B>\|.*?\|/)
+      expect(text).not_to be_match(/@<B>{.*?}/)
+    end
+
     it 'noop' do
       expect(File).to exist(file03)
       text = File.open(file03).read()
-      expect(text).to     be_match(/@<b>({}|\|\||$$)/)
+      expect(text).to     be_match(/@<b>({}|\|\||\$\$)/)
       expect(text).not_to include("must_be_replace_nop")
     end
 

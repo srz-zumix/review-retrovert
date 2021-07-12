@@ -566,11 +566,6 @@ module ReVIEW
         content.gsub!('@<TeX>{}', 'TeX')
         content.gsub!('@<hearts>{}', '!HEART!')
 
-        # nop replace must be last step
-        content.gsub!('@<must_be_replace_nop>$must_be_replace_nop$', '@<b>$$')
-        content.gsub!('@<must_be_replace_nop>|must_be_replace_nop|', '@<b>||')
-        content.gsub!('@<must_be_replace_nop>{must_be_replace_nop}', '@<b>{}')
-
         # expand nested inline command
         expand_nested_inline_command(content)
 
@@ -582,6 +577,11 @@ module ReVIEW
           content.gsub!(/(.*)@<br>{}$/, "\\1\n\n")
           content.gsub!(/(.*)@<br>{}(.*)$/, "\\1\n\n\\2")
         end
+
+        # nop replace must be last step
+        content.gsub!('@<must_be_replace_nop>$must_be_replace_nop$', '@<b>$$')
+        content.gsub!('@<must_be_replace_nop>|must_be_replace_nop|', '@<b>||')
+        content.gsub!('@<must_be_replace_nop>{must_be_replace_nop}', '@<b>{}')
 
         File.write(contentfile, content)
         copy_embedded_contents(outdir, content)
