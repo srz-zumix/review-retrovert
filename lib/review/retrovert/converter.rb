@@ -344,9 +344,7 @@ module ReVIEW
       # talklist to //#{cmd}[]{ //emlist[]{}... }
       def talklist_to_nested_contents_list(content, cmd)
         content.gsub!(/^\/\/talklist(.*){/, "//#{cmd}\\1{")
-        content.gsub!(/^\/\/talk(\[#{@r_option_inner}\]\[#{@r_option_inner}\])\[(#{@r_option_inner})\]$/) {
-          "//talk$1{\n$2\n//}"
-        }
+        content.gsub!(/^\/\/talk(\[#{@r_option_inner}\]\[#{@r_option_inner}\])\[(#{@r_option_inner})\]$/, "//talk\\1{\n\\2\n//}")
         content.gsub!(/^\/\/talk((\[#{@r_option_inner}\])*){/) { |s|
           m = s.scan(/(\[#{@r_option_inner}\])/)
           # 1st option is image id
@@ -361,9 +359,7 @@ module ReVIEW
       # desclist to //#{cmd}[]{ //emlist[]{}... }
       def desclist_to_nested_contents_list(content, cmd)
         content.gsub!(/^\/\/desclist(.*){/, "//#{cmd}\\1{")
-        content.gsub!(/^\/\/desc(\[#{@r_option_inner}\])\[(#{@r_option_inner})\]$/) {
-          "//desc$1{\n$2\n//}"
-        }
+        content.gsub!(/^\/\/desc(\[#{@r_option_inner}\])\[(#{@r_option_inner})\]$/, "//desc\\1{\n\\2\n//}")
         content.gsub!(/^\/\/desc((\[#{@r_option_inner}\])*){/, '//emlist\1{')
       end
 
