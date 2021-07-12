@@ -520,6 +520,7 @@ module ReVIEW
         replace_inline_command(content, 'file', 'kw')
         replace_inline_command(content, 'hlink', 'href')
         replace_inline_command(content, 'B', 'strong')
+        replace_inline_command(content, 'W', 'wb')
         replace_inline_command(content, 'term', 'idx')
         replace_inline_command(content, 'termnoidx', 'hidx')
         delete_inline_command(content, 'userinput')
