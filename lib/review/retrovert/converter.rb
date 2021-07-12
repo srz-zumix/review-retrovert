@@ -18,6 +18,7 @@ module ReVIEW
         @configs = YamlConfig.new
         @embeded_contents = []
         @catalog_contents = []
+        @talk_shortcuts = {}
         @ird = false
         @talklist_replace_cmd = "note"
         @desclist_replace_cmd = "info"
@@ -347,10 +348,18 @@ module ReVIEW
         content.gsub!(/^\/\/talk(?<options>\[#{@r_option_inner}\]\[#{@r_option_inner}\])\[(?<body>#{@r_option_inner})\]$/, "//talk\\k<options>{\n\\k<body>\n//}")
         content.gsub!(/^\/\/t(?<options>\[#{@r_option_inner}\])\[(?<body>#{@r_option_inner})\]$/, "//talk\\k<options>{\n\\k<body>\n//}")
         content.gsub!(/^\/\/(t|talk)((\[#{@r_option_inner}\])*){/) { |s|
-          m = s.scan(/(\[#{@r_option_inner}\])/)
+          m = s.scan(/(\[(#{@r_option_inner})\])/)
           # 1st option is image id
-          if m[0][0].length > 2
-            "//indepimage#{m[0][0]}\n//emlist[]#{m[1..-1].join}{"
+          option = m[0][1]
+          if option.length > 0
+            kv = @talk_shortcuts[option]
+            if kv&.key?('image')
+              "//indepimage#{kv['image']}\n//emlist[]#{m[1..-1].join}{"
+            elsif kv&.key?('name')
+              "//emlist[#{kv['name']}]{"
+            else
+              "//indepimage#{m[0][0]}\n//emlist[]#{m[1..-1].join}{"
+            end
           else
             "//emlist#{m.join}{"
           end
@@ -725,6 +734,7 @@ module ReVIEW
         load_config(yamlfile)
         store_image_dir = store_out_image(outdir) if options['no-image']
         create_initial_project(outdir, options)
+        @talk_shortcuts = @config['starter']['talk_shortcuts']
 
         copy_config(outdir)
         copy_catalog(outdir)

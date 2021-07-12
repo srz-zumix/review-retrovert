@@ -257,6 +257,11 @@ RSpec.describe 'convert result' do
           expect(text).to     be_match(/^不可能なことを言い立てるのは貴官の方だ。それも安全な場所から動かずにな。/)
         end
 
+        it 'talk_shortcuts' do
+          expect(text).not_to be_match(/^\/\/indepimage\[b1\]/)
+          expect(text).not_to be_match(/^\/\/indepimage\[g1\]/)
+        end
+
         it 'desclist' do
           expect(text).not_to be_match(/^\/\/desclist\[.*\]/)
           expect(text).not_to be_match(/^\/\/desc\[.*\]/)
