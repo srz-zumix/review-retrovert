@@ -215,20 +215,6 @@ RSpec.describe 'convert result' do
       expect(text).to     be_match(/^\/\/list\[starter_auto_id_list_0\]\[.*?\]{/)
     end
 
-    it '? id set to' do
-      expect(File).to exist(file03)
-      text = File.open(file03).read()
-      expect(text).not_to be_match(/^\/\/list\[[^\[\]]*?\]{/)
-      expect(text).to     be_match(/^\/\/list\[starter_auto_id_list_0\]\[.*?\]{/)
-    end
-
-    it 'noteref' do
-      expect(File).to exist(file03)
-      text = File.open(file03).read()
-      expect(text).not_to be_include('@<noteref>')
-      expect(text).not_to be_match(/^\/\/note\[.*?\]\[.*?\]{/)
-    end
-
     it 'image border' do
       expect(File).to exist(file03)
       text = File.open(file03).read()
@@ -237,19 +223,6 @@ RSpec.describe 'convert result' do
       expect(File).to exist(file06)
       text = File.open(file06).read()
       expect(text).not_to be_match(/^\/\/image\[[^\]]*?border=.*?/)
-      end
-
-    it 'list lineno' do
-      expect(File).to exist(file03)
-      text = File.open(file03).read()
-      expect(text).not_to be_match(/^\/\/list\[[^\]]*?lineno=.*?/)
-    end
-
-    it 'exclude starter option' do
-      expect(File).to exist(file03)
-      text = File.open(file03).read()
-      expect(text).not_to be_match(/^\/\/table\[.*?\]\[.*?\]\[.*?\].*/)
-      expect(text).not_to be_match(/^\/\/tsize\[.*?\]\[.*?\].*/)
     end
 
     it 'fix lack options' do
@@ -274,22 +247,6 @@ RSpec.describe 'convert result' do
       expect(text).not_to be_match(/^#@#\/\/sampleoutputbegin.*?^#@\++.*^#@-+.*?^#@#\/\/sampleoutputend/m)
     end
 
-    it 'block comment' do
-      expect(File).to exist(file03)
-      text = File.open(file03).read()
-      text.gsub!(/^#@#\/\/sampleoutputbegin.*?^#@#\/\/sampleoutputend/m, '')
-      expect(text).not_to be_match(/^#@\++/)
-      expect(text).not_to be_match(/^#@-+/)
-      inner = text.match(/^#@#\++\R(.*)^#@#-+/m)[1]
-      expect(inner).to     be_match(/(^#@#.*\R)*/m)
-    end
-
-    it 'auto url link footnote' do
-      expect(File).to exist(file03)
-      text = File.open(file03).read()
-      expect(text).to be_include "//footnote[03_syntax_link_auto_footnote1][https://github.com/kmuto/review/blob/master/doc/format.ja.md]"
-    end
-
     context 'syntax' do
       subject(:text) { File.open(file03).read() }
       context 'starter list expand to emlist' do
@@ -308,6 +265,41 @@ RSpec.describe 'convert result' do
           inner = m[1]
           expect(inner).not_to be_match(/^\/\/.*?{.*?^\/\/}/m)
         end
+      end
+
+      it '? id set to' do
+        expect(text).not_to be_match(/^\/\/list\[[^\[\]]*?\]{/)
+        expect(text).to     be_match(/^\/\/list\[starter_auto_id_list_0\]\[.*?\]{/)
+      end
+
+      it 'noteref' do
+        expect(text).not_to be_include('@<noteref>')
+        expect(text).not_to be_match(/^\/\/note\[.*?\]\[.*?\]{/)
+      end
+
+      it 'list lineno' do
+        expect(text).not_to be_match(/^\/\/list\[[^\]]*?lineno=.*?/)
+      end
+
+      it 'block comment' do
+        text.gsub!(/^#@#\/\/sampleoutputbegin.*?^#@#\/\/sampleoutputend/m, '')
+        expect(text).not_to be_match(/^#@\++/)
+        expect(text).not_to be_match(/^#@-+/)
+        inner = text.match(/^#@#\++\R(.*)^#@#-+/m)[1]
+        expect(inner).to     be_match(/(^#@#.*\R)*/m)
+      end
+
+      it 'auto url link footnote' do
+        expect(text).to be_include "//footnote[03_syntax_link_auto_footnote1][https://github.com/kmuto/review/blob/master/doc/format.ja.md]"
+      end
+
+      it 'exclude starter option' do
+        expect(text).not_to be_match(/^\/\/table\[.*?\]\[.*?\]\[.*?\].*/)
+        expect(text).not_to be_match(/^\/\/tsize\[.*?\]\[.*?\].*/)
+      end
+
+      it 'output block command' do
+        expect(text).not_to be_match(/^\/\/output\[.*\]/)
       end
 
       it 'chapterauthor' do
