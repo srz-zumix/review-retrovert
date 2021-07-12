@@ -258,6 +258,7 @@ RSpec.describe 'convert result' do
         it 'desclist' do
           expect(text).not_to be_match(/^\/\/desclist\[.*\]/)
           expect(text).not_to be_match(/^\/\/desc\[.*\]/)
+          expect(text).to     be_match(/^\/\/emlist\[.*?(.*?\[.*?\\\].*?)*.*?\]{/)
         end
 
         it 'emlist not nested' do
