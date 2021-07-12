@@ -253,11 +253,14 @@ RSpec.describe 'convert result' do
         it 'talklist' do
           expect(text).not_to be_match(/^\/\/talklist\[.*\]/)
           expect(text).not_to be_match(/^\/\/talk\[.*\]/)
+          expect(text).not_to be_match(/^\/\/t\[.*\]/)
+          expect(text).to     be_match(/^不可能なことを言い立てるのは貴官の方だ。それも安全な場所から動かずにな。/)
         end
 
         it 'desclist' do
           expect(text).not_to be_match(/^\/\/desclist\[.*\]/)
           expect(text).not_to be_match(/^\/\/desc\[.*\]/)
+          expect(text).to     be_match(/^20XX年XX月XX日/)
           if Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('5.0.0')
             expect(text).to     be_match(/^\/\/emlist\[.*?(.*?\[.*?\\\].*?)*.*?\]{/)
           end

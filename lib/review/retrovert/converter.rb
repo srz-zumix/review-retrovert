@@ -343,9 +343,10 @@ module ReVIEW
 
       # talklist to //#{cmd}[]{ //emlist[]{}... }
       def talklist_to_nested_contents_list(content, cmd)
-        content.gsub!(/^\/\/talklist(.*){/, "//#{cmd}\\1{")
-        content.gsub!(/^\/\/talk(\[#{@r_option_inner}\]\[#{@r_option_inner}\])\[(#{@r_option_inner})\]$/, "//talk\\1{\n\\2\n//}")
-        content.gsub!(/^\/\/talk((\[#{@r_option_inner}\])*){/) { |s|
+        content.gsub!(/^\/\/talklist(.*?){/, "//#{cmd}\\1{")
+        content.gsub!(/^\/\/talk(?<options>\[#{@r_option_inner}\]\[#{@r_option_inner}\])\[(?<body>#{@r_option_inner})\]$/, "//talk\\k<options>{\n\\k<body>\n//}")
+        content.gsub!(/^\/\/t(?<options>\[#{@r_option_inner}\])\[(?<body>#{@r_option_inner})\]$/, "//talk\\k<options>{\n\\k<body>\n//}")
+        content.gsub!(/^\/\/(t|talk)((\[#{@r_option_inner}\])*){/) { |s|
           m = s.scan(/(\[#{@r_option_inner}\])/)
           # 1st option is image id
           if m[0][0].length > 2
@@ -358,8 +359,8 @@ module ReVIEW
 
       # desclist to //#{cmd}[]{ //emlist[]{}... }
       def desclist_to_nested_contents_list(content, cmd)
-        content.gsub!(/^\/\/desclist(.*){/, "//#{cmd}\\1{")
-        content.gsub!(/^\/\/desc(\[#{@r_option_inner}\])\[(#{@r_option_inner})\]$/, "//desc\\1{\n\\2\n//}")
+        content.gsub!(/^\/\/desclist(.*?){/, "//#{cmd}\\1{")
+        content.gsub!(/^\/\/desc(?<options>\[#{@r_option_inner}\])\[(?<body>#{@r_option_inner})\]$/, "//desc\\k<options>{\n\\k<body>\n//}")
         content.gsub!(/^\/\/desc((\[#{@r_option_inner}\])*){/, '//emlist\1{')
       end
 
