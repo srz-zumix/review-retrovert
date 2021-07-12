@@ -271,6 +271,16 @@ RSpec.describe 'convert result' do
           end
         end
 
+        it 'term' do
+          expect(text).not_to be_match(/@<term>{.*?}/)
+          expect(text).to     be_match(/@<idx>{.*?}/)
+        end
+
+        it 'termnoidx' do
+          expect(text).not_to be_match(/@<termnoidx>{.*?}/)
+          # expect(text).to     be_match(/@<hidx>{.*?}/)
+        end
+
         it 'emlist not nested' do
           m = text.match(/^\/\/emlist.*?{(.*?)^\/\/}/m)
           if m
