@@ -436,6 +436,7 @@ module ReVIEW
         replace_compatible_block_command_outline(content, 'output', 'list', 3)
         replace_compatible_block_command_to_outside(content, 'sideimage', 'image', 1, '[]')
         replace_block_command_outline(content, 'abstract', 'lead', true)
+        delete_block_command(content, 'vspace')
         delete_block_command(content, 'needvspace')
         delete_block_command(content, 'clearpage')
         delete_block_command(content, 'flushright')

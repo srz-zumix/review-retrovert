@@ -135,17 +135,6 @@ RSpec.describe 'convert result' do
       expect(text).to     be_include('LaTeX')
     end
 
-    it 'block command delete' do
-      expect(File).to exist(file03)
-      text = File.open(file03).read()
-      expect(text).not_to be_match('^\/\/needvspace')
-      expect(text).not_to be_match('^\/\/clearpage')
-      expect(text).not_to be_match('^\/\/flushright')
-      expect(text).not_to be_match('^\/\/centering')
-      expect(text).not_to be_match('^\/\/noindent')
-      expect(text).not_to be_match('^\/\/paragraphend')
-    end
-
     it 'block comaptible command replace with options' do
       expect(File).to exist(file02)
       text = File.open(file02).read()
@@ -249,6 +238,30 @@ RSpec.describe 'convert result' do
 
     context 'syntax' do
       subject(:text) { File.open(file03).read() }
+
+      context 'block command delete' do
+        it 'vspace' do
+          expect(text).not_to be_match(/^\/\/vspace/)
+        end
+        it 'needvspace' do
+          expect(text).not_to be_match(/^\/\/needvspace/)
+        end
+        it 'clearpage' do
+          expect(text).not_to be_match(/^\/\/clearpage/)
+        end
+        it 'flushright' do
+          expect(text).not_to be_match(/^\/\/flushright/)
+        end
+        it 'centering' do
+          expect(text).not_to be_match(/^\/\/centering/)
+        end
+        it 'noindent' do
+          expect(text).not_to be_match(/^\/\/noindent/)
+        end
+        it 'paragraphend' do
+          expect(text).not_to be_match(/^\/\/paragraphend/)
+        end
+      end
 
       context 'starter list expand to emlist' do
         it 'talklist' do
