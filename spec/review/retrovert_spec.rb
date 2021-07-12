@@ -249,6 +249,7 @@ RSpec.describe 'convert result' do
 
     context 'syntax' do
       subject(:text) { File.open(file03).read() }
+
       context 'starter list expand to emlist' do
         it 'talklist' do
           expect(text).not_to be_match(/^\/\/talklist\[.*\]/)
@@ -270,22 +271,6 @@ RSpec.describe 'convert result' do
             expect(text).to     be_match(/^\/\/emlist\[.*?(.*?\[.*?\\\].*?)*.*?\]{/)
           end
         end
-
-        it 'term' do
-          expect(text).not_to be_match(/@<term>{.*?}/)
-          expect(text).to     be_match(/@<idx>{.*?}/)
-        end
-
-        it 'termnoidx' do
-          expect(text).not_to be_match(/@<termnoidx>{.*?}/)
-          # expect(text).to     be_match(/@<hidx>{.*?}/)
-        end
-
-        it 'W' do
-          expect(text).not_to be_match(/@<W>{.*?}/)
-          expect(text).to     be_match(/@<wb>{.*?}/)
-        end
-
         it 'emlist not nested' do
           m = text.match(/^\/\/emlist.*?{(.*?)^\/\/}/m)
           if m
@@ -361,7 +346,26 @@ RSpec.describe 'convert result' do
         expect(text).not_to be_include('@<par>$i$')
         expect(text).not_to be_include('@<par>|i|')
       end
-    end
+
+      it 'program' do
+        expect(text).not_to be_match(/\/\/program\[.*?\]/)
+      end
+
+      it 'term' do
+        expect(text).not_to be_match(/@<term>{.*?}/)
+        expect(text).to     be_match(/@<idx>{.*?}/)
+      end
+
+      it 'termnoidx' do
+        expect(text).not_to be_match(/@<termnoidx>{.*?}/)
+        # expect(text).to     be_match(/@<hidx>{.*?}/)
+      end
+
+      it 'W' do
+        expect(text).not_to be_match(/@<W>{.*?}/)
+        expect(text).to     be_match(/@<wb>{.*?}/)
+      end
+  end
 
     if Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('4.0.0')
       it 'deprecated list' do

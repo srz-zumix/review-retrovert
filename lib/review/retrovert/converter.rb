@@ -431,6 +431,7 @@ module ReVIEW
       end
 
       def replace_starter_command(content)
+        replace_compatible_block_command_outline(content, 'program', 'list', 2)
         replace_compatible_block_command_outline(content, 'terminal', 'cmd', 1)
         replace_compatible_block_command_outline(content, 'output', 'list', 3)
         replace_compatible_block_command_to_outside(content, 'sideimage', 'image', 1, '[]')
