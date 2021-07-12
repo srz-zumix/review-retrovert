@@ -350,18 +350,20 @@ module ReVIEW
         content.gsub!(/^\/\/(t|talk)((\[#{@r_option_inner}\])*){/) { |s|
           m = s.scan(/(\[(#{@r_option_inner})\])/)
           # 1st option is image id
-          option = m[0][1]
-          if option.length > 0
-            kv = @talk_shortcuts[option]
+          avatar = m[0][1]
+          first_option = m[0][0]
+          traling_options = m[1..-1].map{ |x| x[0] }.join
+          if avatar.length > 0
+            kv = @talk_shortcuts[avatar]
             if kv&.key?('image')
-              "//indepimage#{kv['image']}\n//emlist[]#{m[1..-1].join}{"
+              "//indepimage#{kv['image']}\n//emlist[]#{traling_options}{"
             elsif kv&.key?('name')
               "//emlist[#{kv['name']}]{"
             else
-              "//indepimage#{m[0][0]}\n//emlist[]#{m[1..-1].join}{"
+              "//indepimage#{first_option}\n//emlist[]#{traling_options}{"
             end
           else
-            "//emlist#{m.join}{"
+            "//emlist#{first_option}#{traling_options}{"
           end
         }
       end
