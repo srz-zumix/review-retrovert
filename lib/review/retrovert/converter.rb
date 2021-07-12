@@ -23,7 +23,7 @@ module ReVIEW
         @talklist_replace_cmd = "note"
         @desclist_replace_cmd = "info"
 
-        @r_option_inner = '.*?(.*?\\[.*?\\\\\\].*?)*.*?'
+        @r_option_inner = '(.*?\\[.*?\\\\\\].*?)*.*?'
       end
 
       def error(msg)
@@ -190,11 +190,11 @@ module ReVIEW
           matched = m[0..-1].join
           inner = m[5]
           # info depth
-          im = inner.match(/^\/\/(\w+)((\[.*?\])*)([$|{])/)
+          im = inner.match(/^\/\/(?<command>\w+)(?<options>(\[#{@r_option_inner}\])*)(?<open>[$|{])/)
           unless im.nil?
-            inner_cmd = im[1]
-            inner_open = im[4]
-            inner_opts = im[2]
+            inner_cmd = im['command']
+            inner_open = im['open']
+            inner_opts = im['options']
             id_opt = ""
 
             # is_commentout = false
@@ -217,11 +217,11 @@ module ReVIEW
             if inner_open == m[2..4].join
               # if same fence then cmd_end == inner_end
               if is_commentout
-                inner.gsub!(/(^\/\/(\w+(\[.*?\]|))*#{inner_open})/, '#@#\1')
+                inner.gsub!(/(^\/\/(\w+(\[#{@r_option_inner}\]|))*#{inner_open})/, '#@#\1')
                 rep = "#{cmd_begin}#{inner}#@##{cmd_end}"
                 content.gsub!(matched) { |mm| rep }
               else
-                imb = inner.match(/(\R((^\/\/\w+(\[.*?\])*)\s*)*^\/\/#{inner_cmd}#{id_opt}(\[.*?\])*#{inner_open}.*)\R/m)
+                imb = inner.match(/(\R((^\/\/\w+(\[#{@r_option_inner}\])*)\s*)*^\/\/#{inner_cmd}#{id_opt}(\[#{@r_option_inner}\])*#{inner_open}.*)\R/m)
                 to_out_block = imb[1]
                 inner.gsub!(/#{Regexp.escape(to_out_block)}/m, '')
                 rep = "#{cmd_begin}#{inner}#{cmd_end}#{to_out_block}"
@@ -230,11 +230,11 @@ module ReVIEW
             else
               close = inner_open == '{' ? '}' : inner_open
               if is_commentout
-                inner.gsub!(/(^\/\/(\w+(\[.*?\]|))*#{inner_open})(.*?)(^\/\/#{close})/m, '#@#\1\2#@#\3')
+                inner.gsub!(/(^\/\/(\w+(\[#{@r_option_inner}\]|))*#{inner_open})(.*?)(^\/\/#{close})/m, '#@#\1\2#@#\3')
                 rep = "#{cmd_begin}#{inner}#{cmd_end}"
                 content.gsub!(matched) { |mm| rep }
               else
-                imb = inner.match(/\R((^\/\/\w+(\[.*?\])*)\s*)*^\/\/(#{inner_cmd})#{id_opt}(\[[^\r\n]*?\])*(?:(\$)|(?:({)|(\|)))(.*?)(^\/\/)(?(3)(\$)|(?(4)(})|(\|)))/m)
+                imb = inner.match(/\R((^\/\/\w+(\[#{@r_option_inner}\])*)\s*)*^\/\/(#{inner_cmd})#{id_opt}(\[[^\r\n]*?\])*(?:(\$)|(?:({)|(\|)))(.*?)(^\/\/)(?(3)(\$)|(?(4)(})|(\|)))/m)
                 to_out_block = imb[0]
                 inner.gsub!(/#{Regexp.escape(to_out_block)}/m, '')
                 rep = "#{cmd_begin}#{inner}#{cmd_end}#{to_out_block}"
