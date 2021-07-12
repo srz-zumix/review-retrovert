@@ -320,9 +320,14 @@ RSpec.describe 'convert result' do
         expect(text).to be_include "//footnote[03_syntax_link_auto_footnote1][https://github.com/kmuto/review/blob/master/doc/format.ja.md]"
       end
 
-      it 'exclude starter option' do
-        expect(text).not_to be_match(/^\/\/table\[.*?\]\[.*?\]\[.*?\].*/)
-        expect(text).not_to be_match(/^\/\/tsize\[.*?\]\[.*?\].*/)
+      context 'exclude starter option' do
+        it 'table' do
+          expect(text).not_to be_match(/^\/\/table\[.*?\]\[.*?\]\[.*?\].*/)
+          expect(text).not_to be_match(/^\/\/tsize\[.*?\]\[.*?\].*/)
+        end
+        it 'imgtable' do
+          expect(text).not_to be_match(/^\/\/imgtable\[.*?\]\[.*?\]\[.*?\].*/)
+        end
       end
 
       it 'output block command' do

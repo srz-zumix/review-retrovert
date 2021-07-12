@@ -445,6 +445,7 @@ module ReVIEW
 
         # delete starter option
         exclude_exta_option(content, 'cmd', 0)
+        exclude_exta_option(content, 'imgtable', 2)
         exclude_exta_option(content, 'table', 2)
         exclude_exta_option(content, 'tsize', 1)
 
