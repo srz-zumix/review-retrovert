@@ -356,7 +356,7 @@ module ReVIEW
           if avatar.length > 0
             kv = @talk_shortcuts[avatar]
             if kv&.key?('image')
-              "//indepimage#{kv['image']}\n//emlist[]#{traling_options}{"
+              "//indepimage[#{kv['image']}]\n//emlist[]#{traling_options}{"
             elsif kv&.key?('name')
               "//emlist[#{kv['name']}]{"
             else
@@ -577,6 +577,7 @@ module ReVIEW
         replace_block_command_nested_boxed_articles(content)
 
         # empty ids
+        replace_auto_ids(content, 'table', 2)
         replace_auto_ids(content, 'list', 2)
         replace_auto_ids(content, 'listnum', 2)
 

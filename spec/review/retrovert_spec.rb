@@ -281,6 +281,7 @@ RSpec.describe 'convert result' do
       end
 
       it '? id set to' do
+        expect(text).not_to be_match(/^\/\/table\[[^\[\]]*?\]{/)
         expect(text).not_to be_match(/^\/\/list\[[^\[\]]*?\]{/)
         expect(text).to     be_match(/^\/\/list\[starter_auto_id_list_0\]\[.*?\]{/)
       end
