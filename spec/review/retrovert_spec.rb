@@ -330,6 +330,9 @@ RSpec.describe 'convert result' do
           expect(text).to     be_include("//tsize[||")
           expect(text).to     be_include("//tsize[|latex||l|p{70mm}|]")
         end
+        it 'image' do
+          expect(text).not_to be_match(/\/\/image\[.*?,\s*\]/)
+        end
         it 'imgtable' do
           expect(text).not_to be_match(/^\/\/imgtable\[.*?\]\[.*?\]\[.*?\].*/)
         end

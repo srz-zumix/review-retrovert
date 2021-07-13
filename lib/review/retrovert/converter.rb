@@ -341,9 +341,9 @@ module ReVIEW
 
       def remove_starter_options(content)
         # image border
-        content.gsub!(/(^\/\/image\[.*?\]\[.*?\]\[.*?)((,|)border=[^,\]]*)(.*?\])/, '\1\4')
+        content.gsub!(/(^\/\/image\[.*?\]\[.*?\]\[.*?)((,|)\s*border=[^,\]]*)(.*?\])/, '\1\4')
         # list lineno
-        content.gsub!(/(^\/\/list\[.*?\]\[.*?\]\[.*?)((,|)lineno=[^,\]]*)(.*?\])/, '\1\4')
+        content.gsub!(/(^\/\/list\[.*?\]\[.*?\]\[.*?)((,|)\s*lineno=[^,\]]*)(.*?\])/, '\1\4')
       end
 
       # talklist to //#{cmd}[]{ //emlist[]{}... }

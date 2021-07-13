@@ -10,3 +10,7 @@ review3:
 
 test:
 	RUBYLIB=lib ./exe/review-retrovert convert --preproc --tabwidth 4 --ird testdata/mybook/config.yml -f tmp/debug
+
+debug-build:
+	docker run --rm -v "${PWD}/tmp/debug":/work -w /work vvakame/review rake preproc pdf
+
