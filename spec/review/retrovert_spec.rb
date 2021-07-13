@@ -204,16 +204,6 @@ RSpec.describe 'convert result' do
       expect(text).to     be_match(/^\/\/list\[starter_auto_id_list_0\]\[.*?\]{/)
     end
 
-    it 'image border' do
-      expect(File).to exist(file03)
-      text = File.open(file03).read()
-      expect(text).not_to be_match(/^\/\/image\[[^\]]*?border=.*?/)
-
-      expect(File).to exist(file06)
-      text = File.open(file06).read()
-      expect(text).not_to be_match(/^\/\/image\[[^\]]*?border=.*?/)
-    end
-
     it 'fix lack options' do
       expect(File).to exist(file04)
       text = File.open(file04).read()
@@ -290,6 +280,16 @@ RSpec.describe 'convert result' do
             inner = m[1]
             expect(inner).not_to be_match(/^\/\/.*?{.*?^\/\/}/m)
           end
+        end
+      end
+
+      context 'image' do
+        it 'border' do
+          expect(text).not_to be_match(/^\/\/image\[.*?border=.*?/)
+        end
+        it 'width' do
+          expect(text).not_to be_match(/^\/\/image\[.*?width=.*?/)
+          expect(text).to     be_match(/^\/\/image\[.*?scale=.*?/)
         end
       end
 

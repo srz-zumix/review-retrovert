@@ -340,6 +340,14 @@ module ReVIEW
       end
 
       def remove_starter_options(content)
+        # image width
+        content.gsub!(/(^\/\/image\[.*?\]\[.*?\]\[.*?)(,|)(\s*)width=\s*([0-9.]+)%(?<after>.*?\])/) { |m|
+          m.gsub!(/width=\s*([0-9.]+)%/) {
+            value = $1
+            "scale=#{value.to_i * 0.01}"
+          }
+        }
+        content.gsub!(/(^\/\/image\[.*?\]\[.*?\]\[.*?)((,|)\s*width=[^,\]]*)(.*?\])/, '\1\4')
         # image border
         content.gsub!(/(^\/\/image\[.*?\]\[.*?\]\[.*?)((,|)\s*border=[^,\]]*)(.*?\])/, '\1\4')
         # list lineno
