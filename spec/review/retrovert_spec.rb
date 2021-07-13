@@ -323,7 +323,12 @@ RSpec.describe 'convert result' do
       context 'exclude starter option' do
         it 'table' do
           expect(text).not_to be_match(/^\/\/table\[.*?\]\[.*?\]\[.*?\].*/)
+        end
+        it 'tsize' do
           expect(text).not_to be_match(/^\/\/tsize\[.*?\]\[.*?\].*/)
+          expect(text).not_to be_include("//tsize[|*|")
+          expect(text).to     be_include("//tsize[||")
+          expect(text).to     be_include("//tsize[|latex||l|p{70mm}|]")
         end
         it 'imgtable' do
           expect(text).not_to be_match(/^\/\/imgtable\[.*?\]\[.*?\]\[.*?\].*/)
@@ -382,6 +387,12 @@ RSpec.describe 'convert result' do
       it 'W' do
         expect(text).not_to be_match(/@<W>{.*?}/)
         expect(text).to     be_match(/@<wb>{.*?}/)
+      end
+
+      it 'csv table' do
+        text.scan(/^\/\/table\[tbl-csv[0-9]*\](\[.*?\])*{\R(.*?)^\/\/}/m) { |m|
+          expect(m[1]).not_to include(',')
+        }
       end
   end
 

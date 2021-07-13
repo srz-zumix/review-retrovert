@@ -6,6 +6,16 @@ module ReVIEW
           no_id_block_command().none?(cmd)
         end
 
+        def fence_close(open)
+          case open
+          when "$", "|" then
+            return open
+          when "{" then
+            return "}"
+          end
+          nil
+        end
+
         # id 指定しないブロックコマンド
         def no_id_block_command()
           [

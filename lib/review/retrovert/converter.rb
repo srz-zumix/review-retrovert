@@ -161,6 +161,10 @@ module ReVIEW
         end
       end
 
+      def exclude_exta_option(content, cmd, max_option_num)
+        replace_compatible_block_command_outline(content, cmd, cmd, max_option_num)
+      end
+
       def replace_compatible_block_command_to_outside(content, command, new_command, option_count, add_options="", new_body="")
         body = new_body
         body += '\n' unless body.empty?
@@ -383,6 +387,55 @@ module ReVIEW
         replace_block_command_nested_boxed_article(content, 'emlist')
       end
 
+      def convert_table_option(content)
+        r_table = /^(?<matched>\/\/table\[#{@r_option_inner}\]\[#{@r_option_inner}\]\[(?<options>#{@r_option_inner})\](?<open>.))$/
+        content.dup.scan(r_table) { |m|
+          matched = m[0]
+          options = m[1]
+          options.split(',').each { |option|
+            if option.match(/\s*csv\s*=\s*on\s*/)
+              open = m[2]
+              close = ReViewDef::fence_close(open)
+              if close
+                tm = content.match(/#{Regexp.escape(matched)}(.*?)^\/\/#{close}/m)
+                outer = tm[0]
+                inner = tm[1]
+                im = inner.match(/(.*?)([=\-]{12,}\R)(.*)/m)
+                if im
+                  header = im[1]
+                  sep = im[2]
+                  body = im[3]
+                  new_header = ""
+                  new_body = ""
+                  CSV.parse(header) do |h|
+                    new_header += CSV.generate_line(h, col_sep: "\t")
+                  end
+                  CSV.parse(body) do |c|
+                    new_body += CSV.generate_line(c, col_sep: "\t")
+                  end
+                  content.gsub!(outer, "#{matched}#{new_header}#{sep}#{new_body}//#{close}")
+                else
+                  new_body = ""
+                  CSV.parse(inner) do |c|
+                    new_body += CSV.generate_line(c, col_sep: "\t")
+                  end
+                  content.gsub!(outer, "#{matched}#{new_body}//#{close}")
+                end
+              end
+            end
+          }
+        }
+      end
+
+      # tsize[builder][xxx] to tsize[|builder|xxx]
+      def replace_tsize(content)
+        content.gsub!(/^\/\/tsize\[(.*?)\]\[(.*?)\]/) {
+          builder = $1
+          builder = "" if $1 == '*'
+          "//tsize[|#{builder}|#{$2}]"
+        }
+      end
+
       def copy_embedded_contents(outdir, content)
         content.scan(/\#@mapfile\((.*?)\)/).each do |filepath|
           srcpath = File.join(@basedir, filepath)
@@ -426,10 +479,6 @@ module ReVIEW
         }
       end
 
-      def exclude_exta_option(content, cmd, max_option_num)
-        replace_compatible_block_command_outline(content, cmd, cmd, max_option_num)
-      end
-
       def replace_starter_command(content)
         replace_compatible_block_command_outline(content, 'program', 'list', 2)
         replace_compatible_block_command_outline(content, 'terminal', 'cmd', 1)
@@ -443,11 +492,15 @@ module ReVIEW
         delete_block_command(content, 'centering')
         delete_block_command(content, 'paragraphend')
 
+        # convert starter option
+        convert_table_option(content)
+
         # delete starter option
         exclude_exta_option(content, 'cmd', 0)
         exclude_exta_option(content, 'imgtable', 2)
         exclude_exta_option(content, 'table', 2)
-        exclude_exta_option(content, 'tsize', 1)
+        # exclude_exta_option(content, 'tsize', 1)
+        replace_tsize(content)
 
         # delete IRD unsupported commands
         if @ird
