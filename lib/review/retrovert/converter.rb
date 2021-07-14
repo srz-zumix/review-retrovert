@@ -339,6 +339,10 @@ module ReVIEW
         }
       end
 
+      def remove_option_arg(content, commands, n, arg)
+        content.gsub!(/(?<prev>^\/\/(#{commands.join('|')})(\[.*?\]){#{n-1}}\[.*?)((,|)\s*#{arg}=[^,\]]*)(?<post>.*?\])/, '\k<prev>\k<post>')
+      end
+
       def remove_starter_options(content)
         # image width
         content.gsub!(/(^\/\/image\[.*?\]\[.*?\]\[.*?)(,|)(\s*)width=\s*([0-9.]+)%(?<after>.*?\])/) { |m|
@@ -347,11 +351,13 @@ module ReVIEW
             "scale=#{value.to_i * 0.01}"
           }
         }
-        content.gsub!(/(^\/\/image\[.*?\]\[.*?\]\[.*?)((,|)\s*width=[^,\]]*)(.*?\])/, '\1\4')
+        remove_option_arg(content, ["image"], 3, "width")
         # image border
-        content.gsub!(/(^\/\/image\[.*?\]\[.*?\]\[.*?)((,|)\s*border=[^,\]]*)(.*?\])/, '\1\4')
+        remove_option_arg(content, ["image"], 3, "border")
+        # image pos
+        remove_option_arg(content, ["image"], 3, "pos")
         # list lineno
-        content.gsub!(/(^\/\/list\[.*?\]\[.*?\]\[.*?)((,|)\s*lineno=[^,\]]*)(.*?\])/, '\1\4')
+        remove_option_arg(content, ["list"], 3, "lineno")
       end
 
       # talklist to //#{cmd}[]{ //emlist[]{}... }

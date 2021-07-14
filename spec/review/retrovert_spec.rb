@@ -287,6 +287,11 @@ RSpec.describe 'convert result' do
         it 'border' do
           expect(text).not_to be_match(/^\/\/image\[.*?border=.*?/)
         end
+        it 'pos' do
+          expect(File).to exist(file04)
+          text4 = File.open(file04).read()
+          expect(text4).not_to be_match(/^\/\/image\[.*?pos=.*?/)
+        end
         it 'width' do
           expect(text).not_to be_match(/^\/\/image\[.*?width=.*?/)
           expect(text).to     be_match(/^\/\/image\[.*?scale=.*?/)
