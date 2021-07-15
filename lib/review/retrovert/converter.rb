@@ -2,6 +2,8 @@ require "review"
 require 'fileutils'
 require 'tmpdir'
 require "review/retrovert/yamlconfig"
+require "review/retrovert/reviewdef"
+require "review/retrovert/utils"
 
 module ReVIEW
   module Retrovert
@@ -16,7 +18,12 @@ module ReVIEW
         @configs = YamlConfig.new
         @embeded_contents = []
         @catalog_contents = []
+        @talk_shortcuts = {}
         @ird = false
+        @talklist_replace_cmd = "note"
+        @desclist_replace_cmd = "info"
+
+        @r_option_inner = '(.*?\\[.*?\\\\\\].*?)*.*?'
       end
 
       def error(msg)
@@ -96,12 +103,38 @@ module ReVIEW
         @configs.rewrite_yml('imagedir', outimagedir)
       end
 
+      def copy_wards(outdir, words_file)
+        new_file = words_file
+        FileUtils.mkdir_p(File.join(outdir, File.dirname(words_file)))
+        if File.extname(words_file) == ".csv"
+          FileUtils.copy(File.join(@basedir, words_file), File.join(outdir, new_file))
+        else
+          new_file += ".csv"
+          Utils.Tsv2Csv(File.join(@basedir, words_file), File.join(outdir, new_file))
+        end
+        new_file
+      end
+
       def update_config(outdir)
         @configs.rewrite_yml('contentdir', '.')
         @configs.rewrite_yml('hook_beforetexcompile', 'null')
         @configs.rewrite_yml('texstyle', '["reviewmacro"]')
         pagesize = @config['starter']['pagesize'].downcase
         jsbook_config = "media=print,paper=#{pagesize}"
+
+        # words
+        words_files = @config['words_file']
+        if words_files.is_a?(Array)
+          new_words_files = []
+          words_files.each do |words_file|
+            new_words_files.push copy_wards(outdir, words_file)
+          end
+          @configs.rewrite_yml('words_file', "[#{new_words_files.join(',')}]")
+        else
+          new_words_file = copy_wards(outdir, words_files)
+          @configs.rewrite_yml('words_file', new_words_file)
+        end
+
         if @ird
           # # リュウミン Pr6N R-KL 12.5Q 22H (9pt = 12.7Q 15.5pt = 21.8Q(H))
           # texdocumentclass: ["review-jsbook", "media=ebook,openany,paper=b5,fontsize=9pt,baselineskip=15.5pt,head_space=15mm,gutter=22mm,footskip=16mm,line_length=45zw,number_of_lines=38"]
@@ -121,9 +154,15 @@ module ReVIEW
       def replace_compatible_block_command_outline(content, command, new_command, option_count)
         if option_count > 0
           content.gsub!(/^\/\/#{command}(?<option>(\[[^\r\n]*?\]){0,#{option_count}})(\[[^\r\n]*\])*{(?<inner>.*?)\/\/}/m, "//#{new_command}\\k<option>{\\k<inner>//}")
+          content.gsub!(/^\/\/#{command}(?<option>(\[[^\r\n]*?\]){0,#{option_count}})(\[[^\r\n]*\])*$/, "//#{new_command}\\k<option>")
         else
           content.gsub!(/^\/\/#{command}(\[[^\r\n]*\])*{(?<inner>.*?)\/\/}/m, "//#{new_command}{\\k<inner>//}")
+          content.gsub!(/^\/\/#{command}(\[[^\r\n]*\])*$/, "//#{new_command}")
         end
+      end
+
+      def exclude_exta_option(content, cmd, max_option_num)
+        replace_compatible_block_command_outline(content, cmd, cmd, max_option_num)
       end
 
       def replace_compatible_block_command_to_outside(content, command, new_command, option_count, add_options="", new_body="")
@@ -149,37 +188,30 @@ module ReVIEW
         content.gsub!(/^\/\/#{command}(\[.*?\])*\s*\R/, '')
       end
 
-      def delete_inline_command(content, command)
-        # FIXME: 入れ子のフェンス記法({}|$)
-        content.gsub!(/@<#{command}>(?:(\$)|(?:({)|(\|)))((?:.*@<\w*>[\|${].*?[\|$}].*?|.*?)*)(?(1)(\$)|(?(2)(})|(\|)))/){"#{$4}"}
-      end
-
-      def replace_inline_command(content, command, new_command)
-        content.gsub!(/@<#{command}>/, "@<#{new_command}>")
-      end
-
       def replace_block_command_nested_boxed_article_i(content, box, depth)
         found = false
         content.dup.scan(/(^\/\/#{box})(\[[^\r\n]*?\])*(?:(\$)|(?:({)|(\|)))(.*?)(^\/\/)(?(3)(\$)|(?(4)(})|(\|)).*?[\r\n]+)/m) { |m|
           matched = m[0..-1].join
           inner = m[5]
           # info depth
-          im = inner.match(/^\/\/(\w+)((\[.*?\])*)([$|{])/)
+          im = inner.match(/^\/\/(?<command>\w+)(?<options>(\[#{@r_option_inner}\])*)(?<open>[$|{])/)
           unless im.nil?
-            inner_cmd = im[1]
-            inner_open = im[4]
-            inner_opts = im[2]
-            first_opt_m = inner_opts.match(/^\[(.*?)\]/)
-            first_opt = ""
+            inner_cmd = im['command']
+            inner_open = im['open']
+            inner_opts = im['options']
+            id_opt = ""
 
             # is_commentout = false
             is_commentout = true
-            if first_opt_m
-              first_opt_v = first_opt_m[1]
-              unless first_opt_v.empty?
-                if inner.match(/@<.*?>[$|{]#{first_opt}/)
-                  is_commentout = false
-                  first_opt = "\\[#{first_opt_v}\\]"
+            if ReViewDef::is_has_id_block_command(inner_cmd)
+              first_opt_m = inner_opts.match(/^\[(.*?)\]/)
+              if first_opt_m
+                first_opt_v = first_opt_m[1]
+                unless first_opt_v.empty?
+                  if inner.match(/@<#{ReViewDef::id_ref_inline_commands().join('|')}>[$|{]#{first_opt_v}/)
+                    is_commentout = false
+                    id_opt = "\\[#{first_opt_v}\\]"
+                  end
                 end
               end
             end
@@ -189,24 +221,28 @@ module ReVIEW
             if inner_open == m[2..4].join
               # if same fence then cmd_end == inner_end
               if is_commentout
-                inner.gsub!(/(^\/\/(\w+(\[.*?\]|))*#{inner_open})/, '#@#\1')
-                content.gsub!(/#{Regexp.escape(matched)}/m, "#{cmd_begin}#{inner}#@##{cmd_end}")
+                inner.gsub!(/(^\/\/(\w+(\[#{@r_option_inner}\]|))*#{inner_open})/, '#@#\1')
+                rep = "#{cmd_begin}#{inner}#@##{cmd_end}"
+                content.gsub!(matched) { |mm| rep }
               else
-                imb = inner.match(/(\R((^\/\/\w+(\[.*?\])*)\s*)*^\/\/#{inner_cmd}#{first_opt}(\[.*?\])*#{inner_open}.*)\R/m)
+                imb = inner.match(/(\R((^\/\/\w+(\[#{@r_option_inner}\])*)\s*)*^\/\/#{inner_cmd}#{id_opt}(\[#{@r_option_inner}\])*#{inner_open}.*)\R/m)
                 to_out_block = imb[1]
                 inner.gsub!(/#{Regexp.escape(to_out_block)}/m, '')
-                content.gsub!(/#{Regexp.escape(matched)}/m, "#{cmd_begin}#{inner}#{cmd_end}#{to_out_block}")
+                rep = "#{cmd_begin}#{inner}#{cmd_end}#{to_out_block}"
+                content.gsub!(matched) { |mm| rep }
               end
             else
               close = inner_open == '{' ? '}' : inner_open
               if is_commentout
-                inner.gsub!(/(^\/\/(\w+(\[.*?\]|))*#{inner_open})(.*?)(^\/\/#{close})/m, '#@#\1\2#@#\3')
-                content.gsub!(/#{Regexp.escape(matched)}/m, "#{cmd_begin}#{inner}#{cmd_end}")
+                inner.gsub!(/(^\/\/(\w+(\[#{@r_option_inner}\]|))*#{inner_open})(.*?)(^\/\/#{close})/m, '#@#\1\2#@#\3')
+                rep = "#{cmd_begin}#{inner}#{cmd_end}"
+                content.gsub!(matched) { |mm| rep }
               else
-                imb = inner.match(/\R((^\/\/\w+(\[.*?\])*)\s*)*^\/\/(#{inner_cmd})#{first_opt}(\[[^\r\n]*?\])*(?:(\$)|(?:({)|(\|)))(.*?)(^\/\/)(?(3)(\$)|(?(4)(})|(\|)))/m)
+                imb = inner.match(/\R((^\/\/\w+(\[#{@r_option_inner}\])*)\s*)*^\/\/(#{inner_cmd})#{id_opt}(\[[^\r\n]*?\])*(?:(\$)|(?:({)|(\|)))(.*?)(^\/\/)(?(3)(\$)|(?(4)(})|(\|)))/m)
                 to_out_block = imb[0]
                 inner.gsub!(/#{Regexp.escape(to_out_block)}/m, '')
-                content.gsub!(/#{Regexp.escape(matched)}/m, "#{cmd_begin}#{inner}#{cmd_end}#{to_out_block}")
+                rep = "#{cmd_begin}#{inner}#{cmd_end}#{to_out_block}"
+                content.gsub!(matched) { |mm| rep }
               end
             end
             found = true
@@ -234,24 +270,27 @@ module ReVIEW
         end
       end
 
+      # #@+++ ~ #@--- to #@#+++ #@#~ #@#---
       def replace_block_commentout(content)
         d = content.dup
-        d.scan(/(^#@)(\++)(.*?)(^#@)(-+)/m) { |m|
+        d.scan(/(^#@)(\++\R)(.*?)(^#@)(-+)/m) { |m|
           matched = m[0..-1].join
           inner = m[2]
-          inner.gsub!(/(^.)/, '#@#\1')
-          content.gsub!(/#{Regexp.escape(matched)}/m, "#@##{m[1]}#{inner}#@##{m[4]}")
+          inner.gsub!(/^/, '#@#')
+          rep = "#@##{m[1]}#{inner}#@##{m[4]}"
+          content.gsub!(matched) { |mm| rep }
         }
       end
 
       def replace_block_commentout_without_sampleout(content)
         d = content.dup
         d.gsub!(/(^\/\/sampleoutputbegin\[)(.*?)(\])(.*?)(^\/\/sampleoutputend)/m, '')
-        d.scan(/(^#@)(\++)(.*?)(^#@)(-+)/m) { |m|
+        d.scan(/(^#@)(\++\R)(.*?)(^#@)(-+)/m) { |m|
           matched = m[0..-1].join
           inner = m[2]
-          inner.gsub!(/(^.)/, '#@#\1')
-          content.gsub!(/#{Regexp.escape(matched)}/m, "#@##{m[1]}#{inner}#@##{m[4]}")
+          inner.gsub!(/^/, '#@#\1')
+          rep = "#@##{m[1]}#{inner}#@##{m[4]}"
+          content.gsub!(matched) { |mm| rep }
         }
       end
 
@@ -264,7 +303,8 @@ module ReVIEW
           option = m[1]
           inner = m[3]
           # inner.gsub!(/^\/\//, '//@<nop>{}')
-          content.gsub!(/#{Regexp.escape(matched)}/m, "#{option}\n#@##{sampleoutputbegin}#{inner}#@##{sampleoutputend}")
+          rep = "#{option}\n#@##{sampleoutputbegin}#{inner}#@##{sampleoutputend}"
+          content.gsub!(matched) { |mm| rep }
         }
       end
 
@@ -290,47 +330,124 @@ module ReVIEW
           ref = m[4]
           n = content.match(/^\/\/note\[#{ref}\](\[.*?\])/)
           unless n.nil?
-            content.gsub!(/#{Regexp.escape(matched)}/, n[1])
+            rep = n[1]
+            content.gsub!(matched) { |mm| rep }
             content.gsub!(/^\/\/note\[#{ref}\](\[.*?\])/, '//note\1')
           else
-            # content.gsub!(/#{Regexp.escape(matched)}/, "noteref<#{ref}>")
+            # content.gsub!(matched, "noteref<#{ref}>")
           end
         }
+      end
+
+      def remove_option_arg(content, commands, n, arg)
+        content.gsub!(/(?<prev>^\/\/(#{commands.join('|')})(\[.*?\]){#{n-1}}\[.*?)((,|)\s*#{arg}=[^,\]]*)(?<post>.*?\])/, '\k<prev>\k<post>')
       end
 
       def remove_starter_options(content)
+        # image width
+        content.gsub!(/(^\/\/image\[.*?\]\[.*?\]\[.*?)(,|)(\s*)width=\s*([0-9.]+)%(?<after>.*?\])/) { |m|
+          m.gsub!(/width=\s*([0-9.]+)%/) {
+            value = $1
+            "scale=#{value.to_i * 0.01}"
+          }
+        }
+        remove_option_arg(content, ["image"], 3, "width")
         # image border
-        content.gsub!(/(^\/\/image\[.*?\]\[.*?\]\[.*?)((,|)border=[^,\]]*)(.*?\])/, '\1\4')
+        remove_option_arg(content, ["image"], 3, "border")
+        # image pos
+        remove_option_arg(content, ["image"], 3, "pos")
         # list lineno
-        content.gsub!(/(^\/\/list\[.*?\]\[.*?\]\[.*?)((,|)lineno=[^,\]]*)(.*?\])/, '\1\4')
+        remove_option_arg(content, ["list"], 3, "lineno")
       end
 
-      def expand_nested_inline_command(content)
-        found = false
-        content.dup.scan(/(@<.*?>)(?:(\$)|(?:({)|(\|)))(.*?)(?(2)(\$)|(?(3)(})|(\|)))/) { |m|
-          matched = m.join
-          body = m[4]
-          im = body.match(/(.*)(@<.*?>)(?:(\$)|(?:({)|(\|)))(.*?)(?(3)(\$)|(?(4)(})|(\|)))(.*)/)
-          if im.nil?
-            im = body.match(/(.*)(@<.*?>)#{m[1..3].join}/)
-            unless im.nil?
-              outcmd_begin = m[0] + "$|{".gsub(m[1..3].join, '')
-              outcmd_end = "$|}".gsub(m[5..7].join, '')
-              rep = "#{outcmd_begin}#{body}#{outcmd_end}"
-              content.gsub!(matched, rep)
-              found = true
+      # talklist to //#{cmd}[]{ //emlist[]{}... }
+      def talklist_to_nested_contents_list(content, cmd)
+        content.gsub!(/^\/\/talklist(.*?){/, "//#{cmd}\\1{")
+        content.gsub!(/^\/\/talk(?<options>\[#{@r_option_inner}\]\[#{@r_option_inner}\])\[(?<body>#{@r_option_inner})\]$/, "//talk\\k<options>{\n\\k<body>\n//}")
+        content.gsub!(/^\/\/t(?<options>\[#{@r_option_inner}\])\[(?<body>#{@r_option_inner})\]$/, "//talk\\k<options>{\n\\k<body>\n//}")
+        content.gsub!(/^\/\/(t|talk)((\[#{@r_option_inner}\])*){/) { |s|
+          m = s.scan(/(\[(#{@r_option_inner})\])/)
+          # 1st option is image id
+          avatar = m[0][1]
+          first_option = m[0][0]
+          traling_options = m[1..-1].map{ |x| x[0] }.join
+          if avatar.length > 0
+            kv = @talk_shortcuts[avatar]
+            if kv&.key?('image')
+              "//indepimage[#{kv['image']}]\n//emlist[]#{traling_options}{"
+            elsif kv&.key?('name')
+              "//emlist[#{kv['name']}]{"
+            else
+              "//indepimage#{first_option}\n//emlist[]#{traling_options}{"
             end
           else
-            outcmd_begin = m[0..3].join
-            outcmd_end = m[5..7].join
-            rep = "#{outcmd_begin}#{im[1]}#{outcmd_end}#{im[2..9].join}#{outcmd_begin}#{im[-1]}#{outcmd_end}"
-            content.gsub!(matched, rep)
-            found = true
+            "//emlist#{first_option}#{traling_options}{"
           end
         }
-        if found
-          expand_nested_inline_command(content)
-        end
+      end
+
+      # desclist to //#{cmd}[]{ //emlist[]{}... }
+      def desclist_to_nested_contents_list(content, cmd)
+        content.gsub!(/^\/\/desclist(.*?){/, "//#{cmd}\\1{")
+        content.gsub!(/^\/\/desc(?<options>\[#{@r_option_inner}\])\[(?<body>#{@r_option_inner})\]$/, "//desc\\k<options>{\n\\k<body>\n//}")
+        content.gsub!(/^\/\/desc((\[#{@r_option_inner}\])*){/, '//emlist\1{')
+      end
+
+      def starter_list_to_nested_contents_list(content)
+        # talklist
+        talklist_to_nested_contents_list(content, @talklist_replace_cmd)
+        # desclist
+        desclist_to_nested_contents_list(content, @desclist_replace_cmd)
+        replace_block_command_nested_boxed_article(content, 'emlist')
+      end
+
+      def convert_table_option(content)
+        r_table = /^(?<matched>\/\/table\[#{@r_option_inner}\]\[#{@r_option_inner}\]\[(?<options>#{@r_option_inner})\](?<open>.))$/
+        content.dup.scan(r_table) { |m|
+          matched = m[0]
+          options = m[1]
+          options.split(',').each { |option|
+            if option.match(/\s*csv\s*=\s*on\s*/)
+              open = m[2]
+              close = ReViewDef::fence_close(open)
+              if close
+                tm = content.match(/#{Regexp.escape(matched)}(.*?)^\/\/#{close}/m)
+                outer = tm[0]
+                inner = tm[1]
+                im = inner.match(/(.*?)([=\-]{12,}\R)(.*)/m)
+                if im
+                  header = im[1]
+                  sep = im[2]
+                  body = im[3]
+                  new_header = ""
+                  new_body = ""
+                  CSV.parse(header) do |h|
+                    new_header += CSV.generate_line(h, col_sep: "\t")
+                  end
+                  CSV.parse(body) do |c|
+                    new_body += CSV.generate_line(c, col_sep: "\t")
+                  end
+                  content.gsub!(outer, "#{matched}#{new_header}#{sep}#{new_body}//#{close}")
+                else
+                  new_body = ""
+                  CSV.parse(inner) do |c|
+                    new_body += CSV.generate_line(c, col_sep: "\t")
+                  end
+                  content.gsub!(outer, "#{matched}#{new_body}//#{close}")
+                end
+              end
+            end
+          }
+        }
+      end
+
+      # tsize[builder][xxx] to tsize[|builder|xxx]
+      def replace_tsize(content)
+        content.gsub!(/^\/\/tsize\[(.*?)\]\[(.*?)\]/) {
+          builder = $1
+          builder = "" if $1 == '*'
+          "//tsize[|#{builder}|#{$2}]"
+        }
       end
 
       def copy_embedded_contents(outdir, content)
@@ -376,39 +493,106 @@ module ReVIEW
         }
       end
 
-      def update_content(outdir, contentfile)
-        info contentfile
-        filename = File.basename(contentfile, '.*')
-        content = File.read(contentfile)
-        content.gsub!(/@<href>{(.*?)#.*?,(.*?)}/, '@<href>{\1,\2}')
-        content.gsub!(/@<href>{(.*?)#.*?}/, '@<href>{\1}')
-        linkurl_footnote = @config['starter']['linkurl_footnote']
-        # table 内の @ コマンドは不安定らしい
-        while !content.gsub!(/(\/\/table.*)@<br>{}(.*?\/\/})/m, "\\1#{@table_br_replace}\\2").nil? do
-        end
-        # 空セルが2行になることがあるらしい
-        while !content.gsub!(/(\/\/table.*\s)\.(\s.*?\/\/})/m, "\\1#{@table_empty_replace}\\2").nil? do
-        end
-        # Re:VIEW Starter commands
+      def replace_starter_command(content)
+        replace_compatible_block_command_outline(content, 'program', 'list', 2)
         replace_compatible_block_command_outline(content, 'terminal', 'cmd', 1)
-        replace_compatible_block_command_outline(content, 'cmd', 'cmd', 0)
+        replace_compatible_block_command_outline(content, 'output', 'list', 3)
         replace_compatible_block_command_to_outside(content, 'sideimage', 'image', 1, '[]')
         replace_block_command_outline(content, 'abstract', 'lead', true)
+        delete_block_command(content, 'vspace')
         delete_block_command(content, 'needvspace')
         delete_block_command(content, 'clearpage')
         delete_block_command(content, 'flushright')
         delete_block_command(content, 'centering')
         delete_block_command(content, 'paragraphend')
 
+        # convert starter option
+        convert_table_option(content)
+
+        # delete starter option
+        exclude_exta_option(content, 'cmd', 0)
+        exclude_exta_option(content, 'imgtable', 2)
+        exclude_exta_option(content, 'table', 2)
+        # exclude_exta_option(content, 'tsize', 1)
+        replace_tsize(content)
+
         # delete IRD unsupported commands
         if @ird
           delete_block_command(content, 'noindent')
         end
 
+        # chapterauthor
+        content.gsub!(/^\/\/chapterauthor\[(.*?)\]/, "//lead{\n\\1\n//}")
+        # talklist/desclist
+        starter_list_to_nested_contents_list(content)
+      end
+
+      def delete_inline_command(content, command)
+        # 既に入れ子は展開されている前提
+        content.gsub!(/@<#{command}>(?:(\$)|(?:({)|(\|)))(.*?)(?(1)(\$)|(?(2)(})|(\|)))/, '\4')
+      end
+
+      def do_replace_inline_command(content, command, &blk)
+        # 既に入れ子は展開されている前提
+        content.gsub!(/@<#{command}>(?:(\$)|(?:({)|(\|)))(.*?)(?(1)(\$)|(?(2)(})|(\|)))/) { blk.call([$1, $2, $3].join, $4, [$5, $6, $7].join) }
+      end
+
+      def replace_inline_command(content, command, new_command)
+        do_replace_inline_command(content, command) { |open, inner, close|
+          "@<#{new_command}>#{open}#{inner}#{close}"
+        }
+      end
+
+      # @<XXX>{AAA@<YYY>{BBB}} to @<XXX>{AAA}@<YYY>{BBB}
+      def expand_nested_inline_command(content)
+        found = false
+        content.dup.scan(/(@<.*?>)(?:(\$)|(?:({)|(\|)))(.*?)(?(2)(\$)|(?(3)(})|(\|)))/) { |m|
+          matched = m.join
+          body = m[4]
+          im = body.match(/(.*)(@<.*?>)(?:(\$)|(?:({)|(\|)))(.*?)(?(3)(\$)|(?(4)(})|(\|)))(.*)/)
+          if content.match(/^#@#.*#{Regexp.escape(matched)}.*/)
+            next
+          end
+          if im.nil?
+            im2 = body.match(/(.*)(@<.*?>)#{Regexp.escape(m[1..3].join)}(.*)/)
+            unless im2.nil?
+              rep = ""
+              if im2[3].length > 0
+                outcmd_begin = m[0..3].join + im2[1..2].join + "$|{".gsub(m[1..3].join, '')[0]
+                outcmd_end = "$|}".gsub(m[5..7].join, '')[0]
+                rep = "#{outcmd_begin}#{im2[3]}#{outcmd_end}"
+              else
+                rep = m[0..3].join + im2[1]
+              end
+              content.gsub!(matched) { |mm| rep }
+              found = true
+            end
+          else
+            outcmd_begin = m[0..3].join
+            outcmd_end = m[5..7].join
+            rep = ""
+            rep += "#{outcmd_begin}#{im[1]}#{outcmd_end}" if im[1].length > 0
+            rep += "#{im[2..9].join}"
+            rep += "#{outcmd_begin}#{im[-1]}#{outcmd_end}" if im[-1].length > 0
+            content.gsub!(matched) { |mm| rep }
+            found = true
+          end
+        }
+        if found
+          expand_nested_inline_command(content)
+        end
+      end
+
+      def replace_starter_inline_command(content)
+        expand_nested_inline_command(content)
+
         replace_inline_command(content, 'secref', 'hd')
         replace_inline_command(content, 'file', 'kw')
         replace_inline_command(content, 'hlink', 'href')
         replace_inline_command(content, 'B', 'strong')
+        replace_inline_command(content, 'W', 'wb')
+        replace_inline_command(content, 'term', 'idx')
+        replace_inline_command(content, 'termnoidx', 'hidx')
         delete_inline_command(content, 'userinput')
         delete_inline_command(content, 'weak')
         delete_inline_command(content, 'cursor')
@@ -419,6 +603,31 @@ module ReVIEW
         delete_inline_command(content, 'large')
         delete_inline_command(content, 'xlarge')
         delete_inline_command(content, 'xxlarge')
+
+        do_replace_inline_command(content, 'par') { |open, inner, close| "@<br>#{open}#{close}" }
+        do_replace_inline_command(content, 'qq' ) { |open, inner, close| "\"#{inner}\"" }
+      end
+
+      def update_content(outdir, contentfile)
+        info contentfile
+        filename = File.basename(contentfile, '.*')
+        content = File.read(contentfile)
+        content.gsub!(/@<href>{(.*?)#.*?,(.*?)}/, '@<href>{\1,\2}')
+        content.gsub!(/@<href>{(.*?)#.*?}/, '@<href>{\1}')
+        linkurl_footnote = @config['starter']['linkurl_footnote']
+        # table 内の @ コマンドは不安定らしい
+        while !content.gsub!(/(\/\/table.*)@<br>{}(.*?\/\/})/m, "\\1#{Regexp.escape(@table_br_replace)}\\2").nil? do
+        end
+        # 空セルが2行になることがあるらしい
+        while !content.gsub!(/(\/\/table.*\s)\.(\s.*?\/\/})/m, "\\1#{Regexp.escape(@table_empty_replace)}\\2").nil? do
+        end
+        # noop を最後に消すためにダミーに変える
+        content.gsub!('@<nop>$$', '@<must_be_replace_nop>$must_be_replace_nop$')
+        content.gsub!('@<nop>||', '@<must_be_replace_nop>|must_be_replace_nop|')
+        content.gsub!('@<nop>{}', '@<must_be_replace_nop>{must_be_replace_nop}')
+
+        # Re:VIEW Starter commands
+        replace_starter_command(content)
 
         # fixed lack of options
         content.gsub!(/^\/\/list{/, '//list[][]{')
@@ -441,6 +650,7 @@ module ReVIEW
         replace_block_command_nested_boxed_articles(content)
 
         # empty ids
+        replace_auto_ids(content, 'table', 2)
         replace_auto_ids(content, 'list', 2)
         replace_auto_ids(content, 'listnum', 2)
 
@@ -456,13 +666,7 @@ module ReVIEW
         content.gsub!('@<TeX>{}', 'TeX')
         content.gsub!('@<hearts>{}', '!HEART!')
 
-        # nop replace must be last step
-        content.gsub!('@<nop>$$', '@<b>$$')
-        content.gsub!('@<nop>||', '@<b>||')
-        content.gsub!('@<nop>{}', '@<b>{}')
-
-        # expand nested inline command
-        expand_nested_inline_command(content)
+        replace_starter_inline_command(content)
 
         # fix deprecated
         fix_deprecated_list(content)
@@ -472,6 +676,11 @@ module ReVIEW
           content.gsub!(/(.*)@<br>{}$/, "\\1\n\n")
           content.gsub!(/(.*)@<br>{}(.*)$/, "\\1\n\n\\2")
         end
+
+        # nop replace must be last step
+        content.gsub!('@<must_be_replace_nop>$must_be_replace_nop$', '@<b>$$')
+        content.gsub!('@<must_be_replace_nop>|must_be_replace_nop|', '@<b>||')
+        content.gsub!('@<must_be_replace_nop>{must_be_replace_nop}', '@<b>{}')
 
         File.write(contentfile, content)
         copy_embedded_contents(outdir, content)
@@ -601,6 +810,7 @@ module ReVIEW
         load_config(yamlfile)
         store_image_dir = store_out_image(outdir) if options['no-image']
         create_initial_project(outdir, options)
+        @talk_shortcuts = @config['starter']['talk_shortcuts']
 
         copy_config(outdir)
         copy_catalog(outdir)

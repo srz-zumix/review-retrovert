@@ -96,21 +96,27 @@
  : @<file>{sty/starter.sty}
 	Starter独自のスタイルファイルです。
 	ここに書かれた@<LaTeX>{}マクロを変更したい場合は、このファイルを変更するよりも「@<file>{sty/mystyle.sty}」に書いたほうがバージョンアップがしやすくなります。
- : @<file>{sty/starter-codeblock.sty.eruby}
-	プログラムコードやターミナルのカスタマイズ用です。
- : @<file>{sty/starter-color.sty.eruby}
+ : @<file>{sty/starter-codeblock.sty}
+	プログラムコードやターミナルの@<LaTeX>{}マクロが定義されています。
+ : @<file>{sty/starter-color.sty}
 	色のカスタマイズ用です。
- : @<file>{sty/starter-font.sty.eruby}
+ : @<file>{sty/starter-font.sty}
 	フォントのカスタマイズ用です。
  : @<file>{sty/starter-headline.sty}
 	章(Chapter)や節(Section)や項(Subsection)の@<LaTeX>{}マクロが定義されたファイルです。
- : @<file>{sty/starter-note.sty.eruby}
-	ノートブロックのカスタマイズ用です。
- : @<file>{sty/starter-section.sty.eruby}
+ : @<file>{sty/starter-note.sty}
+	ノートブロックの@<LaTeX>{}マクロが定義されています。
+ : @<file>{sty/starter-section.sty}
 	以前の、章や節の@<LaTeX>{}マクロ定義です。
 	もはや使ってませんが、starter.styを書き換えれば使えます。
- : @<file>{sty/starter-toc.sty.eruby}
+ : @<file>{sty/starter-talklist.sty}
+	会話形式の@<LaTeX>{}マクロが定義されています。
+ : @<file>{sty/starter-toc.sty}
 	目次のカスタマイズ用です。
+ : @<file>{sty/starter-misc.sty}
+	その他、各種のマクロ定義です。
+ : @<file>{sty/starter-util.sty}
+	Starterのスタイルファイルで使われるマクロが定義されています。
  : @<file>{style.css}
 	ePubで使われるCSSスタイルファイルです。
 

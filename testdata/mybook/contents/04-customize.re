@@ -51,7 +51,9 @@ end
 
 === 新しいブロック命令を追加する
 
-たとえば次の例では、新しいブロック命令「@<code>|//blockquote{ ... //}|」を追加しています。
+たとえば次の例では、新しいブロック命令「@<code>|//blockquote{ ... //}|」を追加しています@<fn>{fn-g4he6}。
+
+//footnote[fn-g4he6][インライン命令のときは「@<code>|on_inline_xxx()|」なのにブロック命令では「@<code>|on_xxx_block()|」なのは、歴史的な事情です。非対称で格好悪いですが、ご了承ください。]
 
 //list[][ファイル「review-ext.rb」]{
 module ReVIEW
@@ -62,13 +64,13 @@ module ReVIEW
   ## LaTeX用の定義
   @<b>{class LATEXBuilder}
     ## 入れ子を許す場合
-    @<b>{def on_blockquote(arg=nil)}
+    @<b>{def on_blockquote_block(arg=nil)}
       if arg.present?
         puts "\\noindent"
         puts escape(arg)
       end
       puts "\\begin{quotation}"
-      yield
+      @<b>{yield}
       puts "\\end{quotation}"
     end
     ## 入れ子を許さない場合
@@ -86,7 +88,7 @@ module ReVIEW
   ## HTML（ePub）用の定義
   @<b>{class HTMLBuilder}
     ## 入れ子を許す場合
-    @<b>{def on_blockquote(arg=nil)}
+    @<b>{def on_blockquote_block(arg=nil)}
       if arg.present?
         puts "<p><span>#{escape(arg)}</span></p>"
       end
@@ -185,8 +187,8 @@ end
 
 Starterでは@<table>{tbl-rlsli}のような本文幅を推奨しています。
 
-//tsize[|latex||ccl|]
-//table[tbl-rlsli][本文幅の推奨値（タブレット向けを除く）]{
+//tsize[latex][ccl]
+//table[tbl-rlsli][本文幅の推奨値（タブレット向けを除く）][hline=off]{
 ベージサイズ	フォントサイズ	本文幅
 --------------------
 A5		9pt		全角38文字か39文字
@@ -207,10 +209,63 @@ Starterでは、印刷用PDFではページ左右の余白幅を変えていま�
 //list[][ファイル「sty/mytextsize.sty」]{
 %% 天（ページ上部）の余白を狭め、その分を本文の高さに加える
 \addtolength{\topmargin}{@<b>|-2\Cvs|}  % 上部の余白を2行分減らす
-\addtolength{\textheight}{@<b>|2Cvs|}   % 本文の高さを2行分増やす
+\addtolength{\textheight}{@<b>|2\Cvs|}  % 本文の高さを2行分増やす
 //}
 
 通常は、このような変更は必要ないはずです。
+
+
+==={subsec-bleed} [PDF] 塗り足しをつける
+
+印刷所に入稿するとき、本文の全ページに上下左右3mmの「塗り足し」が必要になることがあります。
+塗り足しについては次のページなどを参考にしてください。
+
+ * 原稿作成の基礎知識：塗り足し（同人誌印刷栄光）@<br>{}
+   @<href>{https://www.eikou.com/making/basis#nuritashi}
+ * 原稿作成マニュアル：印刷範囲と塗り足し（同人誌印刷の緑陽社）@<br>{}
+   @<href>{https://www.ryokuyou.co.jp/doujin/manual/basic.html#nuritashi}
+
+塗り足しは、技術系同人誌の本文ではたいていの場合必要ありませんが、次のような場合は必要です。
+
+ * ページ端まで絵や線が描かれている場合
+ * 背景色をつけたページがある場合（大扉や章扉など）
+
+//note[技術系同人誌でも表紙と裏表紙には塗り足しが必要]{
+同人誌作成の経験がない方のために補足説明をします。
+
+ * 印刷所に入稿するとき、表紙や裏表紙と、本文とは別のPDFファイルにします。
+   前者はカラー印刷、後者は白黒印刷です。
+ * 表紙や裏表紙では背景色をつけることがほとんどなので、塗り足しが必要です。
+ * マンガ系の同人誌では背景色があったりページ端まで絵を描くことがあるので、塗り足しが必要です。
+   同人誌印刷所のサイトで「塗り足しは必須です」と説明されているのは、マンガ同人誌を前提としているからです。
+ * 技術系同人誌の本文では背景色をつけないしページ端まで何かを描くこともないので、塗り足しは必要ありません。
+   ただしこれは印刷所によって違う可能性があるので、詳しくは入稿先の印刷所に聞いてみてください。
+ * 塗り足しが必要ないのに塗り足しをつけてしまっても、問題ありません。
+ * 塗り足しは印刷するときにのみ必要であり、印刷しないなら必要ありません。
+//}
+
+Starterでは、塗り足しをつける設定が用意されています。
+
+//list[][@<file>{configi-starter.yml}：塗り足しをつける]{
+  ## 上下左右の塗り足し幅（印刷用PDFのみ）
+  bleedsize: 3mm      # 上下左右に3mmの塗り足しをつける
+//}
+
+塗り足しがつくのは印刷用PDFのみであり、電子用にはつきません@<fn>{fn-alz7r}。
+また塗り足しは上下左右につくので、塗り足し幅が3mmだとページサイズの縦と横は6mmずつ増えます。
+
+//footnote[fn-alz7r][印刷用PDFと電子用PDFの違いについては、@<secref>{02-tutorial|sec-pdftype}を参照してください。]
+
+
+=== [PDF] 塗り足しを可視化する
+
+塗り足しがどのくらいの幅を取るのか、見た目で確認したい人もいるでしょう。
+そのような場合は、@<file>{config-starter.yml}で「@<code>|bleedcolor: blue|」のように指定してください。
+すると塗り足しが可視化されます。
+色はred/green/blue/yello/grayなどが使えます。
+
+この機能は、あくまで確認用のみで使ってください。
+入稿するときは必ず設定を外してください。
 
 
 === [PDF] 章の右ページ始まりをやめる
@@ -231,34 +286,42 @@ texdocumentclass: ["jsbook",
 
 ==={subec-miniblockdesign} [PDF] 「//info」や「//warning」のデザインを変更する
 
-Re:VIEWやStarterでは、「@<code>|//note|」以外にも「@<code>|//info|」や「@<code>|//warning|」が使えます（詳しくは@{03-syntax|subsec-miniblock}を見てください）。
+Re:VIEWやStarterでは、「@<code>|//note|」以外にも「@<code>|//info|」や「@<code>|//warning|」が使えます（詳しくは@<secref>{03-syntax|subsec-miniblock}を見てください）。
 
-これらのデザインを変更するには、「@<file>{sty/mystyle.sty}」にたとえば次のように書いてください。
+「@<code>|//info|」や「@<code>|//warning|」で使われているアイコン画像を変更するには、「@<file>{sty/mystyle.sty}」にたとえば次のように書いてください。
 
 //list[][ファイル「@<file>{sty/mystyle.sty}」]{
-%% 「//warning」のデザインを変更する
-\renewenvironment{starterwarning}[1]{%
-  \addvspace{1.0\baselineskip}% 1行分空ける
-  \begin{oframed}%            % 枠線で囲む
-    \ifempty{#1}\else%        % 引数（タイトル）があれば
-      \noindent%              % 字下げせずに
-      {\headfont\large%       % 太字のゴシック体で大きめに表示
-        《警告》#1}%          % 先頭に 《警告》 をつける
-      \par\smallskip%         % 縦方向に少しスペースを空ける
-    \fi%
-}{%
-  \end{oframed}%              % 枠線による囲みの終わり
-  \addvspace{1.0\baselineskip}% 1行分空ける
-}
+\def\starter@miniblock@info@imagefile{./images/info-icon.png}
+\def\starter@miniblock@warning@imagefile{./images/warning-icon.png}
 //}
 
-次はもっと派手なデザインのサンプルです。
-どんなデザインかは自分で確かめてください。
+アイコン画像の表示サイズや本文のフォントを変更するには、次のように書いてください。
 
 //list[][ファイル「@<file>{sty/mystyle.sty}」]{
-%% 「//info」のデザインを変更する
+\def\starter@miniblock@imagewidth{3zw} % アイコン画像の表示幅
+\def\starter@miniblock@indent{4zw}     % 本文のインデント幅
+\def\starter@miniblock@font{\small}    % 本文のフォント
+//}
+
+「@<code>|//memo|」や「@<code>|//tips|」や「@<code>|//important|」などには、デフォルトではアイコン画像はつきません。
+これらにもアイコン画像をつけるには、たとえば次のように書いてください。
+
+//list[][ファイル「@<file>{sty/mystyle.sty}」]{
+%% 「//important」にアイコン画像をつける
+\newenvironment{starterimportant}[1]{%
+  \begin{starter@miniblock}[\starter@miniblock@important@imagefile]{#1}%
+}{%
+  \end{starter@miniblock}%
+}
+\def\starter@miniblock@important@imagefile{./images/info-icon.png}
+//}
+
+デザインそのものを変更するには、たとえば次のようにしてください（どんな表示になるかは自分で確かめてください）。
+
+//list[][ファイル「@<file>{sty/mystyle.sty}」]{
+%% 「//memo」のデザインを変更する
 \usepackage{ascmac}
-\renewenvironment{starterinfo}[1]{%
+\renewenvironment{startermemo}[1]{%
   \addvspace{1.5\baselineskip}% 1.5行分空ける
   \begin{boxnote}%            % 飾り枠で囲む
     \ifempty{#1}\else%        % 引数（タイトル）があれば
@@ -295,16 +358,21 @@ Re:VIEWやStarterでは、「@<code>|//note|」以外にも「@<code>|//info|」
 A5サイズの商業誌で使われているフォントサイズと本文幅を調べました(@<table>{tbl-8jedm})。
 参考にしてください。
 
-//table[tbl-8jedm][商業誌のフォントサイズと本文幅]{
-書籍名@<xsmall>{（出版社）}	各種サイズ
---------------------
-@<xsmall>{『リーダブルコード』}@<xxsmall>{（オライリー・ジャパン）}	@<xsmall>{A5、9pt、38文字}
-@<xsmall>{『ゼロから作るDeep Learning』}@<xxsmall>{（オライリー・ジャパン）}	@<xsmall>{A5、9pt、38文字}
-@<xsmall>{『達人に学ぶSQL徹底指南書 第2版』}@<xxsmall>{（翔泳社）}	@<xsmall>{A5、9pt、38文字}
-@<xsmall>{『アジャイル・サムライ』}@<xxsmall>{（オーム社）}		@<xsmall>{A5、10pt、36文字}
-@<xsmall>{『オブジェクト指向UIデザイン』}@<xxsmall>{（技術評論社）}	@<xsmall>{A5、9pt、35文字}
-@<xsmall>{『現場で役立つシステム設計の原則』}@<xxsmall>{（技術評論社）}		@<xsmall>{A5、10pt、33文字}
-@<xsmall>{『独習プログラマー』}@<xxsmall>{（日経BP社）}		@<xsmall>{A5、10pt、34文字}
+//tsize[][|lll|]
+//table[tbl-8jedm][商業誌のフォントサイズと本文幅][hline=off,fontsize=x-small]{
+出版社		書籍名			各種サイズ
+====================
+オライリー・ジャパン	『リーダブルコード』	A5、9pt、38文字
+.		『ゼロから作るDeep Learning』	A5、9pt、38文字
+
+翔泳社		『達人に学ぶSQL徹底指南書 第2版』	A5、9pt、38文字
+
+オーム社	『アジャイル・サムライ』	A5、10pt、36文字
+
+技術評論社	『オブジェクト指向UIデザイン』	A5、9pt、35文字
+.		『現場で役立つシステム設計の原則』	A5、10pt、33文字
+
+日経BP社	『独習プログラマー』	A5、10pt、34文字
 //}
 
 //}
@@ -364,7 +432,7 @@ end
 
 ===== 全体対策：「@<code>|caption_needspace:|」の値を増やす
 
-@<file>{config-starter.yml}の「@<code>|caption_needspace:|」がたとえば「@<code>|4.6zh|」であれば、プログラムリストの説明文を表示する前に全角4.6文字分の高さのスペースがあるかを調べ、なければ改ページします。
+@<file>{config-starter.yml}の「@<code>|caption_needspace:|」がたとえば「@<code>|4.0zh|」であれば、プログラムリストの説明文を表示する前に全角4文字分の高さのスペースがあるかを調べ、なければ改ページします。
 よってこの設定値を増やせば、説明文だけが別ページになるのを防げます。
 
 ただしこの設定値は、説明文を持つすべてのプログラムリストに影響します。
@@ -387,15 +455,91 @@ end
 
 === プログラムコードの枠線
 
-プログラムコードに枠線をつける・つけないを設定するには、次の設定を変更してください。
+プログラムコードに枠線をつける・つけないを変更するには、次の設定を変更してください。
 
 //list[][ファイル「config-starter.yml」]{
   ## プログラム（//list）を枠で囲むならtrue、囲まないならfalse
   program_border: true
 //}
 
-プログラムコードがページをまたいだときは、枠線があったほうが分かりやすいです。
+プログラムコードがページをまたぐときは、枠線つきのほうが分かりやすいです。
 詳しくは@<secref>{06-bestpractice|subsec-programborder}を見てください。
+
+
+==={subsec-defaultopts} オプションのデフォルト値
+
+「@<code>|//list|」の第3引数には、さまざまなオプションが指定できます。
+これらのオプションは、デフォルト値が「@<file>{config-starter.yml}」で次のように設定されています。
+ここで、YAML@<fn>{d15gt}では「@<code>|on, off, ~|」がそれぞれ「@<code>|true, false, null|」と同じ意味になります。
+
+//footnote[d15gt][「YAML」とはデータを構造化して記述する書き方のひとつであり、JSONの親戚みたいなものです。@<file>{config-starter.yml}はYAMLで書かれています。]
+
+//list[][@<file>{config-starter.yml}]{
+  ## プログラム（//list）のデフォルトオプション
+  ## （注：YAMLでは `on, off, ~` は `true, false, null` と同じ）
+  program_default_options:
+    fold:        on        # on なら長い行を右端で折り返す
+    foldmark:    on        # on なら折り返し記号をつける
+    eolmark:     off       # on なら行末に改行記号をつける
+    lineno:      ~         # 1 なら行番号をつける
+    linenowidth: ~         # 行番号の幅を半角文字数で指定する
+    indent:      ~         # インデント幅
+    fontsize:    ~         # small/x-small/xx-smal
+    lang:        ~         # デフォルトのプログラミング言語名
+    #file:       ~         # （使用しない）
+    encoding:    utf-8     # ファイルの文字コード
+//}
+
+たとえば「@<code>|//list|」にデフォルトで行番号とインデント記号をつけるには、設定を次のように変更します。
+
+//list[][「@<code>|//list|」にデフォルトで行番号とインデント記号をつける]{
+  program_default_options:
+    @<weak>{#...省略...}
+    lineno:      @<b>{1}         # 1 から始まる行番号をつける
+    linenowidth: @<b>{2}         # 行番号を2桁で（0なら自動計算）
+    indent:      @<b>{4}         # インデント幅を半角空白4文字に
+    @<weak>{#...省略...}
+//}
+
+このようにデフォルト値を変更すれば、「@<code>|//list|」にオプションを何も指定しなくても、行番号とインデント記号がつくようになります。
+
+なおこのように設定をしたうえで、特定のプログラムコードでだけ行番号やインデント記号をつけたくない場合は、「@<code>|//list[][][lineno=@<b>{off},indent=@<b>{off}]|」のように個別の指定をしてください。
+
+またターミナル画面を表す「@<code>|//terminal|」のオプションも、デフォルト値が@<file>{config-starter.yml}で設定されています。
+項目名が「@<code>|terminal_default_options:|」であること以外はプログラムコードの場合と同じです。
+
+
+==={sec-excluding} [PDF] 折り返し記号や行番号をマウス選択の対象から外す
+
+PDF中のプログラムコードをマウスで選択してコピーすると、折り返し記号や行番号や改行記号もコピーされてしまいます。
+これはプログラムコードをコピペするときに不便です。
+
+Starterでは、これらの記号をマウスの選択対象から外すことができます。
+そのためには、次のどちらかを設定してください。
+
+ * @<file>{config-starter.yml}の「@<code>|exclude_mouseelect:|」を@<code>|true|にする。
+ * 環境変数「@<code>|$STARTER_EXCLUDE_MOUSESELECT|」を「@<code>|on|」に設定する（「@<code>|true|」ではダメ）。
+
+この設定をしてからPDFを生成すると、以下のものがマウスの選択対象にならなくなります@<fn>{y2q8d}。
+
+ * 折り返し記号
+ * 行番号
+ * 改行記号
+
+なおインデントを表す記号は、文字ではなく図形として縦線を描写しているため、マウスでの選択対象にはなりません。
+
+//footnote[y2q8d][「@<code>|@@<nop>{}<balloon>{}|」で埋め込んだコメント文字列は、マウスコピーの対象外@<bou>{ではありません}。これは意図した仕様です。もしこれも対象外にしたい場合は、相談してください。]
+
+ただし、この機能が有効なのはAcrobat Readerのみです。
+macOSのPreview.appでは効かないので注意してください。
+
+またこの設定をオンにすると、@<LaTeX>{}のコンパイル時間が大幅に増えます。
+そのため、デフォルトではオフになっています。
+リリース時にだけ環境変数「@<code>|$STARTER_EXCLUDE_MOUSESELECT|」を@<code>|on|にするといいでしょう。
+
+//terminal[?][「@<code>|$STARTER_EXCLUDE_MOUSESELECT|」を@<code>|on|にしてPDFを生成]{
+$ STARTER_EXCLUDE_MOUSESELECT=on rake pdf
+//}
 
 
 
@@ -429,7 +573,17 @@ end
   section_decoration: @<b>{grayback}
 //}
 
-指定できる値は「@<code>{config-starter.yml}」の中に書かれています。
+#@#指定できる値は「@<code>{config-starter.yml}」の中に書かれています。
+どんなデザインが指定できるかは、@<img>{section_decoration_samples}を参照してください。
+
+//image[section_decoration_samples][節タイトルのデザイン][scale=0.99,pos=p,border=on]
+
+//note[節タイトルが長くて2行になる場合]{
+もし節タイトルが長くて2行になることがある場合は、「@<code>|circle|」「@<code>|leftline|」「@<code>|numbox|」のどれかを指定するといいでしょう。
+それ以外だと、デザインが破綻してしまいます。
+//}
+
+
 
 
 ==={subsec-paragraphdesign} 段見出しのデザインを変更する
@@ -476,10 +630,27 @@ Starterでは、章(Chapter)ごとにタイトルページをつけられます�
 これは読者にとって便利なので、特にページ数の多い本では章ごとのタイトルページをつけることをお勧めします。
 
 
+=== [PDF] 章扉に背景色をつける
+
+章扉には、デフォルトでは背景色がついていませんが、背景色をつけると見栄えがかなりよくなります。
+
+背景色は@<file>{sty/config-color.sty}において「@<code>{starter@chaptitlepagecolor}」という名前で定義されているので、これを上書き設定すれば変更できます。
+設定は@<file>{sty/mystyle.sty}で行うといいでしょう。
+
+//list[][@<file>{sty/mystyle.sty}：章扉の背景色を設定する]{
+\definecolor{starter@chaptitlepagecolor}{gray}{0.9}% 明るいグレー
+//}
+
+また章扉に背景色を設定した場合は、印刷用PDFの上下左右に3mmずつの「塗り足し」をつけるのが望ましいです。
+そのためには、@<file>{config-starter.sty}で「@<code>{bleedsize: 3mm}」を設定してください。
+この設定は印刷用PDFでのみ機能し、電子用PDFでは無視されます。
+詳しくは@<secref>{subsec-bleed}を参照してください。
+
+
 ==={subsec-newpagepersec} [PDF] 節ごとに改ページする
 
 初心者向けの入門書では、節(Chapter)ごとに改ページするデザインが好まれます。
-Starterでこれを行うには、「@<file>{confit-starter.sty}」で設定項目「@<code>|section_newpage:|」を「@<code>|true|」に設定します。
+Starterでこれを行うには、「@<file>{config-starter.yml}」で設定項目「@<code>|section_newpage:|」を「@<code>|true|」に設定します。
 
 //list[][ファイル「config-starter.yml」]{
   ## 節 (Section) ごとに改ページするか
@@ -495,8 +666,8 @@ Re:VIEWやStarterでは、デフォルトでは項(Subsection)に番号がつき
 
 //list[][ファイル「config.yml」]{
 # 本文でセクション番号を表示する見出しレベル
-#secnolevel: @<b>{2}     # 章 (Chapter) と節 (Section) にだけ番号をつける
-secnolevel: @<b>{3}      # 項 (Subsection) にも番号をつける
+#secnolevel: @<b>{2}    @<balloon>{章 (Chapter) と節 (Section) にだけ番号をつける}
+secnolevel: @<b>{3}     @<balloon>{項 (Subsection) にも番号をつける}
 //}
 
 
@@ -506,8 +677,8 @@ secnolevel: @<b>{3}      # 項 (Subsection) にも番号をつける
 
 //list[][ファイル「config.yml」]{
 # 目次として抽出する見出しレベル
-#toclevel: @<b>{2}       # （部と）章と節までを目次に載せる
-toclevel: @<b>{3}        # （部と）章と節と項を目次に載せる
+#toclevel: @<b>{2}      @<balloon>{（部と）章と節までを目次に載せる}
+toclevel: @<b>{3}       @<balloon>{（部と）章と節と項を目次に載せる}
 //}
 
 
@@ -562,9 +733,9 @@ Starterでは別の解決策として、「@<code>|@@<nop>{}<secref>{...}|」で
 
 === [PDF] 項タイトルの記号をクローバーから変更する
 
-項(Subsection)のタイトル先頭につく記号は、「@<code>{sty/starter.sty}」で次のように定義されています。
+項(Subsection)のタイトル先頭につく記号は、「@<code>{sty/starter-heading.sty}」で次のように定義されています。
 
-//list[][ファイル「sty/starter.sty」]{
+//list[][ファイル「sty/starter-heading.sty」]{
 \newcommand{\starter@subsection@symbol}{@<b>|$\clubsuit$|}% クローバー
 //}
 
@@ -585,14 +756,14 @@ Starterでは別の解決策として、「@<code>|@@<nop>{}<secref>{...}|」で
 
 //list[][ファイル「config.yml」]{
 # 書名
-((*booktitle: |-*))
+@<b>{booktitle: |-}
   Re:VIEW Starter
   ユーザーズガイド
-((*subtitle: |-*))
+@<b>{subtitle: |-}
   便利な機能を一挙解説！
 
 # 著者名。「, 」で区切って複数指定できる
-((*aut:*))
+@<b>{aut:}
   - name:    カウプラン機関極東支部
     file-as: カウプランキカンキョクトウシブ
 //}
@@ -601,30 +772,35 @@ Starterでは、本のタイトルやサブタイトルを複数行で設定で�
 こうすると、大扉（タイトルページ）でも複数行で表示されます。
 
 
-==={subsec-coverpdf} [PDF] 表紙を指定する
+==={subsec-coverpdf} [PDF] 表紙や大扉や奥付となるPDFファイルを指定する
 
-大扉（タイトルページ）ではなく、本の表紙を指定するには、「@<file>{config.yml}」の最後のほうにある設定項目「@<code>|coverpdf_files:|」にPDFファイル名を指定します。
+Starterでは、本の表紙や大扉（タイトルページ）や奥付となるPDFファイルを指定できます。
+@<file>{config-starter.yml}で以下の項目を変更してください@<fn>{fn-2l1nn}。
 
-//list[][ファイル「config.yml」]{
-  coverpdf_files: @<b>{[cover_a5.pdf]}         @<balloon>{表紙}
-  backcoverpdf_files: []                 @<balloon>{裏表紙}
-  coverpdf_option: "offset=-0.0mm 0.0mm" @<balloon>{位置を微調整}
+//footnote[fn-2l1nn][これらの設定は、以前は@<file>{config.yml}で行っていましたが、現在は@<file>{config-starter.yml}で行うように変更されました。また@<file>{config.yml}に古い設定が残っているとコンパイルエラーになり、「古い設定が残っているので移行するように」というエラーメッセージが出ます。]
+
+//list[][ファイル「@<file>{config-starter.yml}」]{
+  frontcover_pdffile: cover_a5.pdf          @<balloon>{表紙}
+  backcover_pdffile:  null                  @<balloon>{裏表紙}
+  titlepage_pdffile:  null                  @<balloon>{大扉}
+  colophon_pdffile:   null                  @<balloon>{奥付}
+  #includepdf_option: "offset=-2.3mm 2.3mm" @<balloon>{位置を微調整する場合}
+  includepdf_option:  null                  @<balloon>{通常は無指定でよい}
 //}
 
-ポイントは次の通りです。
+いくつか注意点があります。
 
- * 画像ファイルは使用できません。必ずPDFファイルを使ってください。
  * PDFファイルは、「@<file>{images/}」フォルダ直下に置いてください。
- * 複数のPDFファイルを指定するには、「@<code>|[file1.pdf, file2.pdf]|」のように指定します。
+ * 画像ファイルは使用できません。必ずPDFファイルを使ってください。
+ * 1つのPDFファイルにつき1ページだけにしてください。
+   もしPDFファイルが複数ページを持つ場合は、「@<code>|cover.pdf<2>|」のように取り込むページ番号を指定してください（実験的機能）。
+ * 複数のPDFファイルを指定するには、YAMLの配列を使って「@<code>|[file1.pdf, file2.pdf]|」のように指定します。
    「@<code>|,|」のあとには必ず半角空白を入れてください。
- * 裏表紙があれば「@<code>|backcoverpdf_files:|」に指定ます。
- * 位置がずれる@<fn>{fn-oq6uz}場合は、「@<code>|coverpdf_option:|」の値を調整してください。
+ * もし位置がずれる場合は、「@<code>|coverpdf_option:|」の値を調整してください（以前は微調整が必要でしたが、現在は必要ないはずです）。
 
-//footnote[fn-oq6uz][@<LaTeX>{}に詳しい人向け：取り込んだPDFファイルの位置がずれるのは、フォントサイズが10pt@<bou>{ではない}ときです。このとき@<file>{jsbook.cls}では@<code>{\mag}の値を@<code>{1.0}以外に変更するので、それが@<file>{pdfpages}パッケージに影響します。一時的に@<code>{\mag}を@<code>{1.0}にしてPDFファイルを取り込む方法は分かりませんでした。]
-
-なお表紙がつくのは、電子用PDFファイルの場合のみです。
-印刷用PDFファイルにはつかない（し、つけてはいけない）ので注意してください。
+なお表紙と裏表紙がつくのは電子用PDFファイルの場合のみであり、印刷用PDFファイルにはつかない（し、つけてはいけない）ので注意してください。
 詳しくは@<secref>{02-tutorial|sec-pdftype}を参照してください。
+これに対して大扉と奥付は、指定されれば印刷用PDFでも電子用PDFでもつきます。
 
 //note[PNGやJPGの画像をPDFに変換する]{
 macOSにてPNGやJPGをPDFにするには、画像をプレビュー.appで開き、メニューから「ファイル > 書き出す... > フォーマット:PDF」を選んでください。
@@ -633,49 +809,209 @@ macOS以外の場合は、「画像をPDFに変換」などでGoogle検索する
 //}
 
 
+=== [PDF] 表紙のPDFから塗り足しを除いて取り込む
+
+表紙や裏表紙のPDFファイルを印刷所に入稿するには、通常のA5やB5に上下左右3mmずつを加えたサイズのPDFファイルを使います。
+この上下左右3mmの部分を「塗り足し」といいます@<fn>{fn-lmc7a}。
+
+//footnote[fn-lmc7a][塗り足しについては@<secref>{subsec-bleed}も参照してください。]
+
+つまり印刷用の表紙や裏表紙は、塗り足しの分だけ縦横サイズが少し大きいのです。
+そのため印刷用の表紙や裏表紙を電子用PDFに取り込むには、塗り足し部分を除いたうえで取り込む必要があります。
+
+StarterではPDFファイル名の後ろに「@<code>|*|」をつけると、塗り足し部分を除いて取り込んでくれます。
+PDFのページ番号も一緒に指定する場合は「@<code>|cover.pdf<2>*|」のように指定してください。
+
+//list[][ファイル「@<file>{config-starter.yml}」]{
+  frontcover_pdffile: frontcover_a5.pdf@<b>{*}  @<balloon>{塗り足し部分を取り除く}
+  backcover_pdffile:  backcover_a5.pdf@<b>{*}   @<balloon>{塗り足し部分を取り除く}
+  titlepage_pdffile:  titlepage_a5.pdf    @<balloon>{大扉は塗り足しなし}
+  colophon_pdffile:   colophon_a5.pdf     @<balloon>{奥付は塗り足しなし}
+//}
+
+より正確には次のような動作をします。
+
+ * PDFファイル名の最後に「@<code>|*|」がついてなければ、用紙サイズに合わせてPDFを拡大・縮小して、中央に配置します。
+ * PDFファイル名の最後に「@<code>|*|」がついていると、拡大・縮小はせずに@<bou>{そのままの大きさで中央に配置}します。
+   その結果、塗り足し部分だけが用紙からはみ出るので、あたかも塗り足し部分が取り除かれたように見えます。
+
+//note[塗り足しつきで表紙を取り込むと上下に空きが入る理由]{
+ファイル名の最後に「@<code>|*|」をつけない場合、用紙サイズに合わせてPDFを拡大または縮小しますが、縦横の比率は変えません。
+そのため、PDFが用紙より縦長だと上下を揃えようとして左右に空きが入り、PDFが用紙より横長だと左右を揃えようとして上下に空きが入ります。
+
+塗り足しのついたPDFファイルをそのまま取り込むと上下が少し空くのは、PDFの縦横サイズが塗り足しの分だけ用紙より横長になるからです。
+//}
+
 
 === [PDF] 大扉のデザインを変更する
 
-大扉（タイトルページ）のデザインは、「@<file>{sty/mytitlepage.sty}」で定義されています。
-大扉のデザインを変更すには、このファイルを変更してください。
-変更する前に、バックアップを取っておくといいでしょう@<fn>{fn-iaa2p}。
+大扉（タイトルページ）のPDFファイルを指定しなかった場合は、デフォルトデザインの大扉がつきます。
+このデザインは「@<file>{sty/mytitlepage.sty}」で定義されているので、デザインを変更したい場合はこのファイルを編集してください。
+編集する前にバックアップを取っておくといいでしょう@<fn>{fn-iaa2p}。
 
 //terminal{
 $ @<userinput>{cp sty/mytitlepage.sty sty/mytitlepage.sty.original}
 $ @<userinput>{vi sty/mytitlepage.sty}
 //}
 
-//footnote[fn-iaa2p][もちろん、Gitでバージョン管理している場合はバックアップする必要はありません。]
-
-
-=== [PDF] 注意書きの文章を変更する
-
-大扉（タイトルページ）の裏のページには、免責事項や商標に関する注意書きが書かれています。
-この文言を変更したい場合は、「@<file>{sty/titlepage.sty}」を編集してください。
-
-#@#//quote{
-#@#■免責
-#@#本書は情報の提供のみを目的としています。
-#@#本書の内容を実行・適用・運用したことで何が起きようとも、それは実行・適用・運用した人自身の責任であり、著者や関係者はいかなる責任も負いません。
-#@#
-#@#■商標
-#@#本書に登場するシステム名や製品名は、関係各社の商標または登録商標です。
-#@#また本書では、TM、®、© などのマークは省略しています。
-#@#//}
+//footnote[fn-iaa2p][Gitなどでバージョン管理している場合は、バックアップする必要はありません。]
 
 
 === [PDF] 奥付のデザインを変更する
 
-奥付のデザインは、「@<file>{sty/mycolophon.sty}」で定義されています。
-奥付のデザインを変更するには、このファイルを変更してください。
-変更する前に、バックアップを取っておくといいでしょう@<fn>{fn-evcg1}。
+奥付のPDFファイルを指定しなかった場合は、デフォルトデザインの奥付がつきます。
+このデザインは「@<file>{sty/mycolophon.sty}」で定義されているので、デザインを変更したい場合はこのファイルを編集してください。
+編集する前にバックアップを取っておくといいでしょう@<fn>{fn-evcg1}。
 
 //terminal{
-$ @<userinput>{cp sty/mytitlepage.sty sty/mytitlepage.sty.original}
-$ @<userinput>{vi sty/mytitlepage.sty}
+$ @<userinput>{cp sty/mycolophon.sty sty/mycolophon.sty.original}
+$ @<userinput>{vi sty/mycolophon.sty}
 //}
 
-//footnote[fn-evcg1][もちろん、Gitでバージョン管理している場合はバックアップする必要はありません。]
+//footnote[fn-evcg1][Gitなどでバージョン管理している場合は、バックアップする必要はありません。]
+
+
+=== [PDF] 奥付を改ページしない
+
+Starterでは、奥付は自動的に最終ページに配置されます（詳しくは@<secref>{06-bestpractice|subsec-colophonlastpage}を参照してください）。
+この自動での配置を止めて手動でコントロールしたい場合は、次のどちらかを行ってください。
+
+ * 「@<file>{sty/mycolopho.sty}」において、7行目付近にある「@<code>|\reviewcolophon|」の先頭に「@<code>|%|」をつけて「@<code>|%\reviewcolophon|」とする。
+ * 「@<file>{sty/mystyle.sty}」に、「@<code>|\def\reviewcolophon{}|」という記述を追加する。
+
+たとえば、最終ページの上半分に著者紹介と過去の著作一覧を表示し、下半分に奥付を表示したいとします。
+その場合は奥付が自動的に改ページされないよう変更してから、あとがきを次のようにするといいでしょう。
+
+//list[][ファイル「@<file>{contents/99-postface.re}」：あとがき]{
+= あとがき
+....文章....
+
+//clearpage     @<balloon>{改ページ}
+== 著者紹介
+....紹介文....
+
+ * 『著作1』
+ * 『著作2』
+//}
+
+
+=== [PDF] 奥付に発行者と連絡先を記載する
+
+「@<href>{https://gishohaku.dev, 技書博}」という技術系同人誌イベントでは、奥付に「発行者」と「連絡先」の記載が必要となりました@<fn>{fn-13udq}。
+Starterでは、奥付に発行者と連絡先を載せる設定を用意しています。
+
+#@#//footnote[fn-13udq][@<hlink>{https://esa-pages.io/p/sharing/13039/posts/115/7fbe936149a836eac678.html#%E5%A5%A5%E4%BB%98%E3%81%AE%E8%A8%98%E8%BC%89, https://esa-pages.io/p/sharing/13039/posts/115/7fbe936149a836eac678.html#奥付の記載}]
+//footnote[fn-13udq][@<hlink>{https://esa-pages.io/p/sharing/13039/posts/115/7fbe936149a836eac678.html#%E5%A5%A5%E4%BB%98%E3%81%AE%E8%A8%98%E8%BC%89}]
+#@#//footnote[fn-13udq][@<hlink>{https://esa-pages.io/p/sharing/13039/posts/115/7fbe936149a836eac678.html#%E5%A5%A5%E4%BB%98%E3%81%AE%E8%A8%98%E8%BC%89, @<tt>{https://esa-pages.io/p/sharing/13039/posts/115/7fbe936149a836eac678.html#奥付の記載}}]
+
+//list[][ファイル「@<file>{config.yml}」]{
+additional:
+  - key:     発行者
+    value:   xxxxx    @<balloon>{サークル名ではなく個人名（ペンネーム可）}
+  - key:     連絡先
+    value:
+      - xxxxx@example.com          @<balloon>{メールアドレス（推奨）}
+      - https://www.example.com/   @<balloon>{WebサイトURL}
+      - "@xxxxx"          @<balloon>{Twitterアカウント（頭に '@' が必要）}
+//}
+
+連絡先にはいくつか補足事項があります。
+
+ * 連絡先には複数の値が指定できます。技書博によればメールアドレスがお勧めだそうです。
+ * 連絡先にURLが指定されると、自動的にリンクになります。
+ * 連絡先にTwitterアカウントを指定するには、先頭に「@<code>|@|」をつけてください。
+   またTwitterアカウントも自動的にリンクになります。
+ * 発行者や連絡先は、奥付の中では印刷所名の直前に置かれます。
+ * PDFの奥付にのみ表示されます。HTMLやePubへは未対応です。
+
+なおこの設定には、発行者や連絡先以外の項目も追加できます。
+もし奥付に表示したい項目があれば、ここに追加してください。
+
+
+=== [PDF] 注意事項の文章を変更する
+
+大扉（タイトルページ）の直後のページには、免責や商標に関する以下のような注意事項が書かれています。
+
+//quote{
+//noindent
+■免責@<br>{}
+本書は情報の提供のみを目的としています。@<br>{}
+本書の内容を実行・適用・運用したことで何が起きようとも、それは実行・適用・運用した人自身の責任であり、著者や関係者はいかなる責任も負いません。
+
+//blankline
+//noindent
+■商標@<br>{}
+本書に登場するシステム名や製品名は、関係各社の商標または登録商標です。@<br>{}
+また本書では、TM、®、© などのマークは省略しています。
+//}
+
+この文言を変更したい場合は、「@<file>{sty/mytitlepage.sty}」を編集してください。
+
+
+=== [PDF] 注意事項の文章を出さない
+
+大扉（タイトルページ）の裏ページにある注意事項の文章を出さないようにするには、次のどちらかを行ってください。
+
+ * 「@<file>{sty/mytitlepage.sty}」において、「@<code>|\newcommand{\mytitlenextpage}|」を「@<code>|\newcommand{\@mytitlenextpage}|」に変更する。
+ * 「@<file>{sty/mystyle.sty}」において、「@<code>|\let\mytitlenextpage=\undefined}|」という記述を追加する。
+
+
+
+=={sec-index} 索引
+
+
+=== [PDF] 用語のグループ化を文字単位にする
+
+索引ページでは、用語が「あ か さ た な は ……」のように行単位でグループ化されます。
+これを「あ い う え お か き ……」のように文字単位でグループ化するには、@<file>{config.yml}の「@<code>|makeindex_options: "-q -g"|」から「@<code>{-g}」を取り除いてください。
+
+
+=== [PDF] 連続したピリオドのかわりに空白を使う
+
+索引ページにて用語とページ番号との間は、デフォルトでは連続したピリオドで埋めています。
+これを空白で埋めるよう変更するには、@<file>{sty/indexsty.ist}を編集してください。
+
+//list[][@<file>{sty/indexsty.ist}]{
+## 用語とページ番号との間をピリオドで埋める
+#delim_0 "\\quad\\dotfill ~"
+#delim_1 "\\quad\\dotfill ~"
+#delim_2 "\\quad\\dotfill ~"
+
+## 用語とページ番号との間を空白で埋める
+delim_0 "\\quad\\hfill"
+delim_1 "\\quad\\hfill"
+delim_2 "\\quad\\hfill"
+//}
+
+なお@<file>{sty/indexsty.ist}の中の設定項目については、@<href>{http://tug.ctan.org/info/mendex-doc/mendex.pdf, mendexコマンドのマニュアル}を参照してください。
+mendexコマンド（またはupmendexコマンド）のオプションについても記載されています。
+
+
+=== [PDF] 用語見出しのデザインを変更する
+
+索引ページの用語見出しは「■あ」「■か」のようになっています。
+このデザインは@<file>{sty/starter-misc.sty}の「@<code>|\starterindexgroup|」で設定されています。
+変更するには「@<code>|\starterindexgroup|」の定義を@<file>{sty/starter-misc.sty}から@<file>{sty/mystyle.sty}にコピーして、「@<code>|\newcommand|」を「@<code>|\renewcommand|」に変更して中身をカスタマイズしてください。
+
+//list[][@<file>{sty/mystyle.sty}]{
+\renewcommand{\starterindexgroup}[1]{%  % 索引グループ
+  {%
+    \bfseries%                   % 太字
+    \gtfamily\sffamily%          % ゴシック体
+    ■#1%                        % 例：`■あ`
+  }%
+}
+//}
+
+また@<file>{sty/indexsty.ist}を編集すると、別の@<LaTeX>{}マクロ名を指定できます。
+
+
+=== [PDF] その他
+
+ * 索引ページにおいて子要素の用語で使う「――」は、@<file>{sty/starter-misc.sty}の「@<code>|\starterindexplaceholder|」で定義されています。
+ * 「@<code>|@@<nop>{}<term>{}|」で表示するフォントは、@<file>{sty/starter-misc.sty}の「@<code>|\starterterm|」で定義されています。
+   デフォルトではゴシック体にで表示するように定義されています。
+ * 用語の転送先を表す「→」を別の記号や文字列に変更するには、@<file>{sty/mystyle.sty}にたとえば「@<code>|\renewcommand{\seename}{\textit{see: }}|」のように書きます。
 
 
 

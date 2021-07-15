@@ -87,6 +87,8 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.10.0)
     rspec-support (3.10.1)
+    ruby-debug-ide (0.7.2)
+      rake (>= 0.8.1)
     rubyzip (2.3.0)
     sys-uname (1.2.2)
       ffi (~> 1.1)
@@ -104,6 +106,7 @@ DEPENDENCIES
   rake (~> 12.0)
   review-retrovert!
   rspec (~> 3.0)
+  ruby-debug-ide
 
 BUNDLED WITH
    2.1.4

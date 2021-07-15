@@ -119,9 +119,10 @@ module ReVIEW
         log('Call ePUB producer.')
         @producer.produce(epubname, builddir, epubtmpdir)
         log('Finished.')
-      rescue ApplicationError => e
+      rescue ApplicationError => ex
         raise if debug?()
-        error(e.message)
+        #error(ex.message)
+        error(colored_errmsg(ex.message))
       ensure
         FileUtils.remove_entry_secure(builddir) unless debug?()
       end
@@ -253,7 +254,7 @@ module ReVIEW
           build_chap(chap, base_path, nil)
         end
       end
-      check_compile_status
+      check_compile_status()
     end
 
     def new_renderer()
@@ -286,10 +287,12 @@ module ReVIEW
         @converter.convert(filename, File.join(@builddir, htmlfile))
         write_info_body(htmlfile, chaptype)
         remove_hidden_title(htmlfile)
-      rescue => e
+      ## 文法エラーだけキャッチし、それ以外のエラーはキャッチしないよう変更
+      #rescue => ex
+      rescue ApplicationError => ex
         @compile_errors = true
-        warn "compile error in #{filename} (#{e.class})"
-        warn e.message
+        warn "compile error in #{filename} (#{ex.class})"
+        warn colored_errmsg(ex.message)
       end
     end
 
@@ -327,7 +330,7 @@ module ReVIEW
     end
 
     def detect_properties(path)
-      doc = File.open(path) {|f| REXML::Document.new(f) }
+      doc = File.open(path, encoding: 'utf-8') {|f| REXML::Document.new(f) }
       has_math = REXML::XPath.first(doc, '//m:math', 'm' => 'http://www.w3.org/1998/Math/MathML')
       has_svg  = REXML::XPath.first(doc, '//s:svg', 's' => 'http://www.w3.org/2000/svg')
       properties = []

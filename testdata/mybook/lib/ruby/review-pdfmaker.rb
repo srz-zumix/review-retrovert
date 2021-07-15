@@ -38,15 +38,14 @@ module ReVIEW
         converter = ReVIEW::Converter.new(book, new_builder())
         errors = create_input_files(converter, book)
         if errors && !errors.empty?
-          FileUtils.rm_f pdf_filepath()   ###
+          #FileUtils.rm_f pdf_filepath()   ###
           handle_compile_errors(errors)
         end
         #
         prepare_files()
-        tmp_file = build_pdf(book)
-        copy_outfile(tmp_file, pdf_filepath())
+        build_pdf(book)
       ensure
-        remove_entry_secure(@build_dir) unless @config['debug']
+        FileUtils.remove_entry_secure(@build_dir) unless @config['debug']
       end
     end
 
@@ -56,8 +55,12 @@ module ReVIEW
       return ReVIEW::LATEXBuilder.new
     end
 
-    def pdf_filepath
-      return File.join(@basedir, "#{@config['bookname']}.pdf")
+    def pdf_filepath()
+      return File.join(@basedir, pdf_filename())
+    end
+
+    def pdf_filename()
+      return "#{@config['bookname']}.pdf"
     end
 
     def remove_old_file
@@ -69,9 +72,9 @@ module ReVIEW
       if !File.directory?(dir)
         Dir.mkdir(dir)
       else
-        ## 目次と相互参照に関するファイルだけを残し、あとは削除
+        ## 目次と相互参照と索引に関するファイルだけを残し、あとは削除
         Pathname.new(dir).children.each do |x|
-          next if x.basename.to_s =~ /\.(aux|toc|out|mtc\d*|maf)\z/
+          next if x.basename.to_s =~ /\.(aux|toc|out|idx|ind|mtc\d*|maf)\z/
           x.rmtree()
         end
       end
@@ -105,7 +108,7 @@ module ReVIEW
       ## （LATEXBuilderで起こったエラーのスタックトレースを表示する）
       rescue ApplicationError => ex
         warn "compile error in #{outfile} (#{ex.class})"
-        warn ex.message
+        warn colored_errmsg(ex.message)
         ex.message
       end
     end
@@ -140,8 +143,9 @@ module ReVIEW
 
     def absolute_path(filename)
       return nil unless filename.present?
-      filepath = File.absolute_path(filename, @basedir)
-      return File.exist?(fielpath) ? filepath : nil
+      #filepath = File.absolute_path(filename, @basedir)
+      filepath = File.absolute_path(filename, '..')
+      return File.exist?(filepath) ? filepath : nil
     end
 
     def compile_latex_files(base, config)
@@ -161,36 +165,60 @@ module ReVIEW
       mkidx  << " -s #{mkidx_sty}" if mkidx_sty
       mkidx  << " -d #{mkidx_dic}" if mkidx_dic
       #
+      texfile = "#{base}.tex"
+      idxfile = "#{base}.idx"
+      dvifile = "#{base}.dvi"
+      pdffile = pdf_filename()
+      #
       call_hook('hook_beforetexcompile')
-      changed = run_latex!(latex, "#{base}.tex")
-      changed = run_latex!(latex, "#{base}.tex") if changed
-      changed = run_latex!(latex, "#{base}.tex") if changed
+      #
+      print_latex_version(latex_cmd)
+      if (v = ENV['STARTER_COMPILETIMES']).present?
+        compile_ntimes = v.to_i
+      elsif ENV['STARTER_CHAPTER'].present?
+        compile_ntimes = 1
+      else
+        compile_ntimes = nil
+      end
+      run_latex(latex, texfile, compile_ntimes)
+      #
       if mkidx_p  # 索引を作る場合
-        call_hook('hook_beforemakeindex')
-        run_cmd!("#{mkidx} #{base}") if File.exist?("#{base}.idx")
-        call_hook('hook_aftermakeindex')
-        run_latex!(latex, "#{base}.tex")
+        changed = _files_changed?('*.ind') do
+          call_hook('hook_beforemakeindex')
+          usr_bin_time { run_cmd!("#{mkidx} #{base}") } if File.exist?(idxfile)
+          call_hook('hook_aftermakeindex')
+        end
+        if changed
+          run_latex(latex, texfile)
+        else
+          puts "[pdfmaker]### (info): index file not changed. skip latex compilation."
+        end
       end
       call_hook('hook_aftertexcompile')
-      return unless File.exist?("#{base}.dvi")
-      run_cmd!("#{dvipdf} #{base}.dvi")
+      return unless File.exist?(dvifile)
+      usr_bin_time { run_cmd!("#{dvipdf} -o ../#{pdffile} #{dvifile}") }
       call_hook('hook_afterdvipdf')
     end
 
     ## コンパイルメッセージを減らすために、uplatexコマンドをバッチモードで起動する。
     ## エラーがあったら、バッチモードにせずに再コンパイルしてエラーメッセージを出す。
-    def run_latex!(latex, file)
-      ## *.auxファイルと*.tocファイルのハッシュ値を計算する。
-      ## （「//list[?]」が生成するラベルはランダムなのでそれを削除してハッシュ値を計算する。）
-      delete_rexp = /^\\newlabel\{_\d+\}/
-      auxfile = file.sub(/\.tex\z/, '.aux')
-      tocfile = file.sub(/\.tex\z/, '.toc')
-      auxhash_old = _filehash(auxfile, delete_rexp)
-      tochash_old = _filehash(tocfile)
-      ## invoke latex command with batchmode option in order to suppress
-      ## compilation message (in other words, to be quiet mode).
-      ok = run_cmd("#{latex} -interaction=batchmode #{file}")
-      if ! ok
+    def run_latex(latex, file, max_ntimes=nil)
+      max_ntimes ||= 3
+      ok = true
+      cmd = "#{latex} -interaction=batchmode #{file}"
+      hash1 = _hash_auxfiles()
+      max_ntimes.times do
+        ## invoke latex command with batchmode option in order to suppress
+        ## compilation message (in other words, to be quiet mode).
+        #ok = run_cmd("#{latex} -interaction=batchmode #{file}")
+        _output, ok = usr_bin_time { run_cmd_capturing_output(cmd, " > /dev/null") }
+        break unless ok
+        hash2 = _hash_auxfiles()
+        auxfiles_changed = hash1 != hash2
+        break unless auxfiles_changed
+        hash1 = hash2
+      end
+      unless ok
         ## latex command with batchmode option doesn't show any error,
         ## therefore we must invoke latex command again without batchmode option
         ## in order to show error.
@@ -199,46 +227,35 @@ module ReVIEW
         $stderr.puts "*"
         run_cmd!("#{latex} #{file}")
       end
-      ## *.tocファイルのハッシュ値を計算し、コンパイル前と変わっていたらtrueを返す。
-      ## （つまりもう一度コンパイルが必要ならtrueを返す。）
-      auxhash_new = _filehash(auxfile, delete_rexp)
-      tochash_new = _filehash(tocfile)
-      return auxhash_old.nil? || tochash_old.nil? \
-          || auxhash_old != auxhash_new || tochash_old != tochash_new
-      ## LaTeXのログファイルに「ラベルが変更された」と出ていたらtrueを返す。
-      ## （つまりもう一度コンパイルが必要ならtrueを返す。）
-      ## → この方法は、ページ番号が変わったことは検出できても、
-      ##    章や節のタイトルが変わったことを検出できない。
-      #logfile = file.sub(/\.tex\z/, '.log')
-      #begin
-      #  lines = File.open(logfile, 'r') {|f|
-      #    f.grep(/^LaTeX Warning: Label\(s\) may have changed./)
-      #  }
-      #  return !lines.empty?
-      #rescue IOError
-      #  return true
-      #end
     end
 
-    def _filehash(filepath, delete_rexp=nil)
-      return nil unless File.exist?(filepath)
-      binary = File.open(filepath, 'rb') {|f| f.read() }
-      binary = binary.gsub(delete_rexp, '') if delete_rexp
-      return Digest::MD5.hexdigest(binary)
-    end
-    private :_filehash
+    private
 
-    ## 開発用。LaTeXコンパイル回数を環境変数で指定する。
-    if ENV['STARTER_COMPILETIMES']
-      alias __run_latex! run_latex!
-      def run_latex!(latex, file)
-        n = ENV['STARTER_COMPILETIMES']
-        @_done ||= {}
-        k = "#{latex} #{file}"
-        return if (@_done[k] ||= 0) >= n.to_i
-        @_done[k] += 1
-        __run_latex!(latex, file)
+    def _hash_auxfiles()
+      return _hash_files(Dir.glob('*.{aux,toc,idx}'))
+    end
+
+    def _files_changed?(filepat)
+      before = _hash_files(Dir.glob(filepat))
+      yield
+      after  = _hash_files(Dir.glob(filepat))
+      return before != after
+    end
+
+    def _hash_files(filenames)
+      return filenames.each_with_object({}) do |filename, dict|
+        s = File.read(filename)
+        dict[filename] = Digest::SHA1.hexdigest(s)
       end
+    end
+
+    protected
+
+    def print_latex_version(latex_cmd)
+      output, ok = run_cmd_capturing_output("#{latex_cmd} --version", " | head -1")
+      ok  or
+        raise BuildError.new("latex command seemds not exist.")
+      puts output.each_line.first
     end
 
     def prepare_files()
@@ -250,14 +267,6 @@ module ReVIEW
       copy_sty(stydir, @build_dir, 'fd')
       copy_sty(stydir, @build_dir, 'cls')
       copy_sty(Dir.pwd, @build_dir, 'tex')
-    end
-
-    def copy_outfile(tmp_pdffile, out_pdffile)
-      if File.exist?(tmp_pdffile)
-        FileUtils.cp(tmp_pdffile, out_pdffile)
-      elsif File.exist?(out_pdffile)
-        FileUtils.rm(out_pdffile)
-      end
     end
 
     def copy_images(from, to)
@@ -305,6 +314,33 @@ module ReVIEW
     class LATEXRenderer < BaseRenderer
       include ReVIEW::LaTeXUtils
 
+      ## LaTeXUtils#escape() だと、'-' を '{-}' に変換する。
+      ## そのため、たとえば「x-small」が「x{-}small」になってしまう。
+      ## これは設定値にとって都合が悪いので、書き直す。
+      def escape(v)
+        case v
+        when nil       ; return ''
+        #when true      ; return 'Y'
+        #when false     ; return ''
+        when Numeric   ; return v.to_s
+        else
+          v.to_s.gsub(/[#$%&{}_^~\\]/, LATEX_ESCAPE_CHARS)
+        end
+      end
+
+      LATEX_ESCAPE_CHARS = {
+        '%'  => '\%',
+        '#'  => '\#',
+        '$'  => '\$',
+        '&'  => '\&',
+        '_'  => '\_',
+        '{'  => '\{',
+        '}'  => '\}',
+        '\\' => '{\textbackslash}',
+        '^'  => '{\textasciicircum}',
+        '~'  => '{\textasciitilde}',
+      }
+
       def layout_template_name
         return './latex/layout.tex.erb'
       end
@@ -323,7 +359,12 @@ module ReVIEW
 
         @okuduke = make_colophon()
         @authors = make_authors()
-
+        #
+        sep = I18n.t('names_splitter')
+        @book_author     = @config.names_of('aut').join(sep)
+        @book_supervisor = @config.names_of('csl').join(sep)
+        @book_translator = @config.names_of('trl').join(sep)
+        #
         @custom_titlepage = make_custom_page(@config['cover']) || make_custom_page(@config['coverfile'])
         @custom_originaltitlepage = make_custom_page(@config['originaltitlefile'])
         @custom_creditpage = make_custom_page(@config['creditfile'])
@@ -336,7 +377,7 @@ module ReVIEW
         if @config['pubhistory']
           warn 'pubhistory is oboleted. use history.'
         else
-          @config['pubhistory'] = make_history_list.join("\n")
+          @config['pubhistory'] = make_history_list().join("\n")
         end
 
         @coverimageoption =
@@ -400,17 +441,54 @@ module ReVIEW
       end
 
       def make_colophon_role(role)
-        return "" unless @config[role].present?
+        return nil unless @config[role].present?
         initialize_metachars(@config['texcommand'])
         names = @config.names_of(role)
         sep   = i18n('names_splitter')
         str   = [names].flatten.join(sep)
-        #return "#{i18n(role)} & #{escape_latex(str)} \\\\\n"
-        return "\\startercolophonrow{#{i18n(role)}}{#{escape_latex(str)}}\n"
+        return i18n(role), escape(str)
       end
 
       def make_colophon()
-        return @config['colophon_order'].map {|role| make_colophon_role(role) }.join
+        kv_list = []
+        @config['colophon_order'].each do |role|
+          if role == 'prt'   # 印刷所の前に追加情報を入れる
+            _each_additional_kvs() {|k, v| kv_list << [k, v] }
+          end
+          kv = make_colophon_role(role)
+          kv_list << kv if kv
+        end
+        #
+        return kv_list.map {|k, v|
+          #"#{i18n(role)} & #{escape_latex(str)} \\\\\n"
+          "\\startercolophonrow{#{k}}{#{v}}\n"
+        }.join()
+      end
+
+      def _each_additional_kvs(&b)
+        dicts = @config['additional']
+        dicts.each do |d|
+          key = d['key']; val = d['value']
+          next unless key.present? && val.present?
+          k = escape(key.to_s)
+          [val].flatten.compact.each do |v|
+            case v
+            when /\A\@[-\w]+\z/
+              url = "https://twitter.com/#{escape(v[1..-1])}"
+              s = "{#{escape(v)}} (\\starterurl{#{url}}{#{url}})"
+              #s = "\textsf{#{escape(v)}} (\\starterurl{#{url}}{#{url}})"
+              #s = "\\starterurl{#{url}}{#{url}}"
+              yield k, s
+            when /\Ahttps?:\/\//
+              url = escape(v)
+              s = "\\starterurl{#{url}}{#{url}}"
+              yield k, s
+            else
+              yield k, escape(v.to_s)
+            end
+            k = nil
+          end
+        end if dicts
       end
 
       def make_authors

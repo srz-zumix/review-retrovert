@@ -16,6 +16,10 @@ module ReVIEW
 
     attr_accessor :starter_config
 
+    def target_name
+      "html"
+    end
+
     def layoutfile
       ## 'rake web' のときに使うレイアウトファイルを 'layout.html5.erb' へ変更
       if @book.config.maker == 'webmaker'
@@ -59,7 +63,7 @@ module ReVIEW
         @toc = ReVIEW::WEBTOCPrinter.book_to_html(@book, @chapter)   #+
       end
 
-      ReVIEW::Template.load(layoutfile).result(binding)
+      ReVIEW::Template.load(layoutfile()).result(binding())
     end
 
     def headline(level, label, caption)
@@ -99,62 +103,109 @@ module ReVIEW
       attrs.map {|k, arr| " #{k}=\"#{arr.join(' ')}\"" }.join()
     end
 
-    def image_image(id, caption, metric)
-      src = @chapter.image(id).path.sub(%r{\A\./}, '')
+    ## 画像
+
+    def _render_image(id, image_filepath, caption, opts)
+      src = image_filepath.sub(/\A\.\//, '')
       alt = escape_html(compile_inline(caption))
-      metrics = parse_metric('html', metric)
-      metrics = " class=\"img\"" unless metrics.present?
+      #
+      classes = ["img"]
+      styles = []
+      #
+      if opts[:scale]
+        case (scale = opts[:scale])
+        when /\A\d+\z/, /\A\d\.\d*\z/, /\A\.\d+\z/
+          per = (scale.to_f * 100).round()
+        when /\A\d+(\.\d+)?%\z/
+          per = scale.sub(/%\z/, '').to_f.round()
+        else
+          error "scale=#{scale}: invalid scale value."
+        end
+        found = PERCENT_THRESHOLDS.find {|x| x == per }
+        if found
+          classes << 'width-%03dper' % per
+        else
+          styles << "max-width:#{per}%"
+        end
+      end
+      #
+      classes << opts[:class] if opts[:class]
+      classes << "border"     if opts[:border]
+      classes << "draft"      if opts[:draft]
+      styles  << opts[:style] if opts[:style]
+      styles  << "width:#{opts[:width]}" if opts[:width]
+      #
       puts "<div id=\"#{normalize_id(id)}\" class=\"image\">"
-      puts "<img src=\"#{src}\" alt=\"#{alt}\"#{metrics} />"
+      print "<img src=\"#{src}\" alt=\"#{alt}\""
+      print " class=\"#{classes.join(' ')}\"" unless classes.empty?
+      print " style=\"#{styles.join(' ')}\""  unless styles.empty?
+      puts  " />"
       image_header(id, caption)
       puts "</div>"
     end
 
-    ## コードブロック（//program, //terminal）
-
-    def program(lines, id=nil, caption=nil, optionstr=nil)
-      _codeblock('program', 'code', lines, id, caption, optionstr)
-    end
-
-    def terminal(lines, id=nil, caption=nil, optionstr=nil)
-      _codeblock('terminal', 'cmd-code', lines, id, caption, optionstr)
-    end
+    PERCENT_THRESHOLDS = [
+      10, 20, 25, 30, 33, 40, 50, 60, 67, 70, 75, 80, 90, 100,
+    ]
 
     protected
 
-    def _codeblock(blockname, classname, lines, id, caption, optionstr)
-      ## ブロックコマンドのオプション引数はCompilerクラスでパースすべき。
-      ## しかしCompilerクラスがそのような設計になってないので、
-      ## 仕方ないのでBuilderクラスでパースする。
-      opts = _parse_codeblock_optionstr(optionstr, blockname)
-      CODEBLOCK_OPTIONS.each {|k, v| opts[k] = v unless opts.key?(k) }
+    ## コードブロック（//program, //terminal, //output）
+
+    CLASSNAMES = {
+      "program"   => "code",
+      "terminal"  => "cmd-code",
+      "list"      => "caption-code",
+      "listnum"   => "code",
+      "emlist"    => "emlist-code",
+      "emlistnum" => "emlistnum-code",
+      "source"    => "source-code",
+      "cmd"       => "cmd-code",
+      "output"    => "output",
+    }
+
+    def _codeblock_eolmark()
+      "<small class=\"startereolmark\"></small>"
+    end
+
+    def _codeblock_indentmark()
+      '<span class="indentbar"> </span>'
+    end
+
+    def _render_codeblock(blockname, lines, id, caption_str, opts)
+      caption = caption_str
       #
       if opts['eolmark']
-        lines = lines.map {|line| "#{detab(line)}<small class=\"startereolmark\"></small>" }
+        eolmark = _codeblock_eolmark()   # ex: '{\startereolmark}'
       else
-        lines = lines.map {|line| detab(line) }
+        eolmark = nil
       end
       #
-      indent_w = opts['indentwidth']
-      if indent_w && indent_w > 0
-        indent_str = " " * (indent_w - 1) + '<span class="indentbar"> </span>'
-        lines = lines.map {|line|
-          line.sub(/\A( +)/) {
-            m, n = ($1.length - 1).divmod indent_w
-            " " << indent_str * m << " " * n
-          }
-        }
+      eol = eolmark ? "#{eolmark}\n" : "\n"
+      lines = lines.map {|line|
+        line = _parse_inline(line) {|text| escape(text) }
+      }
+      #
+      indent_width = opts['indent']
+      if indent_width && indent_width > 0
+        lines = _add_indent_mark(lines, indent_width)
       end
       #
+      classname = CLASSNAMES[blockname] || "code"
+      classname += " #{opts['classname']}" if opts['classname']
       puts "<div id=\"#{normalize_id(id)}\" class=\"#{classname}\">" if id.present?
       puts "<div class=\"#{classname}\">"                        unless id.present?
       #
+      classattr = nil
       if id.present? || caption.present?
         str = _build_caption_str(id, caption)
         print "<span class=\"caption\">#{str}</span>\n"
         classattr = "list"
+      end
+      if blockname == "output"
+        classattr = blockname
       else
-        classattr = "emlist"
+        classattr ||= "emlist"
       end
       #
       lang = opts['lang']
@@ -165,7 +216,7 @@ module ReVIEW
       #
       gen = opts['lineno'] ? LineNumberGenerator.new(opts['lineno']).each : nil
       if gen
-        width = opts['linenowidth']
+        width = opts['linenowidth'] || -1
         if width < 0
           format = "%s"
         elsif width == 0
@@ -177,10 +228,10 @@ module ReVIEW
         end
       end
       buf = []
-      start_tag = opts['linenowidth'] >= 0 ? "<em class=\"linenowidth\">" : "<em class=\"lineno\">"
+      start_tag = (opts['linenowidth'] || -1) >= 0 ? "<em class=\"linenowidth\">" : "<em class=\"lineno\">"
       lines.each_with_index do |line, i|
         buf << start_tag << (format % gen.next) << ": </em>" if gen
-        buf << line << "\n"
+        buf << line #<< "\n"
       end
       puts highlight(body: buf.join(), lexer: lang,
                      format: "html", linenum: !!gen,
@@ -191,27 +242,43 @@ module ReVIEW
       print "</div>\n"
     end
 
+    def _add_indent_mark(lines, indent_width)
+      space = " "
+      rexp  = /\A( +)/
+      #
+      width = indent_width
+      mark  = _codeblock_indentmark()  # ex: '{\starterindentmark}'
+      indent = space * (width - 1) + mark
+      nchar = space.length
+      return lines.map {|line|
+        line.sub(rexp) {
+          m, n = ($1.length / nchar - 1).divmod width
+          "#{space}#{indent * m}#{space * n}"
+        }
+      }
+    end
+
     public
 
     ## コードリスト（//list, //emlist, //listnum, //emlistnum, //cmd, //source）
     def list(lines, id=nil, caption=nil, lang=nil)
-      _codeblock("list", "caption-code", lines, id, caption, _codeblock_optstr(lang, false))
+      _codeblock("list", lines, id, caption, _codeblock_optstr(lang, false))
     end
     def listnum(lines, id=nil, caption=nil, lang=nil)
-      _codeblock("listnum", "code", lines, id, caption, _codeblock_optstr(lang, true))
+      _codeblock("listnum", lines, id, caption, _codeblock_optstr(lang, true))
     end
     def emlist(lines, caption=nil, lang=nil)
-      _codeblock("emlist", "emlist-code", lines, nil, caption, _codeblock_optstr(lang, false))
+      _codeblock("emlist", lines, nil, caption, _codeblock_optstr(lang, false))
     end
     def emlistnum(lines, caption=nil, lang=nil)
-      _codeblock("emlistnum", "emlistnum-code", lines, nil, caption, _codeblock_optstr(lang, true))
+      _codeblock("emlistnum", lines, nil, caption, _codeblock_optstr(lang, true))
     end
     def source(lines, caption=nil, lang=nil)
-      _codeblock("source", "source-code", lines, nil, caption, _codeblock_optstr(lang, false))
+      _codeblock("source", lines, nil, caption, _codeblock_optstr(lang, false))
     end
     def cmd(lines, caption=nil, lang=nil)
       lang ||= "shell-session"
-      _codeblock("cmd", "cmd-code", lines, nil, caption, _codeblock_optstr(lang, false))
+      _codeblock("cmd", lines, nil, caption, _codeblock_optstr(lang, false))
     end
     def _codeblock_optstr(lang, lineno_flag)
       arr = []
@@ -295,19 +362,16 @@ module ReVIEW
       puts "</li>"
     end
 
-    ## 入れ子可能なブロック命令
-
-    def on_minicolumn(type, caption, &b)
-      puts "<div class=\"#{type}\">"
-      puts "<p class=\"caption\">#{compile_inline(caption)}</p>" if caption.present?
-      yield
-      puts '</div>'
+    def dl_dd_begin()
+      puts "<dd>"
     end
-    protected :on_minicolumn
 
-    def on_sideimage_block(imagefile, imagewidth, option_str=nil, &b)
-      imagefile, imagewidth, opts = validate_sideimage_args(imagefile, imagewidth, option_str)
-      filepath = find_image_filepath(imagefile)
+    def dl_dd_end()
+      puts "</dd>"
+    end
+
+    ## 画像横に文章
+    def _render_sideimage(filepath, imagewidth, opts, &b)
       side     = (opts['side'] || 'L') == 'L' ? 'left' : 'right'
       imgclass = opts['border'] ? "image-bordered" : nil
       normalize = proc {|s| s =~ /^\A(\d+(\.\d+))%\z/ ? "#{$1.to_f/100.0}\\textwidth" : s }
@@ -326,6 +390,18 @@ module ReVIEW
       puts "  </div>\n"
       puts "</div>\n"
     end
+
+    ## 入れ子可能なブロック命令
+
+    def on_minicolumn(type, caption=nil, &b)
+      with_context(:minicolumn) do
+        puts "<div class=\"miniblock miniblock-#{type}\">"
+        puts "<p class=\"miniblock-caption\">#{compile_inline(caption)}</p>" if caption.present?
+        yield
+        puts '</div>'
+      end
+    end
+    protected :on_minicolumn
 
     #### ブロック命令
 
@@ -385,10 +461,81 @@ module ReVIEW
     end
 
     ## 章 (Chapter) の概要
-    def abstract(lines)
+    def on_abstract_block()
       puts '<div class="abstract">'
-      puts lines
+      yield
       puts '</div>'
+    end
+
+    ## 章 (Chapter) の著者
+    def on_chapterauthor_block(name)
+      puts "<div class=\"chapterauthor\">#{escape(name)}</div>"
+    end
+
+    ## 会話リスト
+    def _render_talklist(opts, &b)
+      c = opts[:classname]
+      s = c ? " #{c}" : nil
+      puts "<div class=\"talk-outer#{s}\">"
+      puts "  <ul class=\"talk-list#{s}\">"
+      yield
+      puts "  </ul>"
+      puts "</div>"
+    end
+
+    ## 会話項目
+    def _render_talk(image_filepath=nil, name=nil, &b)
+      puts "<li class=\"talk-item\">"
+      print "  <span class=\"talk-chara\">"
+      if image_filepath.present?
+        print "<img class=\"talk-image\" src=\"#{image_filepath}\"/>"
+      else
+        s = compile_inline(name || '')
+        print "<b class=\"talk-name\">#{s}</b>"
+      end
+      puts "</span>"
+      print "  <div class=\"talk-text\">"
+      yield
+      if @output.string.end_with?("\n")
+        @output.seek(-1, IO::SEEK_CUR)   # 改行文字を取り除く
+        #@output.string.chomp!           # これだとヌル文字が入ってしまう
+      end
+      puts "</div>"
+      puts "</li>"
+    end
+
+    ## キーと説明文のリスト
+    def _render_desclist(opts, &b)
+      bkup = @_desclist_opts
+      @_desclist_opts = opts
+      classnames = ['desc-list']
+      classnames << 'compact'        if opts[:compact]
+      classnames << 'item-bold'      if opts[:bold]
+      classnames << opts[:classname] if opts[:classname]
+      puts "<dl class=\"#{classnames.join(' ')}\">"
+      yield
+      puts "</dl>"
+      @_desclist_opts = bkup
+    end
+
+    ## キーと説明文
+    def _render_desc(key, &b)
+      opts = @_desclist_opts
+      s = compile_inline(key)
+      s = "<b>#{s}</b>" if opts[:bold]
+      puts "  <dt class=\"desc\">#{s}</dt>"
+      puts "  <dd class=\"desc\">"
+      yield
+      puts "  </dd>"
+    end
+
+    ## 縦方向の空きを入れる
+    def _render_vspace(size)
+      puts "<div class=\"vspace\" style=\"height:#{size}\"></div>"
+    end
+
+    def _render_addvspace(size)
+      puts "<div class=\"addvspace\" style=\"height:#{size}\"></div>"
     end
 
     ## 章タイトルを独立したページに
@@ -397,10 +544,8 @@ module ReVIEW
     end
 
     ## 縦方向のスペースがなければ改ページ
-    def needvspace(builder_name, height)
-      if builder_name == 'html' || builder_name == 'epub'
-        puts "<div style=\"height:#{height}\"></div>"
-      end
+    def _render_needvspace(height)
+      puts "<div style=\"height:#{height}\"></div>"
     end
 
     ## 段(Paragraph)の終わりにスペースを入れる
@@ -445,15 +590,17 @@ module ReVIEW
     ## ノート（//note{ ... //}）
     ## （入れ子対応なので、中に箇条書きや別のブロックを入れられる）
     def on_note_block(label=nil, caption=nil)
-      caption, label = label, nil if caption.nil?
-      if label
-        puts "<div class=\"note\" id=\"#{label}\">"
-      else
-        puts "<div class=\"note\">"
+      with_context(:minicolumn) do
+        caption, label = label, nil if caption.nil?
+        if label
+          puts "<div class=\"note\" id=\"#{label}\">"
+        else
+          puts "<div class=\"note\">"
+        end
+        puts "<h5>#{compile_inline(caption)}</h5>" if caption.present?
+        yield
+        puts "</div>"
       end
-      puts "<h5>#{compile_inline(caption)}</h5>" if caption.present?
-      yield
-      puts "</div>"
     end
     def note(lines, label=nil, caption=nil)
       on_quote_block(label, caption) do
@@ -472,6 +619,89 @@ module ReVIEW
       puts "</div>"
     end
 
+    ## テーブル
+    def table(lines, id=nil, caption=nil, option=nil)
+      super
+    end
+
+    def table_header(id, caption, options)
+      if id.present?
+        begin
+          num = @chapter.table(id).number
+        rescue KeyError
+          error "no such table: #{id}"
+        end
+        s1 = I18n.t('table')
+        s2 = get_chap() \
+           ? I18n.t('format_number_header', [get_chap(), num]) \
+           : I18n.t('format_number_header_without_chapter', [num])
+        s3 = I18n.t('caption_prefix')
+        puts "<p class=\"caption\">#{s1}#{s2}#{s3}#{compile_inline(caption||'')}</p>"
+      elsif caption.present?
+        puts "<p class=\"caption\">#{compile_inline(caption||'')}</p>"
+      end
+    end
+
+    def table_begin(_ncols, fontsize: nil)
+      if fontsize
+        puts "<table style=\"font-size:#{fontsize}\">"
+      else
+        puts "<table>"
+      end
+    end
+
+    protected
+
+    def _table_before(id, caption, opts)
+      class_ = opts[:csv] ? "table table-nohline" : "table"
+      if id.present?
+        puts "<div id=\"#{normalize_id(id)}\" class=\"#{class_}\">"
+      else
+        puts "<div class=\"#{class_}\">"
+      end
+    end
+
+    def _table_after(id, caption, opts)
+      puts "</div>"
+    end
+
+    def _table_bottom(hline: false)
+    end
+
+    def _table_tr(cells, hline: false)
+      if hline
+        "<tr class=\"hline\">#{cells.join}</tr>"
+      else
+        "<tr>#{cells.join}</tr>"
+      end
+    end
+
+    public
+
+    ## //imgtable
+    def imgtable(lines, id, caption=nil, option=nil)
+      super
+    end
+
+    protected
+
+    def _render_imgtable(id, caption, opts)
+      puts "<div id=\"#{normalize_id(id)}\" class=\"imgtable image\">"
+      table_header(id, caption, opts)
+      puts "  <div>"
+      yield
+      puts "  </div>"
+      puts "</div>"
+    end
+
+    def _render_imgtable_caption(caption)
+    end
+
+    def _render_imgtable_label(id)
+    end
+
+    public
+
     #### インライン命令
 
     def inline_fn(id)
@@ -483,6 +713,16 @@ module ReVIEW
       return "<sup><a id=\"fnb-#{normalize_id(id)}\" href=\"#fn-#{normalize_id(id)}\" class=\"noteref\"#{type}>*#{@chapter.footnote(id).number}</a></sup>"
     rescue KeyError
       error "unknown footnote: #{id}"
+    end
+
+    ## 改段落（箇条書き内では空行を入れられないため）
+    def inline_par(arg)
+      case arg
+      when 'i'
+        "<p class=\"indent\">"
+      else
+        "<p>"
+      end
     end
 
     ## ファイル名
@@ -552,7 +792,7 @@ module ReVIEW
 
     def on_inline_i()     ; "<i>#{yield}</i>"           ; end
     def on_inline_b()     ; "<b>#{yield}</b>"           ; end
-    def on_inline_code()  ; "<code>#{yield}</code>"     ; end
+    #def on_inline_code()  ; "<code>#{yield}</code>"     ; end
     def on_inline_tt()    ; "<tt>#{yield}</tt>"         ; end
     def on_inline_del()   ; "<s>#{yield}</s>"           ; end
     def on_inline_sub()   ; "<sub>#{yield}</sub>"       ; end
@@ -563,6 +803,15 @@ module ReVIEW
     def on_inline_ami()   ; "<span class=\"ami\">#{yield}</span>"; end
     def on_inline_balloon(); "<span class=\"balloon\">← #{yield}</span>"; end
 
+    def on_inline_code()
+      return "<code class=\"inline-code\">#{yield}</code>"
+    end
+
+    ## 「“」と「”」で囲む
+    def on_inline_qq()
+      "“#{yield}”"
+    end
+
     def build_inline_href(url, escaped_label)  # compile_href()をベースに改造
       flag_link = @book.config['externallink']
       return _inline_hyperlink(url, escaped_label, flag_link)
@@ -571,7 +820,8 @@ module ReVIEW
     def inline_hlink(str)
       url, label = str.split(/, /, 2)
       flag_link = @book.config['externallink']
-      return _inline_hyperlink(url, escape(label), flag_link)
+      label_ = label.present? ? escape(label) : nil
+      return _inline_hyperlink(url, label_, flag_link)
     end
 
     def _inline_hyperlink(url, escaped_label, flag_link)
@@ -609,10 +859,48 @@ module ReVIEW
       "<a>#{escape(s)}</a>"
     end
 
+    ## 索引に載せる語句 (@<idx>{}, @<term>{})
+    public
+    def inline_idx(str)
+      s1, s2 = _compile_term(str)
+      %Q`<span class="index" title="#{s2}">#{s1}</span>`
+    end
+    def inline_hidx(str)
+      _, s2 = _compile_term(str)
+      %Q`<span class="index" title="#{s2}"></span>`
+    end
+    def inline_term(str)
+      s1, s2 = _compile_term(str)
+      %Q`<span class="index term" title="#{s2}">#{s1}</span>`
+    end
+    def on_inline_termnoidx(str)
+      %Q`<span class="term">#{yield}</span>`
+    end
+
+    def _compile_term(str)
+      arr = []
+      placeholder = "---"
+      display_str, see = parse_term(str, placeholder) do |term, term_e, yomi|
+        if yomi
+          arr << escape(yomi)
+        else
+          arr << term_e
+        end
+      end
+      title_attr = arr.join()
+      title_attr += " → see: #{escape(see)}" if see
+      return display_str, title_attr
+    end
+    private :_compile_term
+
   end
 
 
   class TEXTBuilder
+
+    def target_name
+      "text"
+    end
 
     ## nestable inline commands
 

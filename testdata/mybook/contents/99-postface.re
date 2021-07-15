@@ -1,4 +1,4 @@
-= あとがき
+= あとがき / おわりに
 
 いかがだったでしょうか。
 感想や質問は随時受けつけています。
@@ -36,3 +36,4 @@
  * 『@<hlink>{https://kauplan.org/books/errmsg/, Rubyのエラーメッセージが読み解けるようになる本}』（技術書典6）
  * 『@<hlink>{https://kauplan.org/books/sql/, わかりみSQL}』（技術書典7）
  * 『@<hlink>{https://kauplan.org/books/pymagic/, Pythonの黒魔術}』（技術書典8）
+ * 『@<hlink>{https://techbookfest.org/product/6602586671022080?productVariantID=6362324925415424, カウプランレポート vol.01}』（技術書典10）

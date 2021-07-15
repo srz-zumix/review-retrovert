@@ -1,6 +1,14 @@
+# -*- coding: utf-8 -*-
+
+##
+## 注：タブ文字を使わないこと（使うとエラーになる）
+##
+
+## まえがき
 PREDEF:
   - 00-preface.re
 
+## 本文
 CHAPS:
   - 01-install.re
   - 02-tutorial.re
@@ -10,25 +18,43 @@ CHAPS:
   - 06-bestpractice.re
   - r0-root.re
 
+## 付録
 APPENDIX:
   - 91-compare.re
   - 92-filelist.re
   - 93-background.re
 
+## あとがき
 POSTDEF:
   - 99-postface.re
 
 ##
-## ■Tips
-## 第I部、第II部、…のように「部」を使うには、「CHAPS:」を次のようにする。
+## 【Tips】
 ##
-##   CHAPS:
-##     - 部タイトル:
-##         - chap01.re
-##         - chap02.re
-##     - 部タイトル:
-##         - chap03.re
-##         - chap04.re
+## ・付録やまえがきやあとがきがなければ、空にする。
+##   例：
 ##
-## 「部タイトル」の最後に半角の「:」をつけることに注意。
+##     PREDEF:
+##
+##     CHAPS:
+##       - 01-install.re
+##
+##     APPENDIX:
+##
+##     POSTDEF:
+##
+##
+## ・第I部、第II部、…のように「部」を使うには、次のようにする。
+##   （部タイトルの最後に半角の「:」をつけることに注意）
+##
+##     CHAPS:
+##       - 初級編:
+##           - 01-install.re
+##           - 02-tutorial.re
+##       - 中級編:
+##           - 03-syntax.re
+##           - 04-customize.re
+##       - 上級編:
+##           - 05-faq.re
+##           - 06-bestpractice.re
 ##

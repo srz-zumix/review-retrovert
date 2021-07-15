@@ -18,6 +18,12 @@ starter:
   ## ・B5 … 少年ジャンプ、ジャポニカ学習帳の大きさ
   pagesize:  A5            # A5 or B5
 
+  ## 上下左右の塗り足し幅（印刷用PDFのみ）
+  ## （参考：https://www.eikou.com/making/basis#nuritashi ）
+  bleedsize:           # 通常は指定しなくてよい
+  #bleedsize: 3mm      # 背景色を使うなら、上下左右に3mmの塗り足しが必要
+  bleedcolor:          # 通常は無指定、確認時のみ使用（red/blue/green/yellow/gray）
+
   ## フォントサイズ
   ## ・A5なら「9pt」、B5なら「10pt」を推奨
   ## ・初心者向け入門書なら大きめにして、A5「10pt」、B5「11pt」を推奨
@@ -34,6 +40,35 @@ starter:
   fontfamily_en: roman     # (英数字) roman: ローマン体, sansserif: サンセリフ体
   fontweight_ja: normal    # (日本語) normal: 通常, light: 細字
   fontweight_en: normal    # (英数字) normal: 通常, light: 細字
+
+  ## 表紙や大扉（タイトルページ）や奥付のページのPDFファイルを指定
+  ## ・PDFファイルは `images/` フォルダに置くこと。
+  ## ・PDFは1ファイルにつき1ページであること。もし複数ページのPDFを指定する場合は
+  ##   取り込むページ番号を `cover.pdf<2>` のように指定すること（実験的機能）。
+  ## ・ファイル名の後ろに `*` をつけると、上下左右の塗り足し部分が除かれる。
+  ## ・必要なら配列を使って複数ファイルを指定可能（例： [a.pdf, b.pdf]）。
+  frontcover_pdffile: cover_a5.pdf   # 表表紙（電子用のみ、印刷用にはつかない）
+  #frontcover_pdffile: cover.pdf<2>* # （ページ番号を指定し、塗り足しを除く場合）
+  backcover_pdffile:  null           # 裏表紙（電子用のみ、印刷用にはつかない）
+  titlepage_pdffile:  null           # 大扉（印刷用・電子用どちらにもつく）
+  colophon_pdffile:   null           # 奥付（印刷用・電子用どちらにもつく）
+  includepdf_option:  null           # PDFの位置調整が必要な場合
+  #includepdf_option:  "offset=-2.3mm 2.3mm"  # 位置調整の指定例
+
+  ## ノンブル（1枚目からの通し番号）の設定
+  ## （注：印刷用PDFのときのみ有効、電子用PDFではノンブルはつかない）
+  nombre:               on           # on ならノンブルをつける
+  nombre_sidemargin:    0.5mm        # ページ左右からのマージン幅
+  nombre_bottommargin:  2.0mm        # ページ下からのマージン高
+  nombre_fontcolor:     gray         # 'gray' or 'black'
+  nombre_fontsize:      6pt          # フォントサイズ（6〜8pt）
+  nombre_startnumber:   1            # ノンブルの開始番号（3から始める流儀もある）
+
+  ## 部 (Part) の開始番号（上・下巻に分割する場合に必要）
+  part_startnumber: 1          # 5 なら「第5部」から始まる
+
+  ## 章 (Chapter) の開始番号
+  chapter_startnumber: 1       # 0 なら「第0章」から始まる
 
   ## 章 (Chapter) タイトルの装飾
   ## （none: なし、underline: 下線、boldlines: 上下に太線）
@@ -55,8 +90,9 @@ starter:
   section_notopmargin: true
 
   ## 節 (Section) タイトルの装飾
-  ## （none: なし、underline: 下線、grayback: 灰色の背景色、leftline: 左に縦線, numbox: 節番号を黒背景に）
-  ## （節タイトルが長くて二行になる場合は「leftline」または「numbox」がお勧め）
+  ## （none: なし、underline: 下線、grayback: 灰色の背景色、
+  ##   leftline: 左に縦線、numbox: 節番号を黒背景に、circle: 円）
+  ## （節タイトルが長くて二行になる場合は「leftline」「numbox」「circle」がお勧め）
   section_decoration: grayback
 
   ## 項 (Subsection) タイトルの装飾
@@ -72,13 +108,7 @@ starter:
   ## キャプション直後での改ページを防ぐために、最低限必要とする高さ
   ## （もしキャプション直後での改ページが発生するなら値を増やす。
   ##   もし十分なスペースがあるのに改ページされるなら値を減らす。）
-  caption_needspace: 4.6zh        # 全角文字4.6個分の高さ（実験で得た境界値）
-
-  ## プログラム（//list）のフォントサイズ
-  program_fontsize: normal  # 'normal' or 'small'
-
-  ## ターミナル（//cmd, //terminal）のフォントサイズ
-  terminal_fontsize: normal  # 'normal' or 'small'
+  caption_needspace: 4.0zh        # 全角文字4個分の高さ（実験で得た境界値）
 
   ## プログラム用（//list）の等幅フォント。
   ##  * lmodern … LaTeXのデフォルト。1とl、0とOが見分けにくい。太字が目立たない。
@@ -106,11 +136,63 @@ starter:
   ## 詳細は https://twitter.com/_kauplan/status/1162167825407963137
   terminal_widen:  0.0mm         # 0.3mmとか
 
+  ## プログラム（//list）のデフォルトオプション
+  ## （注：YAMLでは `on, off, ~` は `true, false, null` と同じ）
+  program_default_options:
+    fold:        on        # on なら長い行を右端で折り返す
+    foldmark:    on        # on なら折り返し記号をつける
+    eolmark:     off       # on なら行末に改行記号をつける
+    lineno:      ~         # 1 なら行番号をつける
+    linenowidth: ~         # 行番号の幅を半角文字数で指定する
+    indent:      ~         # インデント幅（指定するとインデント記号がつく）
+    fontsize:    ~         # null, or small/x-small/xx-smal
+    lang:        ~         # デフォルトのプログラミング言語名
+    #file:       ~         # （使用しない）
+    encoding:    utf-8     # ファイルの文字コード
+    widecharfit: off       # on なら全角1文字を半角2文字幅に
+    charspace:   ~         # 文字の間隔を空ける/詰める（例：-0.03em）
+
+  ## ターミナル（//terminal）のデフォルトオプション
+  ## （注：YAMLでは `on, off, ~` は `true, false, null` と同じ）
+  terminal_default_options:
+    fold:        on        # on なら長い行を右端で折り返す
+    foldmark:    on        # on なら折り返し記号をつける
+    eolmark:     off       # on なら行末に改行記号をつける
+    lineno:      ~         # 1 なら行番号をつける
+    linenowidth: ~         # 行番号の幅を半角文字数で指定する
+    indent:      ~         # インデント幅（指定するとインデント記号がつく）
+    fontsize:    ~         # null, or small/x-small/xx-smal
+    lang:        ~         # デフォルトのプログラミング言語名
+    #file:       ~         # （使用しない）
+    encoding:    utf-8     # ファイルの文字コード
+    widecharfit: off       # on なら全角1文字を半角2文字幅に
+    charspace:   ~         # 文字の間隔を空ける/詰める（例：-0.03em）
+
   ## プログラム（//list）を枠で囲むか？
   program_border: true
 
   ## ターミナル（//terminal, //cmd）を枠で囲むか？
   terminal_border: false
+
+
+  ## 出力結果（//output）の設定
+  output_ttfont:   beramono
+  output_widen:    0.0mm         # 0.3mmとか
+  output_border:   true          # 枠線で囲むか？
+  output_default_options:
+    fold:        on        # on なら長い行を右端で折り返す
+    foldmark:    on        # on なら折り返し記号をつける
+    eolmark:     off       # on なら行末に改行記号をつける
+    lineno:      ~         # 1 なら行番号をつける
+    linenowidth: ~         # 行番号の幅を半角文字数で指定する
+    indent:      ~         # インデント幅（指定するとインデント記号がつく）
+    fontsize:    ~         # null, or small/x-small/xx-smal
+    lang:        ~         # デフォルトのプログラミング言語名
+    #file:       ~         # （使用しない）
+    encoding:    utf-8     # ファイルの文字コード
+    widecharfit: on        # on なら全角1文字を半角2文字幅に
+    charspace:   ~         # 文字の間隔を空ける/詰める（例：-0.03em）
+
 
   ## 文章中の「@<code>{...}」の背景色を薄いグレーにするか？
   inlinecode_gray: false
@@ -137,3 +219,46 @@ starter:
 
   ## @<secref>{}において、親の節のタイトルを含めるか？
   secref_parenttitle: false # trueなら親の節のタイトルを含める
+
+  ## PDF中のテキストをマウスで選択したとき、折り返し記号やインデント記号を選択対象から外すか？
+  ## ・trueだとコンパイル時間が大幅に増えるので、デフォルトではfalse。
+  ## ・環境変数「$STARTER_EXCLUDE_MOUSESELECT=on」でもtrueにできる。
+  ## ・AcrobatReaderでは機能するが、macOS Preview.appでは機能しない。
+  exclude_mouseselect: false
+
+
+  ## 説明リスト（`//desclist`）のデフォルトオプション
+  ## （注：YAMLでは `on` は `true` と同じ、`off` は `false` と同じ）
+  desclist_default_options:
+    indent:      3zw       # 説明文の左側の空き幅
+    space:       1zw       # キーや用語の直後の空き幅
+    bold:        off       # on ならキーや用語を太字に
+    compact:     off       # on ならキーや用語の直後で改行しない
+    listmargin:  0.5zw     # 説明リスト上下の空きの高さ
+    itemmargin:  0mm       # 説明項目間の空きの高さ
+    classname:             # HTMLタグに含めるクラス名
+
+  ## 会話形式（`//talklist`）のデフォルトオプション
+  ## （注：YAMLでは `on` は `true` と同じ、`off` は `false` と同じ）
+  talklist_default_options:
+    indent:      6zw       # 本文左端から会話部分までの幅
+    separator:   "："      # 名前と会話文との区切り文字列
+    imagewidth:  4zw       # 画像幅
+    imageheight:           # 画像高さ（通常は無指定でよい）
+    imageborder: off       # on なら画像に枠線をつける
+    needvspace:  4zw       # 必要な空きがなければ改ページ
+    itemmargin:  1mm       # 会話項目間の空き
+    listmargin:  0.5zw     # 会話リストの最初と最後の空き
+    itemstart:   "「"      # 会話文の先頭につける文字列
+    itemend:     "」"      # 会話文の最後につける文字列
+    classname:             # HTMLタグに含めるクラス名
+
+  ## 大量の会話形式をより簡単に入力するための設定
+  ## （例：`//t[b1]` が `//talk[avatar-b][]` の短縮形となる）
+  talk_shortcuts:
+    ## アイコン画像を使う場合
+    "b1":         {image: "avatar-b"}
+    "g1":         {image: "avatar-g"}
+    ## アイコン画像を使わない場合
+    #"b1":        {name: "アリス"}
+    #"g1":        {name: "ボブ"}

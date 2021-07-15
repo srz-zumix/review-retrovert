@@ -4,12 +4,14 @@
 ## change ReVIEW source code
 ##
 
+require_relative './review-book'          ## Book::Baseクラスを修正
 require_relative './review-compiler'      ## Compilerクラスを修正
 require_relative './review-builder'       ## Builderクラスを修正
 require_relative './review-latexbuilder'  ## LaTeX用の機能を修正
 require_relative './review-htmlbuilder'   ## HTML用の機能を修正
 require_relative './review-textbuilder'   ## テキスト用の機能を修正
 #require_relative './review-pdfmaker'     ## PDF用の機能を修正 (for Rake task)
+require_relative './review-epubbuilder'   ## テキスト用の機能を修正
 require_relative './review-webmaker'      ## Webページ用の機能を修正
 require_relative './review-tocparser'     ## Web用目次作成機能を修正
 

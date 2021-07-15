@@ -1,0 +1,9 @@
+.bundle
+.idea
+.vscode
+pkg
+bin
+tmp
+.rake*
+.rspec_status
+Gemfile.lock
