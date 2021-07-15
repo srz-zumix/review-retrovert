@@ -195,6 +195,8 @@ RSpec.describe 'convert result' do
       expect(text).not_to be_include('$@@<b>{}')
       expect(text).not_to be_include('$@@<b>$$')
       expect(text).not_to be_include('$@@<b>||')
+      expect(text).not_to be_match(/@<.*?>\|[^|]*?@<.*?>\|/)
+      expect(text).not_to be_match(/@<.*?>\$[^$]*?@<.*?>\$/)
     end
 
     it 'empty id set to' do

@@ -554,6 +554,7 @@ module ReVIEW
             next
           end
           if im.nil?
+            # for {}
             im2 = body.match(/(.*)(@<.*?>)#{Regexp.escape(m[1..3].join)}(.*)/)
             unless im2.nil?
               rep = ""
@@ -566,6 +567,15 @@ module ReVIEW
               end
               content.gsub!(matched) { |mm| rep }
               found = true
+            else
+              # for |$
+              if body.match(/.*@<.*?>$/)
+                outcmd_fence = m[1..3].join
+                incmd_fence = "$|".gsub(outcmd_fence, '')
+                rep = "#{m[0..3].join}#{body}#{incmd_fence}"
+                content.gsub!(/#{Regexp.escape(matched)}(.*?)#{Regexp.escape(outcmd_fence)}/, "#{rep}\\1#{incmd_fence}")
+                found = true
+              end
             end
           else
             outcmd_begin = m[0..3].join
