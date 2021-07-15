@@ -195,6 +195,8 @@ RSpec.describe 'convert result' do
       expect(text).not_to be_include('$@@<b>{}')
       expect(text).not_to be_include('$@@<b>$$')
       expect(text).not_to be_include('$@@<b>||')
+      expect(text).not_to be_match(/@<.*?>\|[^|]*?@<.*?>\|/)
+      expect(text).not_to be_match(/@<.*?>\$[^$]*?@<.*?>\$/)
     end
 
     it 'empty id set to' do
@@ -296,6 +298,14 @@ RSpec.describe 'convert result' do
           expect(text).not_to be_match(/^\/\/image\[.*?width=.*?/)
           expect(text).to     be_match(/^\/\/image\[.*?scale=.*?/)
         end
+      end
+
+      it 'cmd caption' do
+        expect(text).not_to be_match(/^\/\/terminal/)
+        expect(text).not_to be_match(/^\/\/cmd\[.*?\]/)
+        expect(text).to     be_match(/^\/\/cmd{/)
+        expect(text).not_to be_match(/^\?$/)
+        expect(text).to     be_match(/^PDFを生成$/)
       end
 
       it '? id set to' do
