@@ -151,18 +151,17 @@ module ReVIEW
         end
       end
 
-      def replace_compatible_block_command_outline(content, command, new_command, option_count)
-        if option_count > 0
-          content.gsub!(/^\/\/#{command}(?<option>(\[[^\r\n]*?\]){0,#{option_count}})(\[[^\r\n]*\])*{(?<inner>.*?)\/\/}/m, "//#{new_command}\\k<option>{\\k<inner>//}")
-          content.gsub!(/^\/\/#{command}(?<option>(\[[^\r\n]*?\]){0,#{option_count}})(\[[^\r\n]*\])*$/, "//#{new_command}\\k<option>")
-        else
-          content.gsub!(/^\/\/#{command}(\[[^\r\n]*\])*{(?<inner>.*?)\/\/}/m, "//#{new_command}{\\k<inner>//}")
-          content.gsub!(/^\/\/#{command}(\[[^\r\n]*\])*$/, "//#{new_command}")
-        end
+      def replace_compatible_block_command_outline(content, command, new_command, option_count, begin_option_pos=0)
+        content.gsub!(/^\/\/#{command}(\[[^\r\n]*\]){0,#{begin_option_pos}}(?<option>(\[[^\r\n]*?\]){0,#{option_count}})(\[[^\r\n]*\])*{(?<inner>.*?)\/\/}/m, "//#{new_command}\\k<option>{\\k<inner>//}")
+        content.gsub!(/^\/\/#{command}(\[[^\r\n]*\]){0,#{begin_option_pos}}(?<option>(\[[^\r\n]*?\]){0,#{option_count}})(\[[^\r\n]*\])*$/, "//#{new_command}\\k<option>")
       end
 
       def exclude_exta_option(content, cmd, max_option_num)
         replace_compatible_block_command_outline(content, cmd, cmd, max_option_num)
+      end
+
+      def starter_caption_to_text(content, command, n)
+        content.gsub!(/^\/\/#{command}(?<option>(\[[^\r\n]*?\]){0,#{n-1}})\[(?<caption>#{@r_option_inner})\](?<post>.*)$/, "\\k<caption>\n//#{command}\\k<option>\\k<post>")
       end
 
       def replace_compatible_block_command_to_outside(content, command, new_command, option_count, add_options="", new_body="")
@@ -339,8 +338,8 @@ module ReVIEW
         }
       end
 
-      def remove_option_arg(content, commands, n, arg)
-        content.gsub!(/(?<prev>^\/\/(#{commands.join('|')})(\[.*?\]){#{n-1}}\[.*?)((,|)\s*#{arg}=[^,\]]*)(?<post>.*?\])/, '\k<prev>\k<post>')
+      def remove_option_param(content, commands, n, param)
+        content.gsub!(/(?<prev>^\/\/(#{commands.join('|')})(\[.*?\]){#{n-1}}\[.*?)((,|)\s*#{param}=[^,\]]*)(?<post>.*?\])/, '\k<prev>\k<post>')
       end
 
       def remove_starter_options(content)
@@ -351,13 +350,13 @@ module ReVIEW
             "scale=#{value.to_i * 0.01}"
           }
         }
-        remove_option_arg(content, ["image"], 3, "width")
+        remove_option_param(content, ["image"], 3, "width")
         # image border
-        remove_option_arg(content, ["image"], 3, "border")
+        remove_option_param(content, ["image"], 3, "border")
         # image pos
-        remove_option_arg(content, ["image"], 3, "pos")
+        remove_option_param(content, ["image"], 3, "pos")
         # list lineno
-        remove_option_arg(content, ["list"], 3, "lineno")
+        remove_option_param(content, ["list"], 3, "lineno")
       end
 
       # talklist to //#{cmd}[]{ //emlist[]{}... }
@@ -495,7 +494,7 @@ module ReVIEW
 
       def replace_starter_command(content)
         replace_compatible_block_command_outline(content, 'program', 'list', 2)
-        replace_compatible_block_command_outline(content, 'terminal', 'cmd', 1)
+        replace_compatible_block_command_outline(content, 'terminal', 'cmd', 1, 1)
         replace_compatible_block_command_outline(content, 'output', 'list', 3)
         replace_compatible_block_command_to_outside(content, 'sideimage', 'image', 1, '[]')
         replace_block_command_outline(content, 'abstract', 'lead', true)
@@ -503,14 +502,15 @@ module ReVIEW
         delete_block_command(content, 'needvspace')
         delete_block_command(content, 'clearpage')
         delete_block_command(content, 'flushright')
-        delete_block_command(content, 'centering')
         delete_block_command(content, 'paragraphend')
+        delete_block_command_outer(content, 'centering')
 
         # convert starter option
         convert_table_option(content)
 
         # delete starter option
-        exclude_exta_option(content, 'cmd', 0)
+        # exclude_exta_option(content, 'cmd', 0)
+        starter_caption_to_text(content, 'cmd', 1)
         exclude_exta_option(content, 'imgtable', 2)
         exclude_exta_option(content, 'table', 2)
         # exclude_exta_option(content, 'tsize', 1)

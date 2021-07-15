@@ -298,6 +298,14 @@ RSpec.describe 'convert result' do
         end
       end
 
+      it 'cmd caption' do
+        expect(text).not_to be_match(/^\/\/terminal/)
+        expect(text).not_to be_match(/^\/\/cmd\[.*?\]/)
+        expect(text).to     be_match(/^\/\/cmd{/)
+        expect(text).not_to be_match(/^\?$/)
+        expect(text).to     be_match(/^PDFを生成$/)
+      end
+
       it '? id set to' do
         expect(text).not_to be_match(/^\/\/table\[[^\[\]]*?\]{/)
         expect(text).not_to be_match(/^\/\/list\[[^\[\]]*?\]{/)
