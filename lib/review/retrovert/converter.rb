@@ -22,6 +22,7 @@ module ReVIEW
         @ird = false
         @talklist_replace_cmd = "note"
         @desclist_replace_cmd = "info"
+        @talk_icon_scale = 0.1
 
         @r_option_inner = '(.*?\\[.*?\\\\\\].*?)*.*?'
       end
@@ -377,14 +378,14 @@ module ReVIEW
           if avatar.length > 0
             kv = @talk_shortcuts[avatar]
             if kv&.key?('image')
-              "//indepimage[#{kv['image']}]\n//emlist[]#{traling_options}{"
+              "//indepimage[#{kv['image']}][scale=#{@talk_icon_scale}]\n//emlist[]#{traling_options}{"
             elsif kv&.key?('name')
               "//emlist[#{kv['name']}]{"
             else
-              "//indepimage#{first_option}\n//emlist[]#{traling_options}{"
+              "//indepimage#{first_option}[sacale=#{@talk_icon_scale}]\n//emlist[]#{traling_options}{"
             end
           else
-            "//emlist#{first_option}#{traling_options}{"
+            "//emlist#{traling_options}{"
           end
         }
       end
