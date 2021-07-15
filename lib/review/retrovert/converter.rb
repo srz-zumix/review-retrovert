@@ -152,8 +152,12 @@ module ReVIEW
       end
 
       def replace_compatible_block_command_outline(content, command, new_command, option_count, begin_option_pos=0)
-        content.gsub!(/^\/\/#{command}(\[[^\r\n]*\]){0,#{begin_option_pos}}(?<option>(\[[^\r\n]*?\]){0,#{option_count}})(\[[^\r\n]*\])*{(?<inner>.*?)\/\/}/m, "//#{new_command}\\k<option>{\\k<inner>//}")
-        content.gsub!(/^\/\/#{command}(\[[^\r\n]*\]){0,#{begin_option_pos}}(?<option>(\[[^\r\n]*?\]){0,#{option_count}})(\[[^\r\n]*\])*$/, "//#{new_command}\\k<option>")
+        content.gsub!(/^\/\/#{command}(\[[^\r\n]*?\]){0,#{begin_option_pos}}(?<option>(\[[^\r\n]*?\]){0,#{option_count}})(\[[^\r\n]*\])*{(?<inner>.*?)\/\/}/m, "//#{new_command}\\k<option>{\\k<inner>//}")
+        content.gsub!(/^\/\/#{command}(\[[^\r\n]*?\]){0,#{begin_option_pos}}(?<option>(\[[^\r\n]*?\]){0,#{option_count}})(\[[^\r\n]*\])*$/, "//#{new_command}\\k<option>")
+        # if begin_option_pos > 0
+        #   content.gsub!(/^\/\/#{command}(\[[^\r\n]*?\]){0,#{begin_option_pos}}{(?<inner>.*?)\/\/}/m, "//#{new_command}{\\k<inner>//}")
+        #   content.gsub!(/^\/\/#{command}(\[[^\r\n]*?\]){0,#{begin_option_pos}}$/, "//#{new_command}")
+        # end
       end
 
       def exclude_exta_option(content, cmd, max_option_num)

@@ -300,6 +300,16 @@ RSpec.describe 'convert result' do
         end
       end
 
+      it 'terminal caption' do
+        expect(File).to exist(file01)
+        text1 = File.open(file01).read()
+        expect(text1).not_to be_match(/^\/\/terminal/)
+        expect(text1).not_to be_match(/^\/\/cmd\[.*?\]/)
+        expect(text1).to     be_match(/^\/\/cmd{/)
+        expect(text1).not_to be_match(/^\?$/)
+        expect(text1).to     be_match(/^必要なライブラリをインストール$/)
+      end
+
       it 'cmd caption' do
         expect(text).not_to be_match(/^\/\/terminal/)
         expect(text).not_to be_match(/^\/\/cmd\[.*?\]/)
