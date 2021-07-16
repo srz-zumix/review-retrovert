@@ -417,6 +417,7 @@ RSpec.describe 'convert result' do
         text.scan(/^\/\/table\[tbl-csv[0-9]*\](\[.*?\])*{\R(.*?)^\/\/}/m) { |m|
           expect(m[1]).not_to include(',')
         }
+        expect(text).to be_include("ぼくのとなりに暗黒破壊神がいます")
       end
   end
 

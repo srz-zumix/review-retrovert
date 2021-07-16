@@ -442,16 +442,16 @@ module ReVIEW
                   new_header = ""
                   new_body = ""
                   CSV.parse(header) do |h|
-                    new_header += CSV.generate_line(h, col_sep: "\t")
+                    new_header += Utils::GenerateTsv(h)
                   end
                   CSV.parse(body) do |c|
-                    new_body += CSV.generate_line(c, col_sep: "\t")
+                    new_body += Utils::GenerateTsv(c)
                   end
                   content.gsub!(outer, "#{matched}#{new_header}#{sep}#{new_body}//#{close}")
                 else
                   new_body = ""
                   CSV.parse(inner) do |c|
-                    new_body += CSV.generate_line(c, col_sep: "\t")
+                    new_body += Utils::GenerateTsv(c)
                   end
                   content.gsub!(outer, "#{matched}#{new_body}//#{close}")
                 end

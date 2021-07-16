@@ -16,6 +16,19 @@ module ReVIEW
           end
         end
 
+        def NormalizeCSVArray(ar)
+          ar&.each do |c|
+            c.gsub!(/\A"|"\z/, '')
+            c.gsub!(/^\s*/, '')
+            c.gsub!(/[\r\n]/, '')
+          end
+          ar
+        end
+
+        def GenerateTsv(c)
+          CSV.generate_line(Utils::NormalizeCSVArray(c), col_sep: "\t")
+        end
+
       end
     end
   end
