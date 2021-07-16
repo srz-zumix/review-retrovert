@@ -567,48 +567,51 @@ module ReVIEW
       # @<XXX>{AAA@<YYY>{BBB}} to @<XXX>{AAA}@<YYY>{BBB}
       def expand_nested_inline_command(content)
         found = false
-        content.dup.scan(/(@<.*?>)(?:(\$)|(?:({)|(\|)))(.*?)(?(2)(\$)|(?(3)(})|(\|)))/) { |m|
-          matched = m.join
-          body = m[4]
-          im = body.match(/(.*)(@<.*?>)(?:(\$)|(?:({)|(\|)))(.*?)(?(3)(\$)|(?(4)(})|(\|)))(.*)/)
-          if content.match(/^#@#.*#{Regexp.escape(matched)}.*/)
+        content.dup.each_line do |line|
+          if line.match(/^#@#/)
             next
           end
-          if im.nil?
-            # for {}
-            im2 = body.match(/(.*)(@<.*?>)#{Regexp.escape(m[1..3].join)}(.*)/)
-            unless im2.nil?
-              rep = ""
-              if im2[3].length > 0
-                outcmd_begin = m[0..3].join + im2[1..2].join + "$|{".gsub(m[1..3].join, '')[0]
-                outcmd_end = "$|}".gsub(m[5..7].join, '')[0]
-                rep = "#{outcmd_begin}#{im2[3]}#{outcmd_end}"
+          line.scan(/(@<.*?>)(?:(\$)|(?:({)|(\|)))(.*?)(?(2)(\$)|(?(3)(})|(\|)))/) { |m|
+            matched = m.join
+            body = m[4]
+            outcmd_cmd = m[0]
+            outcmd_open = m[1..3].join
+            outcmd_begin = outcmd_cmd + outcmd_open
+            outcmd_close = m[5..7].join
+            im = body.match(/(.*)(@<.*?>)(?:(\$)|(?:({)|(\|)))(.*?)(?(3)(\$)|(?(4)(})|(\|)))(.*)/)
+            if im.nil?
+              # for {}
+              im2 = body.match(/(.*)(@<.*?>)#{Regexp.escape(outcmd_open)}(.*)/)
+              unless im2.nil?
+                rep = ""
+                if im2[3].length > 0
+                  incmd_begin = im2[1..2].join + "$|{".gsub(outcmd_open, '')[0]
+                  incmd_end = "$|}".gsub(outcmd_close, '')[0]
+                  rep = "#{outcmd_begin}#{incmd_begin}#{im2[3]}#{incmd_end}"
+                else
+                  rep = outcmd_begin + im2[1]
+                end
+                content.gsub!(matched) { |mm| rep }
+                found = true
               else
-                rep = m[0..3].join + im2[1]
+                # for |$
+                if body.match(/.*@<.*?>$/)
+                  incmd_fence = "$|".gsub(outcmd_open, '')
+                  rep = "#{outcmd_begin}#{body}#{incmd_fence}"
+                  content.gsub!(/#{Regexp.escape(matched)}(.*?)#{Regexp.escape(outcmd_open)}/, "#{rep}\\1#{incmd_fence}")
+                  found = true
+                end
               end
+            else
+              rep = ""
+              rep += "#{outcmd_begin}#{im[1]}#{outcmd_close}" if im[1].length > 0
+              rep += "#{im[2..9].join}"
+              rep += "#{outcmd_begin}#{im[-1]}#{outcmd_close}" if im[-1].length > 0
               content.gsub!(matched) { |mm| rep }
               found = true
-            else
-              # for |$
-              if body.match(/.*@<.*?>$/)
-                outcmd_fence = m[1..3].join
-                incmd_fence = "$|".gsub(outcmd_fence, '')
-                rep = "#{m[0..3].join}#{body}#{incmd_fence}"
-                content.gsub!(/#{Regexp.escape(matched)}(.*?)#{Regexp.escape(outcmd_fence)}/, "#{rep}\\1#{incmd_fence}")
-                found = true
-              end
             end
-          else
-            outcmd_begin = m[0..3].join
-            outcmd_end = m[5..7].join
-            rep = ""
-            rep += "#{outcmd_begin}#{im[1]}#{outcmd_end}" if im[1].length > 0
-            rep += "#{im[2..9].join}"
-            rep += "#{outcmd_begin}#{im[-1]}#{outcmd_end}" if im[-1].length > 0
-            content.gsub!(matched) { |mm| rep }
-            found = true
-          end
-        }
+          }
+        end
         if found
           expand_nested_inline_command(content)
         end
@@ -653,9 +656,9 @@ module ReVIEW
         while !content.gsub!(/(\/\/table.*\s)\.(\s.*?\/\/})/m, "\\1#{Regexp.escape(@table_empty_replace)}\\2").nil? do
         end
         # noop を最後に消すためにダミーに変える
-        content.gsub!('@<nop>$$', '@<must_be_replace_nop>$must_be_replace_nop$')
-        content.gsub!('@<nop>||', '@<must_be_replace_nop>|must_be_replace_nop|')
-        content.gsub!('@<nop>{}', '@<must_be_replace_nop>{must_be_replace_nop}')
+        content.gsub!('@<nop>$$', '@<dummynop>$must_be_replace_nop$')
+        content.gsub!('@<nop>||', '@<dummynop>|must_be_replace_nop|')
+        content.gsub!('@<nop>{}', '@<dummynop>{must_be_replace_nop}')
 
         # Re:VIEW Starter commands
         replace_starter_command(content)
@@ -709,9 +712,11 @@ module ReVIEW
         end
 
         # nop replace must be last step
-        content.gsub!('@<must_be_replace_nop>$must_be_replace_nop$', '@<b>$$')
-        content.gsub!('@<must_be_replace_nop>|must_be_replace_nop|', '@<b>||')
-        content.gsub!('@<must_be_replace_nop>{must_be_replace_nop}', '@<b>{}')
+        # content.gsub!('@<dumynop>$must_be_replace_nop$', '@<b>$$')
+        # content.gsub!('@<dumynop>|must_be_replace_nop|', '@<b>||')
+        content.gsub!('@<dummynop>$must_be_replace_nop$', '@<b>{}')
+        content.gsub!('@<dummynop>|must_be_replace_nop|', '@<b>{}')
+        content.gsub!('@<dummynop>{must_be_replace_nop}', '@<b>{}')
 
         File.write(contentfile, content)
         copy_embedded_contents(outdir, content)

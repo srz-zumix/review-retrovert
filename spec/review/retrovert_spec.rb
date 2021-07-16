@@ -183,22 +183,6 @@ RSpec.describe 'convert result' do
     #   expect(text).not_to match(/^#@#\/\/footnote/)
     # end
 
-    it 'nested inline command' do
-      expect(File).to exist(file01)
-      text = File.open(file01).read()
-      expect(text).not_to be_include('|@@<b>{}')
-      expect(text).not_to be_include('|@@<b>$$')
-      expect(text).not_to be_include('|@@<b>||')
-      expect(text).not_to be_include('{@@<b>{}')
-      expect(text).not_to be_include('{@@<b>$$')
-      expect(text).not_to be_include('{@@<b>||')
-      expect(text).not_to be_include('$@@<b>{}')
-      expect(text).not_to be_include('$@@<b>$$')
-      expect(text).not_to be_include('$@@<b>||')
-      expect(text).not_to be_match(/@<.*?>\|[^|]*?@<.*?>\|/)
-      expect(text).not_to be_match(/@<.*?>\$[^$]*?@<.*?>\$/)
-    end
-
     it 'empty id set to' do
       expect(File).to exist(file05)
       text = File.open(file05).read()
@@ -230,6 +214,12 @@ RSpec.describe 'convert result' do
 
     context 'syntax' do
       subject(:text) { File.open(file03).read() }
+
+      it 'nested inline command' do
+        expect(text).not_to be_match(/^[^#].*@<\w+?>[$|{]@@<b>({}|\|\||\$\$)/)
+        expect(text).not_to be_match(/^[^#].*@<\w+?>\|[^|]*?@<\w+?>\|/)
+        expect(text).not_to be_match(/^[^#].*@<\w+?>\$[^$]*?@<\w+>>\$/)
+      end
 
       context 'block command delete' do
         it 'vspace' do
