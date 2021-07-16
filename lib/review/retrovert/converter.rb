@@ -229,7 +229,7 @@ module ReVIEW
                   line = $1
                   caption = ReViewDef::get_caption(line)
                   s = ""
-                  s += "「#{caption}」\n\n" if caption
+                  s += "「#{caption}」\n\n" unless caption.blank?
                   s += "#@##{line}"
                   s
                 }
@@ -251,7 +251,7 @@ module ReVIEW
                   last = $3
                   caption = ReViewDef::get_caption(first)
                   s = ""
-                  s += "「#{caption}」\n\n" if caption
+                  s += "「#{caption}」\n\n" unless caption.blank?
                   s += "#@##{first}#{body}@##{last}"
                   s
                 }

@@ -29,7 +29,7 @@ jobs:
         run: bundle exec rake spec
       # convert
       - name: convert
-        run: bundle exec review-retrovert convert testdata/mybook/config.yml tmp -f
+        run: bundle exec review-retrovert convert testdata/mybook/config.yml tmp-${{ matrix.review-version }} -f
       # build
       # - name: review build
       #   uses: ${{ matrix.uses }}
@@ -44,16 +44,17 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: build html
         run: |
-          docker run --rm -v "$(pwd)/tmp":/work -w /work vvakame/review:${{ matrix.review-version }} rake preproc html
+          docker run --rm -v "$(pwd)/tmp-${{ matrix.review-version }}":/work -w /work vvakame/review:${{ matrix.review-version }} rake preproc html
       - name: build pdf
         run: |
-          docker run --rm -v "$(pwd)/tmp":/work -w /work vvakame/review:${{ matrix.review-version }} rake preproc pdf
+          docker run --rm -v "$(pwd)/tmp-${{ matrix.review-version }}":/work -w /work vvakame/review:${{ matrix.review-version }} rake preproc pdf
+          cp tmp-${{ matrix.review-version }}/mybook.pdf mybook-${{ matrix.review-version }}.pdf
       # artifacts
       - name: artifacts
         uses: actions/upload-artifact@v1
         with:
           name: mybook
-          path: tmp/mybook.pdf
+          path: mybook-${{ matrix.review-version }}.pdf
       # - name: artifacts
       #   uses: actions/upload-artifact@v1
       #   with:
