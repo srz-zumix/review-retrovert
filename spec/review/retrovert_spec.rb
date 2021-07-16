@@ -260,8 +260,12 @@ RSpec.describe 'convert result' do
           expect(text).not_to be_match(/^\/\/talklist\[.*\]/)
           expect(text).not_to be_match(/^\/\/talk\[.*\]/)
           expect(text).not_to be_match(/^\/\/t\[.*\]/)
-          expect(text).to     be_match(/^\/\/emlist\[B提督\]/)
           expect(text).to     be_match(/^不可能なことを言い立てるのは貴官の方だ。それも安全な場所から動かずにな。/)
+          if Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('5.0.0')
+            expect(text).to     be_match(/^\/\/emlist\[B提督\]/)
+          else
+            expect(text).to     be_match(/^「B提督」$\R/m)
+          end
         end
 
         it 'talk_shortcuts' do

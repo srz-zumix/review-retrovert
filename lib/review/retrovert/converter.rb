@@ -24,7 +24,7 @@ module ReVIEW
         @desclist_replace_cmd = "info"
         @talk_icon_scale = 0.1
 
-        @r_option_inner = '(.*?\\[.*?\\\\\\].*?)*.*?'
+        @r_option_inner = ReViewDef::r_option_inner
       end
 
       def error(msg)
@@ -225,7 +225,14 @@ module ReVIEW
             if inner_open == m[2..4].join
               # if same fence then cmd_end == inner_end
               if is_commentout
-                inner.gsub!(/(^\/\/(\w+(\[#{@r_option_inner}\]|))*#{inner_open})/, '#@#\1')
+                inner.gsub!(/(^\/\/(\w+(\[#{@r_option_inner}\]|))*#{inner_open})/) {
+                  line = $1
+                  caption = ReViewDef::get_caption(line)
+                  s = ""
+                  s += "「#{caption}」\n\n" if caption
+                  s += "#@##{line}"
+                  s
+                }
                 rep = "#{cmd_begin}#{inner}#@##{cmd_end}"
                 content.gsub!(matched) { |mm| rep }
               else
@@ -236,9 +243,18 @@ module ReVIEW
                 content.gsub!(matched) { |mm| rep }
               end
             else
-              close = inner_open == '{' ? '}' : inner_open
+              close = ReViewDef::fence_close(inner_open)
               if is_commentout
-                inner.gsub!(/(^\/\/(\w+(\[#{@r_option_inner}\]|))*#{inner_open})(.*?)(^\/\/#{close})/m, '#@#\1\2#@#\3')
+                inner.gsub!(/(^\/\/(\w+(\[#{@r_option_inner}\]|))*#{inner_open})(.*?)(^\/\/#{close})/m) {
+                  first = $1
+                  body = $2
+                  last = $3
+                  caption = ReViewDef::get_caption(first)
+                  s = ""
+                  s += "「#{caption}」\n\n" if caption
+                  s += "#@##{first}#{body}@##{last}"
+                  s
+                }
                 rep = "#{cmd_begin}#{inner}#{cmd_end}"
                 content.gsub!(matched) { |mm| rep }
               else
