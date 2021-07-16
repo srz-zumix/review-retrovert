@@ -398,7 +398,7 @@ module ReVIEW
             elsif kv&.key?('name')
               "//emlist[#{kv['name']}]{"
             else
-              "//indepimage#{first_option}[][sacale=#{@talk_icon_scale}]{\n//}\n//emlist[]#{traling_options}{"
+              "//indepimage#{first_option}[][scale=#{@talk_icon_scale}]{\n//}\n//emlist[]#{traling_options}{"
             end
           else
             "//emlist#{traling_options}{"
