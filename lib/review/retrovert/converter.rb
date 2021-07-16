@@ -394,11 +394,11 @@ module ReVIEW
           if avatar.length > 0
             kv = @talk_shortcuts[avatar]
             if kv&.key?('image')
-              "//indepimage[#{kv['image']}][scale=#{@talk_icon_scale}]\n//emlist[]#{traling_options}{"
+              "//indepimage[#{kv['image']}][][scale=#{@talk_icon_scale}]{\n//}\n//emlist[]#{traling_options}{"
             elsif kv&.key?('name')
               "//emlist[#{kv['name']}]{"
             else
-              "//indepimage#{first_option}[sacale=#{@talk_icon_scale}]\n//emlist[]#{traling_options}{"
+              "//indepimage#{first_option}[][sacale=#{@talk_icon_scale}]{\n//}\n//emlist[]#{traling_options}{"
             end
           else
             "//emlist#{traling_options}{"
