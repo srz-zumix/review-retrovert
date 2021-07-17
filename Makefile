@@ -9,10 +9,15 @@ review3:
 	docker run -it --rm -w /work review-3-retrovert bash
 
 test:
+	RUBYLIB=lib ./exe/review-retrovert convert --preproc --tabwidth 4 testdata/mybook/config.yml -f tmp/debug
+
+test-ird:
 	RUBYLIB=lib ./exe/review-retrovert convert --preproc --tabwidth 4 --ird testdata/mybook/config.yml -f tmp/debug
 
+REVIEW_VERSION:=latest
+
 debug-build:
-	docker run --rm -v "${PWD}/tmp/debug":/work -w /work vvakame/review rake preproc pdf
+	docker run --rm -v "${PWD}/tmp/debug":/work -w /work vvakame/review:${REVIEW_VERSION} rake preproc pdf
 	# docker run --rm -v "${PWD}":/work -w /work vvakame/review rake preproc pdf
 
 testdata-pdf:

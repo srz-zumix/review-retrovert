@@ -39,6 +39,10 @@ module ReVIEW
           v < Gem::Version.new('4.0.0') || v >= Gem::Version.new('5.1.0')
         end
 
+        def has_bou()
+          Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('3.2.0')
+        end
+
         def Preprocessor(param)
           Preprocessor.new(param)
         end

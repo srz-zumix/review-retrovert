@@ -198,6 +198,8 @@
   \vspace{-5.5pt}
   }
 
+<% if Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('3.1.0') %>
+
 % \renewcommand\reviewimagecaption[1]{%
 %   \captionsetup{format=hang,font=scriptsize,labelfont=bf,margin=50pt,name=図}
 %   \caption{ \bfseries\scriptsize{#1}} \vspace{-1.5mm}}
@@ -213,6 +215,8 @@
 %   \adjustbox{max width=\irdmaxwidth}{%
 %   \includegraphics[#1]{#2}}%
 %   }
+
+<% end %>
 
 %
 % 表
@@ -276,8 +280,10 @@
 % cmd
 %
 
+<% if Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('3.1.0') %>
 \renewenvironment{reviewlistblock}{\needspace{\Cvs}}{}
 
+<% end %>
 \renewenvironment{reviewcmd}{%
   \medskip%
   \ifdefined\reviewlistxkanjiskip%
@@ -314,5 +320,7 @@
 %   \vspace*{-0.2mm}% 枠の後ろの余白の調整
 %   }
 
-  % code
+<% if Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('3.1.0') %>
+% code
 \DeclareRobustCommand{\reviewcode}[1]{{\small\ttfamily\reviewbreakall{#1}}}
+<% end %>
