@@ -10,7 +10,17 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        review-version: [ "3.2", "4.2", "5.0" ]
+        review-version:
+          # - "3.0"
+          # - "3.1"
+          - "3.2"
+          - "4.0"
+          - "4.1"
+          - "4.2"
+          - "5.0"
+          # - "5.1"
+          # - "5.2"
+          # - "latest"
       fail-fast: false
     steps:
       - uses: actions/checkout@v2
@@ -23,13 +33,17 @@ jobs:
           echo 'gem "review", "${{ matrix.review-version }}"' >> Gemfile-${{ matrix.review-version }}
           cat Gemfile-${{ matrix.review-version }}
           echo "BUNDLE_GEMFILE=Gemfile-${{ matrix.review-version }}" >> $GITHUB_ENV
+        if: ${{ matrix.review-version != 'latest' }}
       - run: bundle install --gemfile=Gemfile-${{ matrix.review-version }}
+        if: ${{ matrix.review-version != 'latest' }}
+      - run: bundle install
+        if: ${{ matrix.review-version == 'latest' }}
       # spec
       - name: spec
         run: bundle exec rake spec
       # convert
       - name: convert
-        run: bundle exec review-retrovert convert testdata/mybook/config.yml tmp -f
+        run: bundle exec review-retrovert convert testdata/mybook/config.yml tmp-${{ matrix.review-version }} -f
       # build
       # - name: review build
       #   uses: ${{ matrix.uses }}
@@ -44,16 +58,17 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: build html
         run: |
-          docker run --rm -v "$(pwd)/tmp":/work -w /work vvakame/review:${{ matrix.review-version }} rake preproc html
+          docker run --rm -v "$(pwd)/tmp-${{ matrix.review-version }}":/work -w /work vvakame/review:${{ matrix.review-version }} rake preproc html
       - name: build pdf
         run: |
-          docker run --rm -v "$(pwd)/tmp":/work -w /work vvakame/review:${{ matrix.review-version }} rake preproc pdf
+          docker run --rm -v "$(pwd)/tmp-${{ matrix.review-version }}":/work -w /work vvakame/review:${{ matrix.review-version }} rake preproc pdf
+          cp tmp-${{ matrix.review-version }}/mybook.pdf mybook-${{ matrix.review-version }}.pdf
       # artifacts
       - name: artifacts
         uses: actions/upload-artifact@v1
         with:
           name: mybook
-          path: tmp/mybook.pdf
+          path: mybook-${{ matrix.review-version }}.pdf
       # - name: artifacts
       #   uses: actions/upload-artifact@v1
       #   with:

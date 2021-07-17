@@ -13,4 +13,7 @@ test:
 
 debug-build:
 	docker run --rm -v "${PWD}/tmp/debug":/work -w /work vvakame/review rake preproc pdf
+	# docker run --rm -v "${PWD}":/work -w /work vvakame/review rake preproc pdf
 
+testdata-pdf:
+	docker run --rm -v ${PWD}/testdata/mybook:/work -w /work kauplan/review2.5 rake pdf

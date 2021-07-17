@@ -3,7 +3,7 @@
 #@mapfile(contents/r0-inner.re)
 #@end
 
-@<br>{}
+//blankline
 
 test@<br>{}
 

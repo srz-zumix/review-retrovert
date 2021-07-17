@@ -183,20 +183,6 @@ RSpec.describe 'convert result' do
     #   expect(text).not_to match(/^#@#\/\/footnote/)
     # end
 
-    it 'nested inline command' do
-      expect(File).to exist(file01)
-      text = File.open(file01).read()
-      expect(text).not_to be_include('|@@<b>{}')
-      expect(text).not_to be_include('|@@<b>$$')
-      expect(text).not_to be_include('|@@<b>||')
-      expect(text).not_to be_include('{@@<b>{}')
-      expect(text).not_to be_include('{@@<b>$$')
-      expect(text).not_to be_include('{@@<b>||')
-      expect(text).not_to be_include('$@@<b>{}')
-      expect(text).not_to be_include('$@@<b>$$')
-      expect(text).not_to be_include('$@@<b>||')
-    end
-
     it 'empty id set to' do
       expect(File).to exist(file05)
       text = File.open(file05).read()
@@ -229,6 +215,12 @@ RSpec.describe 'convert result' do
     context 'syntax' do
       subject(:text) { File.open(file03).read() }
 
+      it 'nested inline command' do
+        expect(text).not_to be_match(/^[^#].*@<\w+?>[$|{]@@<b>({}|\|\||\$\$)/)
+        expect(text).not_to be_match(/^[^#].*@<\w+?>\|[^|]*?@<\w+?>\|/)
+        expect(text).not_to be_match(/^[^#].*@<\w+?>\$[^$]*?@<\w+>>\$/)
+      end
+
       context 'block command delete' do
         it 'vspace' do
           expect(text).not_to be_match(/^\/\/vspace/)
@@ -259,6 +251,12 @@ RSpec.describe 'convert result' do
           expect(text).not_to be_match(/^\/\/talk\[.*\]/)
           expect(text).not_to be_match(/^\/\/t\[.*\]/)
           expect(text).to     be_match(/^不可能なことを言い立てるのは貴官の方だ。それも安全な場所から動かずにな。/)
+          if Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('5.0.0')
+            expect(text).to     be_match(/^\/\/indepimage\[avatar-b\]\[\]\[scale=0.1\]{/)
+            expect(text).to     be_match(/^\/\/emlist\[B提督\]/)
+          else
+            expect(text).to     be_match(/^「B提督」$\R/m)
+          end
         end
 
         it 'talk_shortcuts' do
@@ -296,6 +294,24 @@ RSpec.describe 'convert result' do
           expect(text).not_to be_match(/^\/\/image\[.*?width=.*?/)
           expect(text).to     be_match(/^\/\/image\[.*?scale=.*?/)
         end
+      end
+
+      it 'terminal caption' do
+        expect(File).to exist(file01)
+        text1 = File.open(file01).read()
+        expect(text1).not_to be_match(/^\/\/terminal/)
+        expect(text1).not_to be_match(/^\/\/cmd\[.*?\]/)
+        expect(text1).to     be_match(/^\/\/cmd{/)
+        expect(text1).not_to be_match(/^\?$/)
+        expect(text1).to     be_match(/^必要なライブラリをインストール$/)
+      end
+
+      it 'cmd caption' do
+        expect(text).not_to be_match(/^\/\/terminal/)
+        expect(text).not_to be_match(/^\/\/cmd\[.*?\]/)
+        expect(text).to     be_match(/^\/\/cmd{/)
+        expect(text).not_to be_match(/^\?$/)
+        expect(text).to     be_match(/^PDFを生成$/)
       end
 
       it '? id set to' do
@@ -401,6 +417,7 @@ RSpec.describe 'convert result' do
         text.scan(/^\/\/table\[tbl-csv[0-9]*\](\[.*?\])*{\R(.*?)^\/\/}/m) { |m|
           expect(m[1]).not_to include(',')
         }
+        expect(text).to be_include("ぼくのとなりに暗黒破壊神がいます")
       end
   end
 
