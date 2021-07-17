@@ -33,6 +33,7 @@ jobs:
           echo 'gem "review", "${{ matrix.review-version }}"' >> Gemfile-${{ matrix.review-version }}
           cat Gemfile-${{ matrix.review-version }}
           echo "BUNDLE_GEMFILE=Gemfile-${{ matrix.review-version }}" >> $GITHUB_ENV
+        if: ${{ matrix.review-version != 'latest' }} 
       - run: bundle install --gemfile=Gemfile-${{ matrix.review-version }}
       # spec
       - name: spec
