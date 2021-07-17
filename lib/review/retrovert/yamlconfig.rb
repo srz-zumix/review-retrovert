@@ -131,7 +131,6 @@ module ReVIEW
           # YAML.dump(yaml, File.open(yamlfile, "w"))
           content = Psych.dump(yaml)
           content.gsub!('---','')
-          content.gsub!(/^(.*):\s*$/, '\1: null')
           File.write(yamlfile, content)
         }
       end

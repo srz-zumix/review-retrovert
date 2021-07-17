@@ -1,9 +1,10 @@
-require "review"
+require 'review'
 require 'fileutils'
 require 'tmpdir'
-require "review/retrovert/yamlconfig"
-require "review/retrovert/reviewdef"
-require "review/retrovert/utils"
+require 'review/retrovert/yamlconfig'
+require 'review/retrovert/reviewcompat'
+require 'review/retrovert/reviewdef'
+require 'review/retrovert/utils'
 
 module ReVIEW
   module Retrovert
@@ -278,7 +279,7 @@ module ReVIEW
       end
 
       def replace_block_command_nested_boxed_articles(content)
-        unless Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('5.0.0')
+        unless ReViewCompat::has_nested_minicolumn()
           replace_block_command_nested_boxed_article(content, 'note')
           replace_block_command_nested_boxed_article(content, 'memo')
           replace_block_command_nested_boxed_article(content, 'tip')
@@ -338,7 +339,7 @@ module ReVIEW
       end
 
       def fix_deprecated_list(content)
-        if Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('4.0.0')
+        if ReViewCompat::is_need_space_term_list()
           content.gsub!(/^: (.*)/, ' : \1')
         end
       end
@@ -668,7 +669,7 @@ module ReVIEW
         # empty br line to blankline
         content.gsub!(/^\s*@<br>{}\s*$/, '//blankline')
 
-        if Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('4.0.0')
+        unless ReViewCompat::is_allow_empty_image_caption()
           # empty caption is not allow
           content.gsub!(/^\/\/image\[(.*)\]\[\]{/, '//image[\1][ ]{')
         end
@@ -748,7 +749,7 @@ module ReVIEW
         contentdir = abspath
         info 'replace starter block command'
         info 'replace starter inline command'
-        catalog = ReVIEW::Catalog.new(File.open(File.join(abspath, yamlfile)))
+        catalog = ReViewCompat::Catalog(File.join(abspath, yamlfile))
         update_content_files(outdir, contentdir, @catalog_contents)
         unless options['strict']
           all_contentsfiles = Pathname.glob(File.join(File.join(@basedir, @srccontentsdir), '*.re')).map(&:basename)
@@ -763,12 +764,10 @@ module ReVIEW
           contentpath = File.join(contentdir, content)
           if File.exist?(contentpath)
             info "preproc #{contentpath}"
-            buf = StringIO.new
             pwd = Dir.pwd
             Dir.chdir(outdir)
-            File.open(contentpath) { |f| pp.process(f, buf) }
+            content = pp.process(contentpath)
             Dir.chdir(pwd)
-            content = buf.string
             content.gsub!(/^#[@]map.*$/, '')
             content.gsub!(/^#[@]end$/, '')
             File.write(contentpath, content)
@@ -782,10 +781,10 @@ module ReVIEW
         contentdir = abspath
         param = {}
         param['tabwidth'] = options['tabwidth'].to_i
-        pp = ReVIEW::Preprocessor.new(ReVIEW::Repository.new(param), param)
+        pp = ReViewCompat::Preprocessor(param)
 
         if options['strict']
-          catalog = ReVIEW::Catalog.new(File.open(File.join(abspath, yamlfile)))
+          catalog = ReViewCompat::Catalog(File.join(abspath, yamlfile))
           preproc_content_files(outdir, pp, contentdir, @catalog_contents)
         else
           contentsfiles = Pathname.glob(File.join(File.join(@basedir, @srccontentsdir), '*.re')).map(&:basename)
@@ -826,7 +825,7 @@ module ReVIEW
         @basedir = @configs.basedir
         @srccontentsdir = @config['contentdir']
 
-        catalog = ReVIEW::Catalog.new(File.open(@configs.catalogfile()))
+        catalog = ReViewCompat::Catalog(@configs.catalogfile())
         add_catalog_contents(catalog.predef())
         add_catalog_contents(catalog.chaps())
         add_catalog_contents(catalog.appendix())
