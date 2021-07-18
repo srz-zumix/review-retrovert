@@ -138,6 +138,12 @@ module ReVIEW
           @configs.rewrite_yml('words_file', new_words_file)
         end
 
+        # makeindex_dic
+        makeindex_dic = @config['pdfmaker']['makeindex_dic']
+        if makeindex_dic
+          FileUtils.copy(File.join(@basedir, makeindex_dic), File.join(outdir, makeindex_dic))
+        end
+
         if @ird
           # # リュウミン Pr6N R-KL 12.5Q 22H (9pt = 12.7Q 15.5pt = 21.8Q(H))
           # texdocumentclass: ["review-jsbook", "media=ebook,openany,paper=b5,fontsize=9pt,baselineskip=15.5pt,head_space=15mm,gutter=22mm,footskip=16mm,line_length=45zw,number_of_lines=38"]
