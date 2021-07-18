@@ -796,14 +796,20 @@ module ReVIEW
         end
       end
 
+      def erb_sty(outdir, filename)
+        src = File.join(__dir__, "sty/#{filename}.erb")
+        dest = File.join(outdir, "sty/#{filename}")
+        erb = ERB.new(File.read(src))
+        File.write(dest, erb.result)
+      end
+
       def update_sty(outdir, options)
-        # FileUtils.cp(File.join(@basedir, 'sty/review-custom.sty'), File.join(outdir, 'sty/review-custom.sty'))
+        review_custom_sty = File.open(File.join(outdir, 'sty/review-custom.sty'), 'a')
+        erb_sty(outdir, 'review-retrovert-custom.sty')
+        review_custom_sty.puts('\RequirePackage{review-retrovert-custom}')
         if @ird
-          erb = ERB.new(File.read(File.join(__dir__, 'sty/ird.sty.erb')))
-          File.write(File.join(outdir, 'sty/ird.sty'), erb.result)
-          # FileUtils.cp(File.join(__dir__, 'sty/ird.sty'), File.join(outdir, 'sty/ird.sty'))
-          file = File.open(File.join(outdir, 'sty/review-custom.sty'), 'a')
-          file.puts('\RequirePackage{ird}')
+          erb_sty(outdir, 'ird.sty')
+          review_custom_sty.puts('\RequirePackage{ird}')
         end
       end
 
