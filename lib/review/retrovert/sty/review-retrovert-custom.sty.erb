@@ -1,0 +1,6 @@
+% for retrovert comaptible macro
+
+<% if Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('5.1.0') %>
+\usepackage{ulem}
+\renewcommand{\reviewstrike}[1]{\sout{#1}}
+<% end %>

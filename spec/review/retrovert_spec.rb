@@ -101,6 +101,10 @@ RSpec.describe 'convert result' do
       expect(File).to exist(file99)
     end
 
+    it 'data file exist' do
+      expect(File).to exist(File.join(outpath, 'data/words.txt.csv'))
+    end
+
     it 'inline command delete' do
       expect(File).to exist(file03)
       text = File.open(file03).read()
@@ -392,6 +396,14 @@ RSpec.describe 'convert result' do
         expect(text).not_to be_include('@<par>{i}')
         expect(text).not_to be_include('@<par>$i$')
         expect(text).not_to be_include('@<par>|i|')
+      end
+
+      it 'bou' do
+        if Gem::Version.new(ReVIEW::VERSION) < Gem::Version.new('3.2.0')
+          expect(text).not_to be_match(/@<bou>{.*?}/)
+          expect(text).not_to be_match(/@<bou>\$.*?\$/)
+          expect(text).not_to be_match(/@<bou>\|.*?\|/)
+        end
       end
 
       it 'program' do

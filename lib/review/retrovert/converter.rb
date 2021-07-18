@@ -1,4 +1,5 @@
 require 'review'
+require 'erb'
 require 'fileutils'
 require 'tmpdir'
 require 'review/retrovert/yamlconfig'
@@ -628,6 +629,9 @@ module ReVIEW
         replace_inline_command(content, 'W', 'wb')
         replace_inline_command(content, 'term', 'idx')
         replace_inline_command(content, 'termnoidx', 'hidx')
+        unless ReViewCompat::has_bou()
+          replace_inline_command(content, 'bou', 'b')
+        end
         delete_inline_command(content, 'userinput')
         delete_inline_command(content, 'weak')
         delete_inline_command(content, 'cursor')
@@ -792,12 +796,20 @@ module ReVIEW
         end
       end
 
+      def erb_sty(outdir, filename)
+        src = File.join(__dir__, "sty/#{filename}.erb")
+        dest = File.join(outdir, "sty/#{filename}")
+        erb = ERB.new(File.read(src))
+        File.write(dest, erb.result)
+      end
+
       def update_sty(outdir, options)
-        # FileUtils.cp(File.join(@basedir, 'sty/review-custom.sty'), File.join(outdir, 'sty/review-custom.sty'))
+        review_custom_sty = File.open(File.join(outdir, 'sty/review-custom.sty'), 'a')
+        erb_sty(outdir, 'review-retrovert-custom.sty')
+        review_custom_sty.puts('\RequirePackage{review-retrovert-custom}')
         if @ird
-          FileUtils.cp(File.join(__dir__, 'sty/ird.sty'), File.join(outdir, 'sty/ird.sty'))
-          file = File.open(File.join(outdir, 'sty/review-custom.sty'), 'a')
-          file.puts('\RequirePackage{ird}')
+          erb_sty(outdir, 'ird.sty')
+          review_custom_sty.puts('\RequirePackage{ird}')
         end
       end
 
