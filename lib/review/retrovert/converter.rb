@@ -368,7 +368,13 @@ module ReVIEW
       end
 
       def remove_option_param(content, commands, n, param)
-        content.gsub!(/(?<prev>^\/\/(#{commands.join('|')})(\[.*?\]){#{n-1}}\[.*?)((,|)\s*#{param}=[^,\]]*)(?<post>.*?\])/, '\k<prev>\k<post>')
+        content.gsub!(/(^\/\/(#{commands.join('|')})(\[.*?\]){#{n-1}}\[.*?)((,|)\s*#{param}=[^,\]]*)(.*?\])/) {
+          prev = $1
+          cmd = $2
+          opt = $4
+          post = $6
+          "#{prev}#{post}"
+        }
       end
 
       def remove_starter_options(content)
@@ -385,7 +391,7 @@ module ReVIEW
         # image pos
         remove_option_param(content, ["image"], 3, "pos")
         # list lineno
-        remove_option_param(content, ["list"], 3, "lineno")
+        remove_option_param(content, ["list", "listnum"], 3, "lineno")
       end
 
       # talklist to //#{cmd}[]{ //emlist[]{}... }
@@ -429,7 +435,36 @@ module ReVIEW
         replace_block_command_nested_boxed_article(content, 'emlist')
       end
 
-      def convert_table_option(content)
+      def replace_file_option(content, matched, fence_open, option)
+        file_param_m = option.match(/\s*file\s*=\s*([^,\]]*)/)
+        if file_param_m
+          fence_close = ReViewDef::fence_close(fence_open)
+          filepath = file_param_m[1]
+          if fence_close
+            content.gsub!(/#{Regexp.escape(matched)}(.*?)^\/\/#{fence_close}/m) {
+              "#{matched}\n\#@mapfile(#{filepath})\n\#@end\n//#{fence_close}"
+            }
+          end
+        end
+      end
+
+      def convert_starter_option(content)
+        # file
+        r = /^(?<matched>\/\/(list|listnum|table)\[#{@r_option_inner}\]\[#{@r_option_inner}\]\[(?<options>#{@r_option_inner})\](?<open>.))$/
+        content.dup.scan(r) { |m|
+          matched = m[0]
+          options = m[1]
+          fence_open = m[2]
+          options.split(',').each { |option|
+            replace_file_option(content, matched, fence_open, option)
+          }
+        }
+        remove_option_param(content, ["list", "listnum", "table"], 3, "file")
+        # csv
+        convert_csv_option(content)
+      end
+
+      def convert_csv_option(content)
         r_table = /^(?<matched>\/\/table\[#{@r_option_inner}\]\[#{@r_option_inner}\]\[(?<options>#{@r_option_inner})\](?<open>.))$/
         content.dup.scan(r_table) { |m|
           matched = m[0]
@@ -457,8 +492,16 @@ module ReVIEW
                   end
                   content.gsub!(outer, "#{matched}#{new_header}#{sep}#{new_body}//#{close}")
                 else
+                  im = inner.match(/^\#@mapfile\((.*?)\)\R^\#@end/m)
+                  if im
+                    inner_file = im[1]
+                    csv_text = "\n"
+                    csv_text += File.open(File.join(@basedir, inner_file)).read()
+                  else
+                    csv_text = inner
+                  end
                   new_body = ""
-                  CSV.parse(inner) do |c|
+                  CSV.parse(csv_text) do |c|
                     new_body += Utils::GenerateTsv(c)
                   end
                   content.gsub!(outer, "#{matched}#{new_body}//#{close}")
@@ -479,13 +522,17 @@ module ReVIEW
       end
 
       def copy_embedded_contents(outdir, content)
-        content.scan(/\#@mapfile\((.*?)\)/).each do |filepath|
+        content.scan(/\#@mapfile\((.*?)\)/).each do |filepath_|
+          filepath = filepath_[0]
+          if filepath.blank?
+            next
+          end
           srcpath = File.join(@basedir, filepath)
           if File.exist?(srcpath)
             outpath = File.join(File.absolute_path(outdir), filepath)
             FileUtils.mkdir_p(File.dirname(outpath))
             FileUtils.cp(srcpath, outpath)
-            @embeded_contents.push(filepath[0])
+            @embeded_contents.push(filepath)
             update_content(outpath, outpath)
           end
         end
@@ -535,7 +582,7 @@ module ReVIEW
         delete_block_command_outer(content, 'centering')
 
         # convert starter option
-        convert_table_option(content)
+        convert_starter_option(content)
 
         # delete starter option
         # exclude_exta_option(content, 'cmd', 0)

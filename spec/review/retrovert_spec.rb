@@ -455,6 +455,17 @@ RSpec.describe 'convert result' do
         expect(text).to     be_include('//footnote[fnbar][test@<br>{}hoge]')
       end
 
+      it 'file param' do
+        expect(text).not_to be_include('file=contents/test.txt')
+        expect(text).not_to be_include('#@mapfile(contents/test.txt)')
+        expect(text).to     be_include('TestText-250c8d96-1d5d-434c-a43f-7dc3ad5a588b')
+      end
+
+      it 'file param with csv' do
+        expect(text).not_to be_include('file=contents/table.csv')
+        expect(text).to     be_include("AAA\t10\t10\t10")
+      end
+
     end
 
     if Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('4.0.0')
