@@ -103,6 +103,7 @@ RSpec.describe 'convert result' do
 
     it 'data file exist' do
       expect(File).to exist(File.join(outpath, 'data/words.txt.csv'))
+      expect(File).to exist(File.join(outpath, 'data/terms.txt'))
     end
 
     it 'inline command delete' do
