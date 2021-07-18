@@ -432,7 +432,30 @@ RSpec.describe 'convert result' do
         }
         expect(text).to be_include("ぼくのとなりに暗黒破壊神がいます")
       end
-  end
+    end
+
+    context 'more syntax' do
+      subject(:text) { File.open(root).read() }
+
+      it 'no duplicate mapfile' do
+        expect(File).to     exist(root)
+        expect(File).not_to exist(inner)
+      end
+
+      it 'preproc delete #@mapXXX~#@end' do
+        expect(text).not_to be_match(/^#[@]mapfile.*/)
+        expect(text).not_to be_match(/^#[@]end$/)
+        expect(text).to     be_match(/^== Inner file$/)
+      end
+
+      it 'br to blankline' do
+        expect(text).not_to be_match(/^\s*@<br>{}\s*$/)
+        # expect(text).to match(/^\s*.*@<br>{}\s*$/)
+        expect(text).to     be_match(/^\/\/blankline$/)
+        expect(text).to     be_include('//footnote[fnbar][test@<br>{}hoge]')
+      end
+
+    end
 
     if Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('4.0.0')
       it 'deprecated list' do
@@ -440,27 +463,6 @@ RSpec.describe 'convert result' do
         text = File.open(file02).read()
         expect(text).not_to be_match(/^:/)
       end
-    end
-
-    it 'preproc delete #@mapXXX~#@end' do
-      expect(File).to exist(root)
-      text = File.open(root).read()
-      expect(text).not_to be_match(/^#[@]mapfile.*/)
-      expect(text).not_to be_match(/^#[@]end$/)
-      expect(text).to     be_match(/^== Inner file$/)
-    end
-
-    it 'no duplicate mapfile' do
-      expect(File).to exist(root)
-      expect(File).not_to exist(inner)
-    end
-
-    it 'br to blankline' do
-      expect(File).to exist(root)
-      text = File.open(root).read()
-      expect(text).not_to be_match(/^\s*@<br>{}\s*$/)
-      # expect(text).to match(/^\s*.*@<br>{}\s*$/)
-      expect(text).to     be_match(/^\/\/blankline$/)
     end
 
     it 'sty' do

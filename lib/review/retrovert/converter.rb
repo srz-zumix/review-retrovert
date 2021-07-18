@@ -718,8 +718,13 @@ module ReVIEW
 
         if @ird
           # br to blankline
-          content.gsub!(/(.*)@<br>{}$/, "\\1\n\n")
-          content.gsub!(/(.*)@<br>{}(.*)$/, "\\1\n\n\\2")
+          content.gsub!(/(^\/\/footnote\[.*?\]\[.*?)((.*?@<br>({}|\$\$|\|\|)){1,})(.*\])$/) { |m|
+            m.gsub(/@<br>({}|\$\$|\|\|)/, '@<fnbr>\1')
+          }
+
+          content.gsub!(/(.*)@<br>({}|\$\$|\|\|)$/, "\\1\n\n")
+          content.gsub!(/(.*)@<br>({}|\$\$|\|\|)(.*)$/, "\\1\n\n\\2")
+          content.gsub!(/@<fnbr>({}|\$\$|\|\|)/, '@<br>\1')
         end
 
         # nop replace must be last step
