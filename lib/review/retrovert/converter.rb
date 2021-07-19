@@ -613,6 +613,8 @@ module ReVIEW
         content.gsub!(/^\/\/chapterauthor\[(.*?)\]/, "//lead{\n\\1\n//}")
         # talklist/desclist
         starter_list_to_nested_contents_list(content)
+        # empty caption imaget to indepimage
+        content.gsub!(/^\/\/image(\[#{@r_option_inner}\]\[\].*)$/, '//indepimage\1')
       end
 
       def delete_inline_command(content, command)

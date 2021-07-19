@@ -152,7 +152,7 @@ RSpec.describe 'convert result' do
       expect(File).to exist(file99)
       text = File.open(file99).read()
       expect(text).not_to be_match(/^\/\/sideimage/)
-      expect(text).to     be_match(/^\/\/image\[tw-icon\]\[\s*\]{\R\/\/}/)
+      expect(text).to     be_match(/^\/\/indepimage\[tw-icon\]\[\s*\]{\R\/\/}/)
     end
 
     # it 'block command replace exclude options' do
@@ -299,6 +299,11 @@ RSpec.describe 'convert result' do
           expect(text).not_to be_match(/^\/\/image\[.*?width=.*?/)
           expect(text).to     be_match(/^\/\/image\[.*?scale=.*?/)
         end
+      end
+
+      it 'indepimage' do
+        expect(text).not_to be_match(/^\/\/image\[[^\]]*?\]\[\].*$/)
+        expect(text).to     be_match(/^\/\/indepimage\[[^\]]*?\]\[\].*$/)
       end
 
       it 'terminal caption' do
