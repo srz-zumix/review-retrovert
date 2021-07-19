@@ -173,6 +173,12 @@ module ReVIEW
         replace_compatible_block_command_outline(content, cmd, cmd, max_option_num)
       end
 
+      def exclude_exta_options(content, commands, max_option_num)
+        commands.each do |cmd|
+          exclude_exta_option(content, cmd, max_option_num)
+        end
+      end
+
       def starter_caption_to_text(content, command, n)
         content.gsub!(/^\/\/#{command}(?<option>(\[[^\r\n]*?\]){0,#{n-1}})\[(?<caption>#{@r_option_inner})\](?<post>.*)$/, "\\k<caption>\n//#{command}\\k<option>\\k<post>")
       end
@@ -587,8 +593,14 @@ module ReVIEW
         # delete starter option
         # exclude_exta_option(content, 'cmd', 0)
         starter_caption_to_text(content, 'cmd', 1)
-        exclude_exta_option(content, 'imgtable', 2)
-        exclude_exta_option(content, 'table', 2)
+        exclude_exta_options(content, [
+          'imgtable',
+          'table',
+          # list/listnum の第３引数は言語指定だが、Starter の第３引数と全く異なるため 2 引数にしている
+          # Starter 側が言語指定対応したら修正
+          'list',
+          'listnum',
+        ], 2)
         # exclude_exta_option(content, 'tsize', 1)
         replace_tsize(content)
 

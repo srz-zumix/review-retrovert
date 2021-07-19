@@ -347,6 +347,12 @@ RSpec.describe 'convert result' do
       end
 
       context 'exclude starter option' do
+        it 'list' do
+          expect(text).not_to be_match(/^\/\/list\[.*?\]\[.*?\]\[.*?\].*/)
+        end
+        it 'listnum' do
+          expect(text).not_to be_match(/^\/\/listnum\[.*?\]\[.*?\]\[.*?\].*/)
+        end
         it 'table' do
           expect(text).not_to be_match(/^\/\/table\[.*?\]\[.*?\]\[.*?\].*/)
         end
