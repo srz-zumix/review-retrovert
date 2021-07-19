@@ -127,15 +127,17 @@ module ReVIEW
 
         # words
         words_files = @config['words_file']
-        if words_files.is_a?(Array)
-          new_words_files = []
-          words_files.each do |words_file|
-            new_words_files.push copy_wards(outdir, words_file)
+        if words_files
+          if words_files.is_a?(Array)
+            new_words_files = []
+            words_files.each do |words_file|
+              new_words_files.push copy_wards(outdir, words_file)
+            end
+            @configs.rewrite_yml('words_file', "[#{new_words_files.join(',')}]")
+          else
+            new_words_file = copy_wards(outdir, words_files)
+            @configs.rewrite_yml('words_file', new_words_file)
           end
-          @configs.rewrite_yml('words_file', "[#{new_words_files.join(',')}]")
-        else
-          new_words_file = copy_wards(outdir, words_files)
-          @configs.rewrite_yml('words_file', new_words_file)
         end
 
         # makeindex_dic
