@@ -152,7 +152,7 @@ RSpec.describe 'convert result' do
       expect(File).to exist(file99)
       text = File.open(file99).read()
       expect(text).not_to be_match(/^\/\/sideimage/)
-      expect(text).to     be_match(/^\/\/image\[tw-icon\]\[\s*\]{\R\/\/}/)
+      expect(text).to     be_match(/^\/\/indepimage\[tw-icon\]\[\s*\]{\R\/\/}/)
     end
 
     # it 'block command replace exclude options' do
@@ -301,6 +301,11 @@ RSpec.describe 'convert result' do
         end
       end
 
+      it 'indepimage' do
+        expect(text).not_to be_match(/^\/\/image\[[^\]]*?\]\[\].*$/)
+        expect(text).to     be_match(/^\/\/indepimage\[[^\]]*?\]\[\].*$/)
+      end
+
       it 'terminal caption' do
         expect(File).to exist(file01)
         text1 = File.open(file01).read()
@@ -347,6 +352,12 @@ RSpec.describe 'convert result' do
       end
 
       context 'exclude starter option' do
+        it 'list' do
+          expect(text).not_to be_match(/^\/\/list\[.*?\]\[.*?\]\[.*?\].*/)
+        end
+        it 'listnum' do
+          expect(text).not_to be_match(/^\/\/listnum\[.*?\]\[.*?\]\[.*?\].*/)
+        end
         it 'table' do
           expect(text).not_to be_match(/^\/\/table\[.*?\]\[.*?\]\[.*?\].*/)
         end
@@ -432,7 +443,41 @@ RSpec.describe 'convert result' do
         }
         expect(text).to be_include("ぼくのとなりに暗黒破壊神がいます")
       end
-  end
+    end
+
+    context 'more syntax' do
+      subject(:text) { File.open(root).read() }
+
+      it 'no duplicate mapfile' do
+        expect(File).to     exist(root)
+        expect(File).not_to exist(inner)
+      end
+
+      it 'preproc delete #@mapXXX~#@end' do
+        expect(text).not_to be_match(/^#[@]mapfile.*/)
+        expect(text).not_to be_match(/^#[@]end$/)
+        expect(text).to     be_match(/^== Inner file$/)
+      end
+
+      it 'br to blankline' do
+        expect(text).not_to be_match(/^\s*@<br>{}\s*$/)
+        # expect(text).to match(/^\s*.*@<br>{}\s*$/)
+        expect(text).to     be_match(/^\/\/blankline$/)
+        expect(text).to     be_include('//footnote[fnbar][test@<br>{}hoge]')
+      end
+
+      it 'file param' do
+        expect(text).not_to be_include('file=contents/test.txt')
+        expect(text).not_to be_include('#@mapfile(contents/test.txt)')
+        expect(text).to     be_include('TestText-250c8d96-1d5d-434c-a43f-7dc3ad5a588b')
+      end
+
+      it 'file param with csv' do
+        expect(text).not_to be_include('file=contents/table.csv')
+        expect(text).to     be_include("AAA\t10\t10\t10")
+      end
+
+    end
 
     if Gem::Version.new(ReVIEW::VERSION) >= Gem::Version.new('4.0.0')
       it 'deprecated list' do
@@ -440,27 +485,6 @@ RSpec.describe 'convert result' do
         text = File.open(file02).read()
         expect(text).not_to be_match(/^:/)
       end
-    end
-
-    it 'preproc delete #@mapXXX~#@end' do
-      expect(File).to exist(root)
-      text = File.open(root).read()
-      expect(text).not_to be_match(/^#[@]mapfile.*/)
-      expect(text).not_to be_match(/^#[@]end$/)
-      expect(text).to     be_match(/^== Inner file$/)
-    end
-
-    it 'no duplicate mapfile' do
-      expect(File).to exist(root)
-      expect(File).not_to exist(inner)
-    end
-
-    it 'br to blankline' do
-      expect(File).to exist(root)
-      text = File.open(root).read()
-      expect(text).not_to be_match(/^\s*@<br>{}\s*$/)
-      # expect(text).to match(/^\s*.*@<br>{}\s*$/)
-      expect(text).to     be_match(/^\/\/blankline$/)
     end
 
     it 'sty' do

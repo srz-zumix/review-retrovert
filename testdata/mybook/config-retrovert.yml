@@ -5,3 +5,12 @@
 # 上記のようにすることで retrovert 後のプロジェクトでのみ設定を上書きできます
 retrovert:
   chapterlink: null
+
+  # ソースコードハイライトを利用する (rouge,pygmentsには外部gemが必要)
+  highlight:
+  #   html: "rouge"
+    # 「×」が Package inputenc Error: Invalid UTF-8 byte sequence. になるので有効にしない
+    # latex: "listings"
+    # \ などがエスケープされないためエラーになる
+    # latex: "rouge"
+    # latex: "pygments"
