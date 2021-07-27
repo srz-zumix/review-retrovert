@@ -10,6 +10,7 @@ end
 
 RSpec.describe 'command test', type: :aruba do
   let(:config_yaml) { File.join(File.dirname(__FILE__), '../../testdata/mybook/config.yml') }
+  let(:config_noretrovert_yaml) { File.join(File.dirname(__FILE__), '../../testdata/mybook/config-noretrovert.yml') }
 
   context 'help' do
     before(:each) { run_command('bundle exec review-retrovert help') }
@@ -29,7 +30,15 @@ RSpec.describe 'command test', type: :aruba do
   end
 
   context 'convert no preproc' do
-    before(:each) { run_command("review-retrovert convert --tabwidth 4 #{config_yaml} tmp") }
+    before(:each) { run_command("review-retrovert convert --tabwidth 4 #{config_yaml} tmp_preproc") }
+    it 'result' do
+      expect(last_command_started).to be_successfully_executed
+      expect(last_command_started).not_to have_output(/INFO.*: preproc/)
+    end
+  end
+
+  context 'convert no retrovert config' do
+    before(:each) { run_command("review-retrovert convert --tabwidth 4 #{config_noretrovert_yaml} tmp_noretrovert") }
     it 'result' do
       expect(last_command_started).to be_successfully_executed
       expect(last_command_started).not_to have_output(/INFO.*: preproc/)
