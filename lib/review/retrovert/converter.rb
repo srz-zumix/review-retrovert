@@ -152,11 +152,13 @@ module ReVIEW
           jsbook_config = "media=ebook,openany,paper=b5,fontsize=9pt,baselineskip=15.5pt,head_space=15mm,gutter=22mm,footskip=16mm,line_length=45zw,number_of_lines=38"
         end
         @configs.rewrite_yml_array('texdocumentclass', "[\"review-jsbook\", \"#{jsbook_config}\"]")
-        @config['retrovert'].each{ |k,v|
-          unless v..is_a?(Hash)
-            @configs.commentout_root_yml(k)
-          end
-        }
+        if @config.key?('retrovert')
+          @config['retrovert'].each{ |k,v|
+            unless v..is_a?(Hash)
+              @configs.commentout_root_yml(k)
+            end
+          }
+        end
         if @ird
           @configs.rewrite_yml('chapterlink', 'null')
         end
