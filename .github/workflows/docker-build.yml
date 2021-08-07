@@ -20,7 +20,7 @@ jobs:
       - name: Push to version tag
         env:
           DOCKER_TAG: latest
-          IMAGE_NAME: srzzumix/review-retrovert
+          IMAGE_NAME: srzzumix/review-retrovert:latest
           DOCKER_REPO: srzzumix/review-retrovert
         run: |
           ./hooks/post_push
