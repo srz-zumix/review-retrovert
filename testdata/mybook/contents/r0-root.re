@@ -29,3 +29,8 @@ secref: @<secref>{01-install|RubyとTeXLiveのインストール}
 ==== footnote bar
 
 //footnote[fnbar][test@<br>{}hoge]
+
+==== others
+
+Test @<foldhere>{} foldhere
+
