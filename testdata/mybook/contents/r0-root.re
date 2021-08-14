@@ -34,3 +34,5 @@ secref: @<secref>{01-install|RubyとTeXLiveのインストール}
 
 Test @<foldhere>{} foldhere
 
+@<yomi>{虎空棘魚, タイガーシーラカンス}
+
