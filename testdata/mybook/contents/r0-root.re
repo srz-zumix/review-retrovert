@@ -1,3 +1,5 @@
+//makechaptitlepage[toc=on]
+
 = Retrovert テスト用
 
 //blankline
