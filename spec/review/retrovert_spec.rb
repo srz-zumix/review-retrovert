@@ -481,6 +481,11 @@ RSpec.describe 'convert result' do
         expect(text).not_to be_include('@<foldhere>$$')
       end
 
+      it 'yomi to ruby' do
+        expect(text).not_to be_match(/@<yomi>{.*?}/)
+        expect(text).to     be_match(/@<ruby>{.*?}/)
+      end
+
       it 'file param' do
         expect(text).not_to be_include('file=contents/test.txt')
         expect(text).not_to be_include('#@mapfile(contents/test.txt)')

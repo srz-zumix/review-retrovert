@@ -700,6 +700,7 @@ module ReVIEW
         replace_inline_command(content, 'W', 'wb')
         replace_inline_command(content, 'term', 'idx')
         replace_inline_command(content, 'termnoidx', 'hidx')
+        replace_inline_command(content, 'yomi', 'ruby')
         unless ReViewCompat::has_bou()
           replace_inline_command(content, 'bou', 'b')
         end
