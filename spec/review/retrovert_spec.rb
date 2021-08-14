@@ -475,6 +475,12 @@ RSpec.describe 'convert result' do
         expect(text).to     be_include('//footnote[fnbar][test@<br>{}hoge]')
       end
 
+      it 'foldhere' do
+        expect(text).not_to be_include('@<foldhere>{}')
+        expect(text).not_to be_include('@<foldhere>||')
+        expect(text).not_to be_include('@<foldhere>$$')
+      end
+
       it 'file param' do
         expect(text).not_to be_include('file=contents/test.txt')
         expect(text).not_to be_include('#@mapfile(contents/test.txt)')

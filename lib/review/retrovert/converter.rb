@@ -706,6 +706,7 @@ module ReVIEW
         delete_inline_command(content, 'userinput')
         delete_inline_command(content, 'weak')
         delete_inline_command(content, 'cursor')
+        delete_inline_command(content, 'foldhere')
         # font size
         delete_inline_command(content, 'small')
         delete_inline_command(content, 'xsmall')
