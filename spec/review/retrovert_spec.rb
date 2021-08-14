@@ -475,6 +475,10 @@ RSpec.describe 'convert result' do
         expect(text).to     be_include('//footnote[fnbar][test@<br>{}hoge]')
       end
 
+      it 'makechaptitlepage' do
+        expect(text).not_to be_include('//makechaptitlepage[')
+      end
+
       it 'foldhere' do
         expect(text).not_to be_include('@<foldhere>{}')
         expect(text).not_to be_include('@<foldhere>||')
