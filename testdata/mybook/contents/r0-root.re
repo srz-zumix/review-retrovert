@@ -19,6 +19,14 @@ test@<br>{}
 //table[][][csv=on,file=contents/table.csv]{
 //}
 
+//table[][]{
+A	B
+--------------
+a	b@<br>{}b
+.	X
+X	.
+//}
+
 ==={subsubtest} コマンド
 
 ==== Secref テスト用

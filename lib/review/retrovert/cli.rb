@@ -12,6 +12,7 @@ module ReVIEW
       method_option "table-br-replace", desc: '@<br>{} in table replace string (Default: empty)', type: :string, default: ''
       method_option "table-empty-replace", desc: 'empty cell(.) in table replace string (Default full-width space)', type: :string, default: '　'
       method_option "ird", desc: 'For IRD', type: :boolean
+      method_option "no-update", desc: 'Do not Re:VIEW update', type: :boolean
       method_option "no-image", desc: 'Do not copy image', type: :boolean
       method_option "delegate-config", desc: 'If there is no config.yml file, create an inherited file', type: :boolean
       def convert(review_starter_configfile, outdir)

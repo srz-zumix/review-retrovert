@@ -727,12 +727,6 @@ module ReVIEW
         content.gsub!(/@<href>{(.*?)#.*?,(.*?)}/, '@<href>{\1,\2}')
         content.gsub!(/@<href>{(.*?)#.*?}/, '@<href>{\1}')
         linkurl_footnote = @config['starter']['linkurl_footnote']
-        # table 内の @ コマンドは不安定らしい
-        while !content.gsub!(/(\/\/table.*)@<br>{}(.*?\/\/})/m, "\\1#{Regexp.escape(@table_br_replace)}\\2").nil? do
-        end
-        # 空セルが2行になることがあるらしい
-        while !content.gsub!(/(\/\/table.*\s)\.(\s.*?\/\/})/m, "\\1#{Regexp.escape(@table_empty_replace)}\\2").nil? do
-        end
         # noop を最後に消すためにダミーに変える
         content.gsub!('@<nop>$$', '@<dummynop>$must_be_replace_nop$')
         content.gsub!('@<nop>||', '@<dummynop>|must_be_replace_nop|')
@@ -789,9 +783,20 @@ module ReVIEW
             m.gsub(/@<br>({}|\$\$|\|\|)/, '@<fnbr>\1')
           }
 
+          content.gsub!(/(\/\/table.*?{.*?\/\/})/m) { |m|
+            # table 内の @ コマンドは不安定らしい
+            m.gsub!('@<br>{}', "#{Regexp.escape(@table_br_replace)}")
+            # 空セルが2行になることがあるらしい
+            m.gsub!(/(\s)\.(\s)/, "\\1#{Regexp.escape(@table_empty_replace)}\\2")
+            m
+          }
+
           content.gsub!(/(.*)@<br>({}|\$\$|\|\|)$/, "\\1\n\n")
           content.gsub!(/(.*)@<br>({}|\$\$|\|\|)(.*)$/, "\\1\n\n\\2")
-          content.gsub!(/@<fnbr>({}|\$\$|\|\|)/, '@<br>\1')
+
+          content.gsub!('@<fnbr>{}', '@<br>{}')
+          content.gsub!('@<fnbr>$$', '@<br>$$')
+          content.gsub!('@<fnbr>||', '@<br>||')
         end
 
         # nop replace must be last step
@@ -953,16 +958,18 @@ module ReVIEW
           end
         end
 
-        pwd = Dir.pwd
-        Dir.chdir(outdir)
-        updater = ReVIEW::Update.new
-        updater.force = true
-        # updater.backup = false
-        begin
-          updater.execute()
-        rescue
+        unless options['no-update']
+          pwd = Dir.pwd
+          Dir.chdir(outdir)
+          updater = ReVIEW::Update.new
+          updater.force = true
+          # updater.backup = false
+          begin
+            updater.execute()
+          rescue
+          end
+          Dir.chdir(pwd)
         end
-        Dir.chdir(pwd)
 
         if options['preproc']
           info 'preproc'
