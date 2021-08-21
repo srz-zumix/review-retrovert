@@ -946,6 +946,14 @@ module ReVIEW
         update_sty(outdir, options)
         update_ext(outdir, options)
 
+        if options['delegate-config']
+          unless File.exist?(Path.join(outdir, 'config.yml'))
+            root_config = File.open(File.join(outdir, 'config.yml'), 'w')
+            root_config.puts("review_version: #{ReVIEW::VERSION}")
+            root_config.puts("inherit: [\"#{File.basename(yamlfile)}\"]")
+          end
+        end
+
         pwd = Dir.pwd
         Dir.chdir(outdir)
         updater = ReVIEW::Update.new
