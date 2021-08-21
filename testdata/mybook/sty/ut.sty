@@ -1,0 +1,26 @@
+\renewcommand{\centering}{}
+\newcommand{\HUGE}{}
+\newcommand{\plainifnotempty}{}
+\newif\if@omit@number
+\newdimen\jsc@tocl@width
+
+\newdimen\fullwidth
+
+\newcommand{\seename}{}
+
+\renewcommand{\appendix}{\par
+  \setcounter{chapter}{0}%
+  \setcounter{section}{0}%
+  \gdef\@chapapp{\appendixname}%
+  \gdef\@chappos{}%
+  \gdef\thechapter{\@Alph\c@chapter}}
+
+
+\renewcommand{\thechapter}{\@arabic\c@chapter}
+\renewcommand{\thesection}{\thechapter.\@arabic\c@section}
+\renewcommand{\thesubsection}{\thesection.\@arabic\c@subsection}
+\renewcommand{\thesubsubsection}{%
+   \thesubsection.\@arabic\c@subsubsection}
+
+\usepackage[japanese,nohints]{minitoc}
+\renewcommand{\minitoc}{}

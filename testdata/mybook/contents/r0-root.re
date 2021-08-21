@@ -19,9 +19,9 @@ test@<br>{}
 //table[][][csv=on,file=contents/table.csv]{
 //}
 
-=== コマンド
+==={subsubtest} コマンド
 
-===={subsubtest} Secref テスト用
+==== Secref テスト用
 
 secref: @<secref>{subsubtest}
 secref: @<secref>{r0-root|subsubtest}
@@ -34,7 +34,11 @@ secref: @<secref>{01-install|RubyとTeXLiveのインストール}
 
 ==== others
 
+//terminal{
 Test @<foldhere>{} foldhere
+//}
 
-@<yomi>{虎空棘魚, タイガーシーラカンス}
+@<ruby>{虎空棘魚, タイガーシーラカンス}
 
+5 + 5 = @<tcy>{10}
+@<tcy>{YES}

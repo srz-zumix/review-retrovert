@@ -33,3 +33,7 @@
   \rule[#1]{0pt}{0pt}%   % 幅のない縦線を引く。引くスペースがなければ改ページされる。
   \vspace{-#1}\par%      % もとの位置に戻る
 }
+
+\ifdefined\rensuji\else
+  \newcommand\rensuji[1]{#1}
+\fi

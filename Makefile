@@ -22,3 +22,7 @@ debug-build:
 
 testdata-pdf:
 	docker run --rm -v ${PWD}/testdata/mybook:/work -w /work kauplan/review2.5 rake pdf
+
+testdata-ut-pdf:
+	# rm -rf ./testdata/mybook/mybook-ut-pdf
+	docker run --rm -v ${PWD}/testdata/mybook:/work -w /work -e config=ut-config.yml kauplan/review2.5 rake pdf
