@@ -14,7 +14,7 @@ module ReVIEW
       method_option "ird", desc: 'For IRD', type: :boolean
       method_option "no-update", desc: 'Do not Re:VIEW update', type: :boolean
       method_option "no-image", desc: 'Do not copy image', type: :boolean
-      method_option "delegate-config", desc: 'If there is no config.yml file, create an inherited file', type: :boolean
+      method_option "no-delegate-yaml", desc: 'review-retrovert creates an inherited file if the config.yml/catalog.yml file does not exist. Not done if no-delegate-yaml option is specified', type: :boolean
       def convert(review_starter_configfile, outdir)
         Converter.execute(review_starter_configfile, outdir, options)
       end

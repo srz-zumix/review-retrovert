@@ -81,6 +81,12 @@ RSpec.describe 'convert result' do
         expect(config_text).to be_match(/^words_file:\s*.*\.csv.*/)
       end
 
+      it 'texdocumentclass' do
+        expect(config_text).not_to be_match(/^texdocumentclass.*uplatex/)
+        expect(config_text).not_to be_match(/^texdocumentclass.*papersize/)
+        expect(config_text).to     be_match(/^texdocumentclass.*review-jsbook/)
+      end
+
     end
 
     context 'retrovert config' do
