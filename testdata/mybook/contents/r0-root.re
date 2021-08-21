@@ -47,6 +47,3 @@ Test @<foldhere>{} foldhere
 //}
 
 @<ruby>{虎空棘魚, タイガーシーラカンス}
-
-5 + 5 = @<tcy>{10}
-@<tcy>{YES}
