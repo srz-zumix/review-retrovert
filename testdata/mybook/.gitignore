@@ -7,3 +7,7 @@ rubygems/*
 tmp/*
 mybook-pdf/*
 mybook-md/*
+mybook-ut-pdf/*
+mybook-ut-md/*
+mybook.pdf
+mybook-ut.pdf

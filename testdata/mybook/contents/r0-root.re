@@ -1,3 +1,5 @@
+//makechaptitlepage[toc=on]
+
 = Retrovert テスト用
 
 //blankline
@@ -17,9 +19,17 @@ test@<br>{}
 //table[][][csv=on,file=contents/table.csv]{
 //}
 
-=== コマンド
+//table[][]{
+A	B
+--------------
+a	b@<br>{}b
+.	X
+X	.
+//}
 
-===={subsubtest} Secref テスト用
+==={subsubtest} コマンド
+
+==== Secref テスト用
 
 secref: @<secref>{subsubtest}
 secref: @<secref>{r0-root|subsubtest}
@@ -29,3 +39,11 @@ secref: @<secref>{01-install|RubyとTeXLiveのインストール}
 ==== footnote bar
 
 //footnote[fnbar][test@<br>{}hoge]
+
+==== others
+
+//terminal{
+Test @<foldhere>{} foldhere
+//}
+
+@<ruby>{虎空棘魚, タイガーシーラカンス}

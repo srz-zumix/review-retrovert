@@ -81,6 +81,12 @@ RSpec.describe 'convert result' do
         expect(config_text).to be_match(/^words_file:\s*.*\.csv.*/)
       end
 
+      it 'texdocumentclass' do
+        expect(config_text).not_to be_match(/^texdocumentclass.*uplatex/)
+        expect(config_text).not_to be_match(/^texdocumentclass.*papersize/)
+        expect(config_text).to     be_match(/^texdocumentclass.*review-jsbook/)
+      end
+
     end
 
     context 'retrovert config' do
@@ -468,11 +474,14 @@ RSpec.describe 'convert result' do
         expect(text).to     be_match(/^== Inner file$/)
       end
 
-      it 'br to blankline' do
-        expect(text).not_to be_match(/^\s*@<br>{}\s*$/)
-        # expect(text).to match(/^\s*.*@<br>{}\s*$/)
-        expect(text).to     be_match(/^\/\/blankline$/)
-        expect(text).to     be_include('//footnote[fnbar][test@<br>{}hoge]')
+      it 'makechaptitlepage' do
+        expect(text).not_to be_include('//makechaptitlepage[')
+      end
+
+      it 'foldhere' do
+        expect(text).not_to be_include('@<foldhere>{}')
+        expect(text).not_to be_include('@<foldhere>||')
+        expect(text).not_to be_include('@<foldhere>$$')
       end
 
       it 'file param' do
@@ -484,6 +493,24 @@ RSpec.describe 'convert result' do
       it 'file param with csv' do
         expect(text).not_to be_include('file=contents/table.csv')
         expect(text).to     be_include("AAA\t10\t10\t10")
+      end
+
+      context 'for ird' do
+        it 'br to blankline' do
+          expect(text).not_to be_match(/^\s*@<br>{}\s*$/)
+          # expect(text).to match(/^\s*.*@<br>{}\s*$/)
+          expect(text).to     be_match(/^\/\/blankline$/)
+          expect(text).to     be_include('//footnote[fnbar][test@<br>{}hoge]')
+        end
+
+        it 'br in table' do
+          expect(text).not_to be_include('b@<br>{}b')
+        end
+
+        it 'empty column in table' do
+          expect(text).not_to be_include(".\tX")
+          expect(text).to     be_include("　\tX")
+        end
       end
 
     end

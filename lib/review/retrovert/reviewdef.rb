@@ -44,6 +44,35 @@ module ReVIEW
           ]
         end
 
+        def review_jsbook_invalid_configs()
+          [
+            "uplatex",
+            "autodetect-engine",
+            "papersize",
+            "titlepage",
+            "notitlepage",
+            "usemag",
+            "nomag",
+            "nomag*",
+            "a4j",
+            "a5j",
+            "b4j",
+            "b5j",
+            "winjis",
+            "mingoth",
+            "jis",
+            "disablejfam",
+            "a4paper",
+            "a5paper",
+            "b4paper",
+            "b5paper",
+            "letterpaper",
+            "tombo",
+            "tombow",
+            "mentuke",
+          ]
+        end
+
         # キャプションを取得する
         def get_caption(line)
           m = line.match(/^\/\/(\w+?)((\[#{r_option_inner}\])*)([$|{])*$/)

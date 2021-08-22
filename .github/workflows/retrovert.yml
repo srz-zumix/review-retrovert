@@ -6,6 +6,21 @@ on:
 
 name: Retrovert
 jobs:
+  review-starter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: build pdf
+        run: |
+          docker run --rm -v "$(pwd)/testdata/mybook":/work -w /work kauplan/review2.5 rake preproc pdf
+          cp testdata/mybook/mybook.pdf mybook-starter.pdf
+      # artifacts
+      - name: artifacts
+        uses: actions/upload-artifact@v1
+        with:
+          name: mybook
+          path: mybook-starter.pdf
+
   review:
     runs-on: ubuntu-latest
     strategy:

@@ -14,6 +14,9 @@ test:
 test-ird:
 	RUBYLIB=lib ./exe/review-retrovert convert --preproc --tabwidth 4 --ird testdata/mybook/config.yml -f tmp/debug
 
+test-ut:
+	RUBYLIB=lib ./exe/review-retrovert convert --preproc --tabwidth 4 testdata/mybook/ut-config.yml -f tmp/debug
+
 REVIEW_VERSION:=latest
 
 debug-build:
@@ -22,3 +25,7 @@ debug-build:
 
 testdata-pdf:
 	docker run --rm -v ${PWD}/testdata/mybook:/work -w /work kauplan/review2.5 rake pdf
+
+testdata-ut-pdf:
+	# rm -rf ./testdata/mybook/mybook-ut-pdf
+	docker run --rm -v ${PWD}/testdata/mybook:/work -w /work -e config=ut-config.yml kauplan/review2.5 rake pdf

@@ -28,9 +28,13 @@
 %%  ・ページに左右がないので、「texdocumentclass:」に"oneside"を指定する。
 %%
 
+\def\inv@mag{1}
+
 %% 本文の幅を設定
 \setlength{\textwidth}{\starter@textwidth}  % 例：'39zw' なら全角39文字分
-\setlength{\fullwidth}{\textwidth}  % ヘッダの幅を本文と同じにする
+\ifdefined\fullwidth
+    \setlength{\fullwidth}{\textwidth}  % ヘッダの幅を本文と同じにする
+\fi
 
 %% 左右の余白幅を自動設定
 \setlength{\oddsidemargin}{\paperwidth}      % 紙の幅から

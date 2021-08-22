@@ -122,8 +122,6 @@ module ReVIEW
         @configs.rewrite_yml('contentdir', '.')
         @configs.rewrite_yml('hook_beforetexcompile', 'null')
         @configs.rewrite_yml('texstyle', '["reviewmacro"]')
-        pagesize = @config['starter']['pagesize'].downcase
-        jsbook_config = "media=print,paper=#{pagesize}"
 
         # words
         words_files = @config['words_file']
@@ -146,12 +144,41 @@ module ReVIEW
           FileUtils.copy(File.join(@basedir, makeindex_dic), File.join(outdir, makeindex_dic))
         end
 
+        # texdocumentclass
+        pagesize = @config['starter']['pagesize'].downcase
+        book_configs = [
+          "media=print",
+          "paper=#{pagesize}"
+        ]
+
+        texdocumentclass = @config['texdocumentclass']
+        book_style = texdocumentclass[0]
+        if book_style == "jsbook"
+          book_style = "review-jsbook"
+        elsif book_style == "utbook"
+          book_style = "review-utbook"
+          FileUtils.cp(File.join(__dir__, 'sty/review-utbook.cls'), File.join(outdir, 'sty/review-utbook.cls'))
+        end
+        origin_book_configs = texdocumentclass[1].split(',')
+        book_configs.concat origin_book_configs.select { |c| !ReViewDef::review_jsbook_invalid_configs().include?(c) }
+
         if @ird
           # # リュウミン Pr6N R-KL 12.5Q 22H (9pt = 12.7Q 15.5pt = 21.8Q(H))
           # texdocumentclass: ["review-jsbook", "media=ebook,openany,paper=b5,fontsize=9pt,baselineskip=15.5pt,head_space=15mm,gutter=22mm,footskip=16mm,line_length=45zw,number_of_lines=38"]
-          jsbook_config = "media=ebook,openany,paper=b5,fontsize=9pt,baselineskip=15.5pt,head_space=15mm,gutter=22mm,footskip=16mm,line_length=45zw,number_of_lines=38"
+          book_config = [
+            "media=ebook",
+            "openany",
+            "paper=b5",
+            "fontsize=9pt",
+            "baselineskip=15.5pt",
+            "head_space=15mm",
+            "gutter=22mm",
+            "footskip=16mm",
+            "line_length=45zw",
+            "number_of_lines=38"
+          ]
         end
-        @configs.rewrite_yml_array('texdocumentclass', "[\"review-jsbook\", \"#{jsbook_config}\"]")
+        @configs.rewrite_yml_array('texdocumentclass', "[\"#{book_style}\", \"#{book_configs.join(',')}\"]")
         if @config.key?('retrovert')
           @config['retrovert'].each{ |k,v|
             unless v..is_a?(Hash)
@@ -584,6 +611,7 @@ module ReVIEW
         replace_compatible_block_command_outline(content, 'output', 'list', 3)
         replace_compatible_block_command_to_outside(content, 'sideimage', 'image', 1, '[]')
         replace_block_command_outline(content, 'abstract', 'lead', true)
+        delete_block_command(content, 'makechaptitlepage')
         delete_block_command(content, 'vspace')
         delete_block_command(content, 'needvspace')
         delete_block_command(content, 'clearpage')
@@ -706,6 +734,7 @@ module ReVIEW
         delete_inline_command(content, 'userinput')
         delete_inline_command(content, 'weak')
         delete_inline_command(content, 'cursor')
+        delete_inline_command(content, 'foldhere')
         # font size
         delete_inline_command(content, 'small')
         delete_inline_command(content, 'xsmall')
@@ -725,12 +754,6 @@ module ReVIEW
         content.gsub!(/@<href>{(.*?)#.*?,(.*?)}/, '@<href>{\1,\2}')
         content.gsub!(/@<href>{(.*?)#.*?}/, '@<href>{\1}')
         linkurl_footnote = @config['starter']['linkurl_footnote']
-        # table 内の @ コマンドは不安定らしい
-        while !content.gsub!(/(\/\/table.*)@<br>{}(.*?\/\/})/m, "\\1#{Regexp.escape(@table_br_replace)}\\2").nil? do
-        end
-        # 空セルが2行になることがあるらしい
-        while !content.gsub!(/(\/\/table.*\s)\.(\s.*?\/\/})/m, "\\1#{Regexp.escape(@table_empty_replace)}\\2").nil? do
-        end
         # noop を最後に消すためにダミーに変える
         content.gsub!('@<nop>$$', '@<dummynop>$must_be_replace_nop$')
         content.gsub!('@<nop>||', '@<dummynop>|must_be_replace_nop|')
@@ -787,9 +810,20 @@ module ReVIEW
             m.gsub(/@<br>({}|\$\$|\|\|)/, '@<fnbr>\1')
           }
 
+          content.gsub!(/(\/\/table.*?{.*?\/\/})/m) { |m|
+            # table 内の @ コマンドは不安定らしい
+            m.gsub!('@<br>{}', "#{Regexp.escape(@table_br_replace)}")
+            # 空セルが2行になることがあるらしい
+            m.gsub!(/(\s)\.(\s)/, "\\1#{Regexp.escape(@table_empty_replace)}\\2")
+            m
+          }
+
           content.gsub!(/(.*)@<br>({}|\$\$|\|\|)$/, "\\1\n\n")
           content.gsub!(/(.*)@<br>({}|\$\$|\|\|)(.*)$/, "\\1\n\n\\2")
-          content.gsub!(/@<fnbr>({}|\$\$|\|\|)/, '@<br>\1')
+
+          content.gsub!('@<fnbr>{}', '@<br>{}')
+          content.gsub!('@<fnbr>$$', '@<br>$$')
+          content.gsub!('@<fnbr>||', '@<br>||')
         end
 
         # nop replace must be last step
@@ -943,16 +977,30 @@ module ReVIEW
         update_sty(outdir, options)
         update_ext(outdir, options)
 
-        pwd = Dir.pwd
-        Dir.chdir(outdir)
-        updater = ReVIEW::Update.new
-        updater.force = true
-        # updater.backup = false
-        begin
-          updater.execute()
-        rescue
+        unless options['no-delegate-config']
+          unless File.exist?(File.join(outdir, 'config.yml'))
+            root_config = File.open(File.join(outdir, 'config.yml'), 'w')
+            root_config.puts("review_version: #{ReVIEW::VERSION}")
+            root_config.puts("inherit: [\"#{File.basename(yamlfile)}\"]")
+          end
+          unless File.exist?(File.join(outdir, 'catalog.yml'))
+            catalogfile = @config['catalogfile']
+            FileUtils.copy(File.join(@basedir, catalogfile), File.join(outdir, 'catalog.yml'))
+          end
         end
-        Dir.chdir(pwd)
+
+        unless options['no-update']
+          pwd = Dir.pwd
+          Dir.chdir(outdir)
+          updater = ReVIEW::Update.new
+          updater.force = true
+          # updater.backup = false
+          begin
+            updater.execute()
+          rescue
+          end
+          Dir.chdir(pwd)
+        end
 
         if options['preproc']
           info 'preproc'
