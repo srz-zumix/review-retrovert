@@ -16,7 +16,7 @@ jobs:
           cp testdata/mybook/mybook.pdf mybook-starter.pdf
       # artifacts
       - name: artifacts
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v6
         with:
           name: mybook
           path: mybook-starter.pdf
@@ -81,12 +81,12 @@ jobs:
           cp tmp-${{ matrix.review-version }}/mybook.pdf mybook-${{ matrix.review-version }}.pdf
       # artifacts
       - name: artifacts
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v6
         with:
           name: mybook
           path: mybook-${{ matrix.review-version }}.pdf
       # - name: artifacts
-      #   uses: actions/upload-artifact@v1
+      #   uses: actions/upload-artifact@v6
       #   with:
       #     name: mybook
       #     path: tmp/mybook.epub
