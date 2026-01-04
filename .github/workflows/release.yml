@@ -8,11 +8,12 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Ruby 2.6
-        uses: actions/setup-ruby@v1
+      - uses: actions/checkout@v6
         with:
-          version: 2.6.x
+          persist-credentials: false
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
       - name: Publish to RubyGems
         run: |
           gem --version

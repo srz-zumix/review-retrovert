@@ -137,7 +137,7 @@ module ReVIEW
 
       def load_yaml(filepath)
         begin
-          yaml = YAML.load_file(filepath)
+          yaml = YAML.load_file(filepath, permitted_classes: [Date, Time])
         rescue => e
           error "load error #{e.message}"
         end

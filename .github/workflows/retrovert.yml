@@ -9,7 +9,7 @@ jobs:
   review-starter:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: build pdf
         run: |
           docker run --rm -v "$(pwd)/testdata/mybook":/work -w /work kauplan/review2.5 rake preproc pdf
@@ -39,10 +39,12 @@ jobs:
           - "latest"
       fail-fast: false
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 2.6
+          bundler-cache: true
       - run: |
           rm -f Gemfile.lock
           cp Gemfile Gemfile-${{ matrix.review-version }}
