@@ -92,7 +92,7 @@ jobs:
       - name: artifacts
         uses: actions/upload-artifact@v6
         with:
-          name: mybook
+          name: mybook-${{ matrix.review-version }}
           path: mybook-${{ matrix.review-version }}.pdf
       # - name: artifacts
       #   uses: actions/upload-artifact@v6
