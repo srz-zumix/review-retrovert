@@ -1,3 +1,30 @@
+require 'yaml'
+
+# For Ruby 3.1+ compatibility with review 5.3 and earlier
+# These versions don't support safe YAML loading with permitted_classes
+module YAML
+  class << self
+    alias_method :original_load_file, :load_file
+    alias_method :original_safe_load, :safe_load
+
+    def load_file(path, *args, **kwargs)
+      if kwargs.empty? && args.empty?
+        original_load_file(path, permitted_classes: [Date, Time, Symbol], permitted_symbols: [], aliases: true)
+      else
+        original_load_file(path, *args, **kwargs)
+      end
+    end
+
+    def safe_load(yaml, *args, **kwargs)
+      if kwargs.empty? && args.empty?
+        original_safe_load(yaml, permitted_classes: [Date, Time, Symbol], permitted_symbols: [], aliases: true)
+      else
+        original_safe_load(yaml, *args, **kwargs)
+      end
+    end
+  end
+end
+
 require 'review'
 require 'erb'
 require 'fileutils'
