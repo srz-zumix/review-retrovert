@@ -105,7 +105,7 @@ jobs:
     needs:
       - review
       - review-starter
-    if: !success()
+    if: failure()
     steps:
       - name: Retrovert Status Check
         run: |
