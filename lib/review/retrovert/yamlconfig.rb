@@ -128,11 +128,28 @@ module ReVIEW
           retrovert = yaml['retrovert']
           yaml.deep_merge!(retrovert)
           yaml.delete('retrovert')
+          # Convert Date/Time objects to strings to avoid YAML loading issues
+          # with Ruby 3.1+ and review 5.3 or earlier
+          yaml = convert_dates_to_strings(yaml)
           # YAML.dump(yaml, File.open(yamlfile, "w"))
           content = Psych.dump(yaml)
           content.gsub!('---','')
           File.write(yamlfile, content)
         }
+      end
+
+      # Recursively convert Date and Time objects to ISO 8601 strings
+      def convert_dates_to_strings(obj)
+        case obj
+        when Hash
+          obj.transform_values { |v| convert_dates_to_strings(v) }
+        when Array
+          obj.map { |v| convert_dates_to_strings(v) }
+        when Date, Time
+          obj.strftime('%Y-%m-%d')
+        else
+          obj
+        end
       end
 
       def load_yaml(filepath)
