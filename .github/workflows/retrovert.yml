@@ -37,7 +37,9 @@ jobs:
           - "5.0"
           - "5.1"
           - "5.2"
-          - "5.3"
+          # review 5.3 is skipped because vvakame/review:5.3 Docker image uses Ruby 3.1
+          # which is incompatible with review 5.3's YAML.safe_load usage
+          # - "5.3"
           - "5.4"
           - "5.5"
           - "5.6"
