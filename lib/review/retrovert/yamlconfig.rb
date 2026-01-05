@@ -84,7 +84,25 @@ module ReVIEW
           FileUtils.copy(File.expand_path(current_file, @basedir), File.join(outdir, current_file))
         }
         @basedir = outdir
+        # Only quote date fields for review 5.3 and earlier (< 5.4.0)
+        # These versions have YAML Date parsing issues with Ruby 3.1+
+        if Gem::Version.new(ReVIEW::VERSION) < Gem::Version.new('5.4.0')
+          quote_date_fields()
+        end
         rewrite_retrovert_yml()
+      end
+
+      # Quote date fields to avoid YAML Date parsing issues with Ruby 3.1+ and review 5.3 or earlier
+      def quote_date_fields()
+        @config_files.each { |current_file|
+          yamlfile = File.join(@basedir, current_file)
+          content = File.read(yamlfile)
+          # Match date fields like "date: 2021-07-10" and quote them
+          content.gsub!(/^(\s*)(date|history):\s*(\d{4}-\d{2}-\d{2})\s*$/, '\1\2: "\3"')
+          # Match date in arrays like "  - 2021-07-10"
+          content.gsub!(/^(\s*-\s*)(\d{4}-\d{2}-\d{2})\s*$/, '\1"\2"')
+          File.write(yamlfile, content)
+        }
       end
 
       def commentout(yamlfile, key)
@@ -130,7 +148,9 @@ module ReVIEW
           yaml.delete('retrovert')
           # Convert Date/Time objects to strings to avoid YAML loading issues
           # with Ruby 3.1+ and review 5.3 or earlier
-          yaml = convert_dates_to_strings(yaml)
+          if Gem::Version.new(ReVIEW::VERSION) < Gem::Version.new('5.4.0')
+            yaml = convert_dates_to_strings(yaml)
+          end
           # YAML.dump(yaml, File.open(yamlfile, "w"))
           content = Psych.dump(yaml)
           content.gsub!('---','')
