@@ -1,3 +1,41 @@
+require 'yaml'
+
+# For Ruby 3.1+ compatibility with review 5.3 and earlier
+# These versions don't support safe YAML loading with permitted_classes
+module YAML
+  class << self
+    alias_method :original_load_file, :load_file
+    alias_method :original_safe_load, :safe_load
+
+    def load_file(path, *args, **kwargs)
+      if kwargs.empty? && args.empty?
+        original_load_file(path, permitted_classes: [Date, Time, Symbol], permitted_symbols: [], aliases: true)
+      else
+        original_load_file(path, *args, **kwargs)
+      end
+    end
+
+    # Handle both old positional args (review 5.3 and earlier) and new keyword args
+    # Old format: YAML.safe_load(yaml, permitted_classes, permitted_symbols, aliases, filename)
+    # New format: YAML.safe_load(yaml, permitted_classes: [], permitted_symbols: [], aliases: false)
+    def safe_load(yaml, *args, **kwargs)
+      if kwargs.empty?
+        if args.empty?
+          original_safe_load(yaml, permitted_classes: [Date, Time, Symbol], permitted_symbols: [], aliases: true)
+        else
+          # Convert old positional args to new keyword args format
+          permitted_classes = args[0].is_a?(Array) ? args[0] : [Date, Time, Symbol]
+          permitted_symbols = args[1].is_a?(Array) ? args[1] : []
+          aliases = args[2].nil? ? true : args[2]
+          original_safe_load(yaml, permitted_classes: permitted_classes + [Date, Time, Symbol], permitted_symbols: permitted_symbols, aliases: aliases)
+        end
+      else
+        original_safe_load(yaml, *args, **kwargs)
+      end
+    end
+  end
+end
+
 require 'review'
 require 'erb'
 require 'fileutils'

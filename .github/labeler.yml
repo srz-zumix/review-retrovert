@@ -1,0 +1,16 @@
+ci:
+  - any:
+      - changed-files:
+          - any-glob-to-all-files: '.github/**'
+  - color: '#7c0bb2'
+
+aqua:
+  - changed-files:
+      - any-glob-to-any-file: 'aqua.*.yaml'
+  - color: '#1E90FF'
+
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'docs/**'
+          - README.md

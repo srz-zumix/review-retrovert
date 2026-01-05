@@ -1,0 +1,23 @@
+name: Labeler
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      # checkov:skip=CKV_GHA_7: Input required for manual trigger
+      pr-number:
+        description: 'The pull request number(s)'
+        required: true
+
+permissions: {}
+
+jobs:
+  labeler:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: srz-zumix/labeler-action@30d5b027a64eb31b545399436303b0884087e4dd # v0.6.2
+        with:
+          pr-number: ${{ github.event.inputs.pr-number || github.event.number }}
