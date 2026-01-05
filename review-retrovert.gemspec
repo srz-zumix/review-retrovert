@@ -28,6 +28,11 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency "thor"
+  # Required for Ruby 3.4+ where these gems are no longer default gems
+  # Necessary for compatibility with review versions 5.4 and earlier
+  spec.add_dependency "rexml"
+  spec.add_dependency "csv"
+  spec.add_dependency "nkf"
   spec.add_development_dependency "rspec", ['~> 3.0']
   spec.add_development_dependency "rake", ['~> 12.0']
   spec.add_development_dependency 'aruba', ['~> 1.0.2']

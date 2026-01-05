@@ -2,7 +2,10 @@ PATH
   remote: .
   specs:
     review-retrovert (0.9.11)
+      csv
+      nkf
       review (>= 3.0.0)
+      rexml
       thor
 
 GEM
