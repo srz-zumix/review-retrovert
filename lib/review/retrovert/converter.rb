@@ -15,9 +15,20 @@ module YAML
       end
     end
 
+    # Handle both old positional args (review 5.3 and earlier) and new keyword args
+    # Old format: YAML.safe_load(yaml, permitted_classes, permitted_symbols, aliases, filename)
+    # New format: YAML.safe_load(yaml, permitted_classes: [], permitted_symbols: [], aliases: false)
     def safe_load(yaml, *args, **kwargs)
-      if kwargs.empty? && args.empty?
-        original_safe_load(yaml, permitted_classes: [Date, Time, Symbol], permitted_symbols: [], aliases: true)
+      if kwargs.empty?
+        if args.empty?
+          original_safe_load(yaml, permitted_classes: [Date, Time, Symbol], permitted_symbols: [], aliases: true)
+        else
+          # Convert old positional args to new keyword args format
+          permitted_classes = args[0].is_a?(Array) ? args[0] : [Date, Time, Symbol]
+          permitted_symbols = args[1].is_a?(Array) ? args[1] : []
+          aliases = args[2].nil? ? true : args[2]
+          original_safe_load(yaml, permitted_classes: permitted_classes + [Date, Time, Symbol], permitted_symbols: permitted_symbols, aliases: aliases)
+        end
       else
         original_safe_load(yaml, *args, **kwargs)
       end
