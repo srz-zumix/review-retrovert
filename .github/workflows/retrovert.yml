@@ -99,3 +99,15 @@ jobs:
       #   with:
       #     name: mybook
       #     path: tmp/mybook.epub
+
+  retrovert-status-check:
+    runs-on: ubuntu-latest
+    needs:
+      - review
+      - review-starter
+    if: !success()
+    steps:
+      - name: Retrovert Status Check
+        run: |
+          echo "One of the review builds has failed."
+          exit 1
