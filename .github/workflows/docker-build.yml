@@ -22,8 +22,10 @@ jobs:
         id: get-versions
         run: |
           # Get directory list from vvakame/docker-review repository
-          VERSIONS=$(curl -s https://api.github.com/repos/vvakame/docker-review/contents | \
-            jq -r '["latest"] + [.[] | select(.type == "dir" and (.name | test("^review-[0-9]+\\.[0-9]+$"))) | .name | ltrimstr("review-")] | sort_by(if . == "latest" then [999,999] else split(".") | map(tonumber) end) | reverse')
+          REVIEW_VERSIONS=$(curl -s https://api.github.com/repos/vvakame/docker-review/contents | \
+            jq -r '[.[] | select(.type == "dir" and (.name | test("^review-[0-9]+\\.[0-9]+$"))) | .name | ltrimstr("review-")] | sort_by(split(".") | map(tonumber)) | reverse')
+          # Add "latest" to the beginning
+          VERSIONS=$(echo "${REVIEW_VERSIONS}" | jq '. = ["latest"] + .')
           echo "versions=${VERSIONS}" >> $GITHUB_OUTPUT
           echo "Found versions: ${VERSIONS}"
 
