@@ -10,6 +10,8 @@ on:
   release:
     types: [published]
 
+permissions: {}
+
 jobs:
   get-versions:
     runs-on: ubuntu-latest
@@ -28,6 +30,8 @@ jobs:
   push_to_registries:
     needs: get-versions
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
