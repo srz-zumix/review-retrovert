@@ -7,6 +7,7 @@ on:
         required: true
         type: boolean
         default: false
+  pull_request:
   release:
     types: [published]
 
@@ -56,6 +57,7 @@ jobs:
         with:
           push: ${{ (github.event_name == 'release' || inputs.publish) && matrix.version == 'latest' }}
           load: true
+          file: ${{ github.event_name == 'pull_request' && 'Dockerfile.local' || 'Dockerfile' }}
           build-args: |
             REVIEW_VERSION=${{ matrix.version }}
           tags: srzzumix/review-retrovert:${{ matrix.version }}
