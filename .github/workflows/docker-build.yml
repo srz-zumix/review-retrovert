@@ -40,6 +40,33 @@ jobs:
       matrix:
         version: ${{ fromJson(needs.get-versions.outputs.versions) }}
     steps:
+      - name: Set build conditions
+        id: conditions
+        run: |
+          # Determine if we should publish to Docker Hub
+          if [ "${{ github.event_name }}" = "release" ] || [ "${{ inputs.publish }}" = "true" ]; then
+            echo "should_publish=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "should_publish=false" >> "${GITHUB_OUTPUT}"
+          fi
+          
+          # Determine if we should push the base image tag
+          if [ "${{ github.event_name }}" = "release" ] || [ "${{ inputs.publish }}" = "true" ]; then
+            if [ "${{ matrix.version }}" = "latest" ]; then
+              echo "should_push_base=true" >> "${GITHUB_OUTPUT}"
+            else
+              echo "should_push_base=false" >> "${GITHUB_OUTPUT}"
+            fi
+          else
+            echo "should_push_base=false" >> "${GITHUB_OUTPUT}"
+          fi
+          
+          # Determine which Dockerfile to use
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "dockerfile=Dockerfile.local" >> "${GITHUB_OUTPUT}"
+          else
+            echo "dockerfile=Dockerfile" >> "${GITHUB_OUTPUT}"
+          fi
       - name: Check out the repo
         uses: actions/checkout@v6
         with:
@@ -47,7 +74,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
       - name: Log in to Docker Hub
-        if: github.event_name == 'release' || inputs.publish
+        if: steps.conditions.outputs.should_publish == 'true'
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -55,14 +82,14 @@ jobs:
       - name: Build and Push to Docker Hub
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
-          push: ${{ (github.event_name == 'release' || inputs.publish) && matrix.version == 'latest' }}
+          push: ${{ steps.conditions.outputs.should_push_base }}
           load: true
-          file: ${{ github.event_name == 'pull_request' && 'Dockerfile.local' || 'Dockerfile' }}
+          file: ${{ steps.conditions.outputs.dockerfile }}
           build-args: |
             REVIEW_VERSION=${{ matrix.version }}
           tags: srzzumix/review-retrovert:${{ matrix.version }}
       - name: Push review-retrovert version tag
-        if: github.event_name == 'release' || inputs.publish
+        if: steps.conditions.outputs.should_publish == 'true'
         env:
           DOCKER_TAG: ${{ matrix.version }}
           IMAGE_NAME: srzzumix/review-retrovert:${{ matrix.version }}
