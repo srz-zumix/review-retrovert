@@ -1,28 +1,102 @@
 name: Docker Build
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Push images to Docker Hub'
+        required: true
+        type: boolean
+        default: false
+  pull_request:
+  release:
+    types: [published]
+
+permissions: {}
 
 jobs:
-  push_to_registries:
+  get-versions:
     runs-on: ubuntu-latest
+    outputs:
+      versions: ${{ steps.get-versions.outputs.versions }}
     steps:
+      - name: Get review versions from docker-review repo
+        id: get-versions
+        run: |
+          # Get directory list from vvakame/docker-review repository
+          REVIEW_VERSIONS=$(curl -s https://api.github.com/repos/vvakame/docker-review/contents | \
+            jq -r '[.[] | select(.type == "dir" and (.name | test("^review-[0-9]+\\.[0-9]+$"))) | .name | ltrimstr("review-")] | sort_by(split(".") | map(tonumber)) | reverse')
+          # Add "latest" to the beginning and output as compact JSON
+          VERSIONS=$(echo "${REVIEW_VERSIONS}" | jq -c '. = ["latest"] + .')
+          echo "versions=${VERSIONS}" >> $GITHUB_OUTPUT
+          echo "Found versions: ${VERSIONS}"
+
+  push_to_registries:
+    needs: get-versions
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ${{ fromJson(needs.get-versions.outputs.versions) }}
+    steps:
+      - name: Set build conditions
+        id: conditions
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          INPUT_PUBLISH: ${{ inputs.publish }}
+          REVIEW_VERSION: ${{ matrix.version }}
+        run: |
+          # Determine if we should publish to Docker Hub
+          if [ "${GITHUB_EVENT_NAME}" = "release" ] || [ "${INPUT_PUBLISH}" = "true" ]; then
+            echo "should_publish=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "should_publish=false" >> "${GITHUB_OUTPUT}"
+          fi
+          
+          # Determine if we should push the base image tag
+          if [ "${GITHUB_EVENT_NAME}" = "release" ] || [ "${INPUT_PUBLISH}" = "true" ]; then
+            if [ "${REVIEW_VERSION}" = "latest" ]; then
+              echo "should_push_base=true" >> "${GITHUB_OUTPUT}"
+            else
+              echo "should_push_base=false" >> "${GITHUB_OUTPUT}"
+            fi
+          else
+            echo "should_push_base=false" >> "${GITHUB_OUTPUT}"
+          fi
+          
+          # Determine which Dockerfile to use
+          if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
+            echo "dockerfile=Dockerfile.local" >> "${GITHUB_OUTPUT}"
+          else
+            echo "dockerfile=Dockerfile" >> "${GITHUB_OUTPUT}"
+          fi
       - name: Check out the repo
         uses: actions/checkout@v6
         with:
           persist-credentials: false
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
       - name: Log in to Docker Hub
+        if: steps.conditions.outputs.should_publish == 'true'
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Push to Docker Hub
+      - name: Build and Push to Docker Hub
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
-          push: true
-          tags: srzzumix/review-retrovert:latest
-      - name: Push to version tag
+          push: ${{ steps.conditions.outputs.should_push_base }}
+          load: true
+          file: ${{ steps.conditions.outputs.dockerfile }}
+          build-args: |
+            REVIEW_VERSION=${{ matrix.version }}
+          tags: srzzumix/review-retrovert:${{ matrix.version }}
+      - name: Push review-retrovert version tag
+        if: steps.conditions.outputs.should_publish == 'true'
         env:
-          DOCKER_TAG: latest
-          IMAGE_NAME: srzzumix/review-retrovert:latest
+          DOCKER_TAG: ${{ matrix.version }}
+          IMAGE_NAME: srzzumix/review-retrovert:${{ matrix.version }}
           DOCKER_REPO: srzzumix/review-retrovert
         run: |
           ./hooks/post_push

@@ -1,4 +1,5 @@
-FROM vvakame/review:5.0
+ARG REVIEW_VERSION=latest
+FROM vvakame/review:${REVIEW_VERSION}
 
 RUN gem install review-retrovert
 

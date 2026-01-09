@@ -24,6 +24,12 @@ module ReVIEW
         puts VERSION
       end
 
+      desc "review-version", "show Re:VIEW version"
+      map "review-version" => :review_version
+      def review_version()
+        puts ReVIEW::VERSION
+      end
+
     end
   end
 end
