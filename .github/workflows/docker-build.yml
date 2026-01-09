@@ -42,17 +42,21 @@ jobs:
     steps:
       - name: Set build conditions
         id: conditions
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          INPUT_PUBLISH: ${{ inputs.publish }}
+          REVIEW_VERSION: ${{ matrix.version }}
         run: |
           # Determine if we should publish to Docker Hub
-          if [ "${{ github.event_name }}" = "release" ] || [ "${{ inputs.publish }}" = "true" ]; then
+          if [ "${GITHUB_EVENT_NAME}" = "release" ] || [ "${INPUT_PUBLISH}" = "true" ]; then
             echo "should_publish=true" >> "${GITHUB_OUTPUT}"
           else
             echo "should_publish=false" >> "${GITHUB_OUTPUT}"
           fi
           
           # Determine if we should push the base image tag
-          if [ "${{ github.event_name }}" = "release" ] || [ "${{ inputs.publish }}" = "true" ]; then
-            if [ "${{ matrix.version }}" = "latest" ]; then
+          if [ "${GITHUB_EVENT_NAME}" = "release" ] || [ "${INPUT_PUBLISH}" = "true" ]; then
+            if [ "${REVIEW_VERSION}" = "latest" ]; then
               echo "should_push_base=true" >> "${GITHUB_OUTPUT}"
             else
               echo "should_push_base=false" >> "${GITHUB_OUTPUT}"
@@ -62,7 +66,7 @@ jobs:
           fi
           
           # Determine which Dockerfile to use
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
+          if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
             echo "dockerfile=Dockerfile.local" >> "${GITHUB_OUTPUT}"
           else
             echo "dockerfile=Dockerfile" >> "${GITHUB_OUTPUT}"
