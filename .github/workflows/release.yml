@@ -23,3 +23,5 @@ jobs:
     permissions:
       contents: read
     uses: ./.github/workflows/docker-build.yml
+    with:
+      publish: true
