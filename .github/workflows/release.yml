@@ -17,7 +17,6 @@ jobs:
         with:
           persist-credentials: false
       - uses: ruby/setup-ruby@4c24fa5ec04b2e79eb40571b1cee2a0d2b705771 # v1.278.0
-      - run: bundle install
       - uses: rubygems/release-gem@1c162a739e8b4cb21a676e97b087e8268d8fc40b # v1.1.2
 
   docker-build:
