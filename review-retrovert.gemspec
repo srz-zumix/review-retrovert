@@ -10,7 +10,11 @@ Gem::Specification.new do |spec|
   spec.description   = %q{Re:VIEW Starter to Re:VIEW}
   spec.homepage      = "https://github.com/srz-zumix/review-retrovert"
   spec.license       = "MIT"
-  spec.required_ruby_version = Gem::Requirement.new(">= 2.3.0")
+  if RUBY_VERSION >= '2.6.0'
+      spec.required_ruby_version = Gem::Requirement.new(">= 2.6.0")
+  else
+      spec.required_ruby_version = Gem::Requirement.new(">= 2.3.0")
+  end
 
   # spec.metadata["allowed_push_host"] = "http://mygemserver.com"
 
@@ -29,7 +33,7 @@ Gem::Specification.new do |spec|
 
   # thor 1.3+ requires Ruby >= 2.6.0
   if RUBY_VERSION >= '2.6.0'
-    spec.add_dependency "thor", "~> 1.2"
+    spec.add_dependency "thor"
   else
     spec.add_dependency "thor", "~> 1.2.2"
   end
