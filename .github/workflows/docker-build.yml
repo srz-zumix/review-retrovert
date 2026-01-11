@@ -74,13 +74,6 @@ jobs:
           else
             echo "should_push_base=false" >> "${GITHUB_OUTPUT}"
           fi
-          
-          # Determine which Dockerfile to use
-          if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
-            echo "dockerfile=Dockerfile.local" >> "${GITHUB_OUTPUT}"
-          else
-            echo "dockerfile=Dockerfile" >> "${GITHUB_OUTPUT}"
-          fi
       - name: Check out the repo
         uses: actions/checkout@v6
         with:
@@ -98,7 +91,7 @@ jobs:
         with:
           push: ${{ steps.conditions.outputs.should_push_base }}
           load: true
-          file: ${{ steps.conditions.outputs.dockerfile }}
+          file: Dockerfile.local
           build-args: |
             REVIEW_VERSION=${{ matrix.version }}
           tags: srzzumix/review-retrovert:${{ matrix.version }}
