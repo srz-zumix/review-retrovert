@@ -27,7 +27,12 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "thor", "~> 1.2.2"
+  # thor 1.3+ requires Ruby >= 2.6.0
+  if RUBY_VERSION >= '2.6.0'
+    spec.add_dependency "thor", "~> 1.2"
+  else
+    spec.add_dependency "thor", "~> 1.2.2"
+  end
   # Required for Ruby 3.4+ where these gems are no longer default gems
   # Necessary for compatibility with review versions 5.4 and earlier
   spec.add_dependency "rexml"
