@@ -89,12 +89,18 @@ jobs:
       - name: Build and Push to Docker Hub
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
-          push: ${{ steps.conditions.outputs.should_push_base }}
-          load: ${{ steps.conditions.outputs.should_push_base == 'false' || steps.conditions.outputs.should_publish == 'true' }}
+          push: false
+          load: true
           file: Dockerfile.local
           build-args: |
             REVIEW_VERSION=${{ matrix.version }}
           tags: srzzumix/review-retrovert:${{ matrix.version }}
+      - name: Push base image tag
+        if: steps.conditions.outputs.should_push_base == 'true'
+        env:
+          REVIEW_VERSION: ${{ matrix.version }}
+        run: |
+          docker push srzzumix/review-retrovert:${REVIEW_VERSION}
       - name: Push review-retrovert version tag
         if: steps.conditions.outputs.should_publish == 'true'
         env:
@@ -102,8 +108,4 @@ jobs:
           IMAGE_NAME: srzzumix/review-retrovert:${{ matrix.version }}
           DOCKER_REPO: srzzumix/review-retrovert
         run: |
-          # Pull the image if it was pushed but not loaded
-          if ! docker image inspect ${IMAGE_NAME} >/dev/null 2>&1; then
-            docker pull ${IMAGE_NAME}
-          fi
           ./hooks/post_push
