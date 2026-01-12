@@ -97,8 +97,10 @@ jobs:
           tags: srzzumix/review-retrovert:${{ matrix.version }}
       - name: Push base image tag
         if: steps.conditions.outputs.should_push_base == 'true'
+        env:
+          REVIEW_VERSION: ${{ matrix.version }}
         run: |
-          docker push srzzumix/review-retrovert:${{ matrix.version }}
+          docker push srzzumix/review-retrovert:${REVIEW_VERSION}
       - name: Push review-retrovert version tag
         if: steps.conditions.outputs.should_publish == 'true'
         env:
