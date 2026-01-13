@@ -8,6 +8,9 @@ COPY . /tmp/review-retrovert/
 RUN cd /tmp/review-retrovert && \
     gem build review-retrovert.gemspec && \
     gem install --no-document review-retrovert-*.gem && \
+    gem list review-retrovert && \
+    which review-retrovert && \
+    ls -la $(which review-retrovert) && \
     rm -rf /tmp/review-retrovert
 
 ENTRYPOINT [ "review-retrovert" ]
