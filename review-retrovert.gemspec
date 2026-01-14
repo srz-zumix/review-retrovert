@@ -23,12 +23,12 @@ Gem::Specification.new do |spec|
   spec.metadata["changelog_uri"] = "https://github.com/srz-zumix/review-retrovert"
 
   # Specify which files should be added to the gem when it is released.
-  # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
+  # Explicitly list files to avoid git/Docker environment dependencies
   spec.files         = Dir.chdir(File.expand_path('..', __FILE__)) do
-    files = `git ls-files -z 2>/dev/null`.split("\x0").reject { |f| f.match(%r{^(.github|testdata|spec|features)/}) }
-    # Filter to only include files that actually exist (important for Docker builds with .dockerignore)
-    files.select { |f| File.exist?(f) }
-  end
+    Dir['lib/**/*'] +
+    Dir['exe/*'] +
+    ['README.md', 'LICENSE', 'CHANGELOG.md', 'Rakefile']
+  end.select { |f| File.file?(f) }
   spec.bindir        = "exe"
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
