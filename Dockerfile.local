@@ -6,12 +6,8 @@ COPY . /tmp/review-retrovert/
 
 # Build and install from local source
 RUN cd /tmp/review-retrovert && \
-    ls -la exe/ && \
     gem build review-retrovert.gemspec && \
-    tar -tzf review-retrovert-*.gem | grep exe || echo "No exe in gem" && \
     gem install --no-document review-retrovert-*.gem && \
-    gem list review-retrovert && \
-    (which review-retrovert && ls -la $(which review-retrovert)) || (echo "review-retrovert not found in PATH" && ls -la /usr/local/bin/review* && exit 1) && \
     rm -rf /tmp/review-retrovert
 
 ENTRYPOINT [ "review-retrovert" ]
