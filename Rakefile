@@ -8,7 +8,6 @@ task :default => :spec
 desc "Run bundle install and stage Gemfile.lock"
 task :post_tagpr do
   sh "bundle install"
-  sh "git add Gemfile.lock"
 end
 
 # Override the source_control_push task to skip git push
