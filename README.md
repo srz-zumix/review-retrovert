@@ -53,7 +53,7 @@ sage:
   review-retrovert convert {review_starter_configfile} {outdir}
 
 Options:
-  f, [--force]                                     # Force output
+      [-f], [--force]                              # Force output
       [--strict], [--no-strict]                    # Only process files registered in the catalog
       [--preproc], [--no-preproc]                  # Execute preproc after conversion
       [--tabwidth=N]                               # Preproc tabwidth option value
