@@ -1,6 +1,5 @@
 [![Gem Version](https://badge.fury.io/rb/review-retrovert.svg)](https://badge.fury.io/rb/review-retrovert)
 [![Retrovert](https://github.com/srz-zumix/review-retrovert/actions/workflows/retrovert.yml/badge.svg?branch=master)](https://github.com/srz-zumix/review-retrovert/actions/workflows/retrovert.yml)
-[![Docker Build](https://github.com/srz-zumix/review-retrovert/actions/workflows/docker-build.yml/badge.svg)](https://github.com/srz-zumix/review-retrovert/actions/workflows/docker-build.yml)
 [![Docker Pulls](https://img.shields.io/docker/pulls/srzzumix/review-retrovert)](https://hub.docker.com/r/srzzumix/review-retrovert)
 
 # ReVIEW::Retrovert
