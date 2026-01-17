@@ -59,4 +59,4 @@
 	releaseBranch = main
 	versionFile = lib/review/retrovert/version.rb
     postVersionCommand = rake post_tagpr
-	release = true
+	release = draft
