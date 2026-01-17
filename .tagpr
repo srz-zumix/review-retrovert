@@ -58,5 +58,5 @@
 	vPrefix = true
 	releaseBranch = main
 	versionFile = lib/review/retrovert/version.rb, Gemfile.lock
-    postVersionCommand = bundle install
+    postVersionCommand = rake post_tagpr
 	release = true
