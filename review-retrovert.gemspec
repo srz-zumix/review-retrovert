@@ -46,7 +46,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "nkf"
   spec.add_development_dependency "rspec", ['~> 3.0']
   spec.add_development_dependency "rake", ['~> 12.0']
-  spec.add_development_dependency 'aruba', ['~> 1.0.2']
+  spec.add_development_dependency 'aruba', '~> 1.1.1'
   spec.add_development_dependency "ruby-debug-ide"
   #spec.add_development_dependency "debase"
   spec.add_runtime_dependency "review", ['>= 3.0.0']
