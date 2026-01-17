@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.11.4](https://github.com/srz-zumix/review-retrovert/compare/v0.11.3...v0.11.4) - 2026-01-17
+- Remove Docker Build badge from README by @srz-zumix in https://github.com/srz-zumix/review-retrovert/pull/58
+
 ## [v0.11.3](https://github.com/srz-zumix/review-retrovert/compare/v0.11.2...v0.11.3) - 2026-01-17
 - Change release status to draft in .tagpr by @srz-zumix in https://github.com/srz-zumix/review-retrovert/pull/55
 - Add release trigger for published releases by @srz-zumix in https://github.com/srz-zumix/review-retrovert/pull/57
