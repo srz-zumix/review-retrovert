@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.11.3](https://github.com/srz-zumix/review-retrovert/compare/v0.11.2...v0.11.3) - 2026-01-17
+- Change release status to draft in .tagpr by @srz-zumix in https://github.com/srz-zumix/review-retrovert/pull/55
+- Add release trigger for published releases by @srz-zumix in https://github.com/srz-zumix/review-retrovert/pull/57
+
 ## [v0.11.2](https://github.com/srz-zumix/review-retrovert/compare/v0.11.1...v0.11.2) - 2026-01-17
 - tagpr by @srz-zumix in https://github.com/srz-zumix/review-retrovert/pull/47
 - Fix formatting of command line options in README by @srz-zumix in https://github.com/srz-zumix/review-retrovert/pull/49
