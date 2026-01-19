@@ -45,7 +45,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "csv"
   spec.add_dependency "nkf"
   spec.add_development_dependency "rspec", ['~> 3.0']
-  spec.add_development_dependency "rake", ['~> 12.0']
+  spec.add_development_dependency "rake", '~> 13.3'
   spec.add_development_dependency 'aruba', ['~> 1.0.2']
   spec.add_development_dependency "ruby-debug-ide"
   #spec.add_development_dependency "debase"
