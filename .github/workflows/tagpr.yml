@@ -18,6 +18,6 @@ jobs:
         persist-credentials: false
     - uses: ruby/setup-ruby@09a7688d3b55cf0e976497ff046b70949eeaccfd # v1.288.0
     - run: bundle install
-    - uses: Songmu/tagpr@fa7d23a4aada5ab0d15a76277a7e0b70d107a9c3 # v1.11.1
+    - uses: Songmu/tagpr@da82ed6743aec90049892070edd5561335904a9e # v1.17.0
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
