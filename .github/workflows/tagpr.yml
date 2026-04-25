@@ -16,8 +16,8 @@ jobs:
     - uses: actions/checkout@v6
       with:
         persist-credentials: false
-    - uses: ruby/setup-ruby@09a7688d3b55cf0e976497ff046b70949eeaccfd # v1.288.0
+    - uses: ruby/setup-ruby@7372622e62b60b3cb750dcd2b9e32c247ffec26a # v1.302.0
     - run: bundle install
-    - uses: Songmu/tagpr@b3fb89424646b06c8aa460f50307c60b6a541425 # v1.17.1
+    - uses: Songmu/tagpr@9bbb945b2fb025126186661e27d55485e3fc6df6 # v1.18.3
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
