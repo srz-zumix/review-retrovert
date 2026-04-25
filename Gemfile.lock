@@ -83,7 +83,7 @@ GEM
       middleware
       thor
       thread_safe
-    rake (13.3.1)
+    rake (13.4.2)
     review (5.11.0)
       base64
       csv
@@ -129,7 +129,7 @@ PLATFORMS
 
 DEPENDENCIES
   aruba (~> 1.1.1)
-  rake (~> 13.3)
+  rake (~> 13.4, ~> 13.3)
   review-retrovert!
   rspec (~> 3.0)
   ruby-debug-ide

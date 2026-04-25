@@ -3,6 +3,6 @@ source "https://rubygems.org"
 # Specify your gem's dependencies in review-retrovert.gemspec
 gemspec
 
-gem "rake", "~> 13.3"
+gem "rake", "~> 13.4"
 gem "rspec", "~> 3.0"
 gem 'aruba', '~> 1.1.1'
