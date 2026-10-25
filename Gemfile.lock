@@ -75,7 +75,7 @@ GEM
     mime-types-data (3.2026.0113)
     minitest (5.25.4)
     multi_test (0.1.2)
-    nkf (0.2.0)
+    nkf (0.3.0)
     pastel (0.8.0)
       tty-color (~> 0.5)
     protobuf-cucumber (3.10.8)
