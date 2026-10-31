@@ -75,7 +75,7 @@ jobs:
             echo "should_push_base=false" >> "${GITHUB_OUTPUT}"
           fi
       - name: Check out the repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
       - name: Set up Docker Buildx
