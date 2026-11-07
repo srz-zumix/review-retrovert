@@ -28,7 +28,7 @@ GEM
     childprocess (4.1.0)
     concurrent-ruby (1.3.6)
     contracts (0.16.1)
-    csv (3.3.5)
+    csv (3.3.7)
     cucumber (6.1.0)
       builder (~> 3.2, >= 3.2.4)
       cucumber-core (~> 9.0, >= 9.0.1)
